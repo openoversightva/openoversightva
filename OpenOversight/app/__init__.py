@@ -70,6 +70,10 @@ def create_app(config_name='default'):
     app.logger.addHandler(file_handler)
     app.logger.info('OpenOversight startup')
 
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
+
     # Also log when endpoints are getting hit hard
     limiter.logger.addHandler(file_handler)
 
