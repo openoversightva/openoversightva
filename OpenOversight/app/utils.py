@@ -81,7 +81,7 @@ def unit_choices(department_id: Optional[int] = None):
 
 
 def dept_choices():
-    return db.session.query(Department).all()
+    return db.session.query(Department).order_by(Department.name.asc()).all()
 
 
 def add_new_assignment(officer_id, form):
