@@ -8,8 +8,22 @@
   <div class="text-center frontpage-leads">
     <h1><small>Browse a Department</small></h1>
   </div>
-
-  <div class="text-center frontpage-leads">
+  <p>
+    <div class="text-center frontpage-leads">
+      <div class="btn-group">
+        <h2>Richmond Police Department
+      </h2>
+          <p>
+          <a class="btn btn-lg btn-primary" href="/department/1">
+            Officers
+          </a>
+          
+            <a class="btn btn-lg btn-primary" href="/incidents/?department_id=1">
+              Incidents
+            </a>
+        </p>
+      </div>
+    </p>
   {% for department in departments %}
     <p>
       <div class="btn-group">
