@@ -69,7 +69,7 @@ def index():
 @sitemap_include
 @main.route('/browse', methods=['GET'])
 def browse():
-    departments = Department.query.filter(Department.officers.any())
+    departments = Department.query.order_by(Department.name.asc()).filter(Department.officers.any())
     return render_template('browse.html', departments=departments)
 
 
