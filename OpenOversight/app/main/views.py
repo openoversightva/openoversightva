@@ -103,6 +103,77 @@ def get_officer():
     return render_template('input_find_officer.html', form=form, depts_dict=depts_dict, jsloads=jsloads)
 
 
+@main.route('/search')
+def search_officer(page=1, race=[], gender=[], min_age='16', max_age='100', name=None,
+                 badge=None, unique_internal_identifier=None):
+    form = BrowseForm()
+    form_data = form.data
+    form_data['race'] = race
+    form_data['gender'] = gender
+    form_data['min_age'] = min_age
+    form_data['max_age'] = max_age
+    form_data['name'] = name
+    form_data['badge'] = badge
+    form_data['unique_internal_identifier'] = unique_internal_identifier
+
+    OFFICERS_PER_PAGE = int(current_app.config['OFFICERS_PER_PAGE'])
+
+    # Set form data based on URL
+    if request.args.get('min_age') and request.args.get('min_age') in [ac[0] for ac in AGE_CHOICES]:
+        form_data['min_age'] = request.args.get('min_age')
+    if request.args.get('max_age') and request.args.get('max_age') in [ac[0] for ac in AGE_CHOICES]:
+        form_data['max_age'] = request.args.get('max_age')
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('name'):
+        form_data['name'] = request.args.get('name')
+    if request.args.get('badge'):
+        form_data['badge'] = request.args.get('badge')
+    if request.args.get('unique_internal_identifier'):
+        form_data['unique_internal_identifier'] = request.args.get('unique_internal_identifier')
+    if request.args.get('race') and all(race in [rc[0] for rc in RACE_CHOICES] for race in request.args.getlist('race')):
+        form_data['race'] = request.args.getlist('race')
+    if request.args.get('gender') and all(gender in [gc[0] for gc in GENDER_CHOICES] for gender in request.args.getlist('gender')):
+        form_data['gender'] = request.args.getlist('gender')
+
+    officers = filter_by_form(
+        form_data, Officer.query
+    )
+    officers = officers.options(selectinload(Officer.face))
+    officers = officers.order_by(Officer.last_name, Officer.first_name, Officer.id)
+    officers = officers.paginate(page, OFFICERS_PER_PAGE, False)
+    for officer in officers.items:
+        officer_face = sorted(officer.face, key=lambda x: x.featured, reverse=True)
+
+        # could do some extra work to not lazy load images but load them all together
+        # but we would want to ensure to only load the first picture of each officer
+        if officer_face and officer_face[0].image:
+            officer.image = officer_face[0].image.filepath
+
+    choices = {
+        'race': RACE_CHOICES,
+        'gender': GENDER_CHOICES
+    }
+
+    next_url = url_for('main.search_officer',
+                       page=officers.next_num, race=form_data['race'], gender=form_data['gender'],
+                       min_age=form_data['min_age'], max_age=form_data['max_age'], name=form_data['name'], badge=form_data['badge'],
+                       unique_internal_identifier=form_data['unique_internal_identifier'])
+    prev_url = url_for('main.search_officer',
+                       page=officers.prev_num, race=form_data['race'], gender=form_data['gender'],
+                       min_age=form_data['min_age'], max_age=form_data['max_age'], name=form_data['name'], badge=form_data['badge'],
+                       unique_internal_identifier=form_data['unique_internal_identifier'])
+
+    return render_template(
+        'search.html',
+        form=form,
+        officers=officers,
+        form_data=form_data,
+        choices=choices,
+        next_url=next_url,
+        prev_url=prev_url)
+
+
 @main.route('/tagger_find', methods=['GET', 'POST'])
 def get_ooid():
     form = FindOfficerIDForm()
