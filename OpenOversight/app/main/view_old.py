@@ -69,43 +69,13 @@ def index():
 @sitemap_include
 @main.route('/browse', methods=['GET'])
 def browse():
+    # departments = Department.query.filter(Department.officers.any())
     departments = Department.query.order_by(Department.name.asc()).filter(Department.officers.any())
     return render_template('browse.html', departments=departments)
 
 
-@sitemap_include
-@main.route('/find', methods=['GET', 'POST'])
-def get_officer():
-    jsloads = ['js/find_officer.js']
-    form = FindOfficerForm()
-
-    depts_dict = [dept_choice.toCustomDict() for dept_choice in dept_choices()]
-
-    if getattr(current_user, 'dept_pref_rel', None):
-        set_dynamic_default(form.dept, current_user.dept_pref_rel)
-
-    if form.validate_on_submit():
-        return redirect(url_for(
-            'main.list_officer',
-            department_id=form.data['dept'].id,
-            race=form.data['race'] if form.data['race'] != 'Not Sure' else None,
-            gender=form.data['gender'] if form.data['gender'] != 'Not Sure' else None,
-            rank=form.data['rank'] if form.data['rank'] != 'Not Sure' else None,
-            unit=form.data['unit'] if form.data['unit'] != 'Not Sure' else None,
-            min_age=form.data['min_age'],
-            max_age=form.data['max_age'],
-            name=form.data['name'],
-            badge=form.data['badge'],
-            unique_internal_identifier=form.data['unique_internal_identifier']),
-            code=302)
-    else:
-        current_app.logger.info(form.errors)
-    return render_template('input_find_officer.html', form=form, depts_dict=depts_dict, jsloads=jsloads)
-
-
-
 @main.route('/search')
-def search_officer(page=1, race=[], gender=[], min_age='16', max_age='100', name=None,
+def list_officer(page=1, race=[], gender=[], min_age='16', max_age='100', name=None,
                  badge=None, unique_internal_identifier=None):
     form = BrowseForm()
     form_data = form.data
@@ -156,23 +126,49 @@ def search_officer(page=1, race=[], gender=[], min_age='16', max_age='100', name
         'gender': GENDER_CHOICES
     }
 
-    next_url = url_for('main.search_officer',
+    next_url = url_for('main.list_officer',
                        page=officers.next_num, race=form_data['race'], gender=form_data['gender'],
                        min_age=form_data['min_age'], max_age=form_data['max_age'], name=form_data['name'], badge=form_data['badge'],
                        unique_internal_identifier=form_data['unique_internal_identifier'])
-    prev_url = url_for('main.search_officer',
+    prev_url = url_for('main.list_officer',
                        page=officers.prev_num, race=form_data['race'], gender=form_data['gender'],
                        min_age=form_data['min_age'], max_age=form_data['max_age'], name=form_data['name'], badge=form_data['badge'],
                        unique_internal_identifier=form_data['unique_internal_identifier'])
 
     return render_template(
         'search.html',
-        form=form,
+       form=form,
         officers=officers,
         form_data=form_data,
-        choices=choices,
-        next_url=next_url,
-        prev_url=prev_url)
+     
+@sitemap_include
+@main.route('/find', methods=['GET', 'POST'])
+def get_officer():
+    jsloads = ['js/find_officer.js']
+    form = FindOfficerForm()
+
+    depts_dict = [dept_choice.toCustomDict() for dept_choice in dept_choices()]
+
+    if getattr(current_user, 'dept_pref_rel', None):
+        set_dynamic_default(form.dept, current_user.dept_pref_rel)
+
+    if form.validate_on_submit():
+        return redirect(url_for(
+            'main.list_officer',
+            department_id=form.data['dept'].id,
+            race=form.data['race'] if form.data['race'] != 'Not Sure' else None,
+            gender=form.data['gender'] if form.data['gender'] != 'Not Sure' else None,
+            rank=form.data['rank'] if form.data['rank'] != 'Not Sure' else None,
+            unit=form.data['unit'] if form.data['unit'] != 'Not Sure' else None,
+            min_age=form.data['min_age'],
+            max_age=form.data['max_age'],
+            name=form.data['name'],
+            badge=form.data['badge'],
+            unique_internal_identifier=form.data['unique_internal_identifier']),
+            code=302)
+    else:
+        current_app.logger.info(form.errors)
+    return render_template('input_find_officer.html', form=form, depts_dict=depts_dict, jsloads=jsloads)
 
 
 @main.route('/tagger_find', methods=['GET', 'POST'])
