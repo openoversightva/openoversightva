@@ -248,7 +248,7 @@ def create_officer_from_row(row, department_id):
     set_field_from_row(row, officer, 'gender')
     set_field_from_row(row, officer, 'employment_date', allow_blank=False)
     set_field_from_row(row, officer, 'birth_year')
-    set_field_from_row(row, officer, 'unique_internal_identifier')
+    set_field_from_row(row, officer, 'unique_internal_identifier', allow_blank=False)
     db.session.add(officer)
     db.session.flush()
 
