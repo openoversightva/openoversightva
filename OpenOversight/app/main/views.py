@@ -103,10 +103,9 @@ def get_officer():
     return render_template('input_find_officer.html', form=form, depts_dict=depts_dict, jsloads=jsloads)
 
 
-
 @main.route('/search')
 def search_officer(page=1, race=[], gender=[], min_age='16', max_age='100', name=None,
-                 badge=None, unique_internal_identifier=None):
+                   badge=None, unique_internal_identifier=None):
     form = BrowseForm()
     form_data = form.data
     form_data['race'] = race
