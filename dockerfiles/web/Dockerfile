@@ -1,6 +1,6 @@
 ARG TRAVIS_PYTHON_VERSION
 ARG DOCKER_BUILD_ENV
-FROM python:${TRAVIS_PYTHON_VERSION:-3.5}-buster
+FROM python:${TRAVIS_PYTHON_VERSION:-3.8}-buster
 
 WORKDIR /usr/src/app
 
@@ -10,9 +10,9 @@ ENV DEBIAN-FRONTEND noninteractive
 ENV DISPLAY=:1
 
 # install apt dependencies
-RUN echo "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/backports.list
+RUN echo "deb http://deb.debian.org/debian buster-backports main" > /etc/apt/sources.list.d/backports.list
 RUN apt-get update && apt-get install -y xvfb firefox-esr libpq-dev python3-dev && \
-    apt-get install -y -t stretch-backports libsqlite3-0 && apt-get clean
+    apt-get install -y -t buster-backports libsqlite3-0 && apt-get clean
 
 # install node
 ENV NODE_SETUP_SHA=5d07994f59e3edc2904c547e772b818d10abb066f6ff36ab3db5d686b0fe9a73
