@@ -63,7 +63,6 @@ all_rows = [[y.translate(NOPRINT_TRANS_TABLE) for y in x] for x in all_rows]
 
 df = pd.DataFrame(all_rows)
 
-# [str(i).lower() for i in df.iloc[0]]
 df.columns = ['last', 'first', 'mi', 'photo', 'badge', 'job_title',
               'unit', 'gender', 'race', 'hired', 'salary',
               'department', 'uuid']
@@ -179,18 +178,60 @@ with engine.connect() as connection:
         on j.id = a.job_id
         and j.department_id = o.department_id
     ''', connection)
+odf.replace([None], np.nan, inplace=True)
 
 modf = odf.loc[:, ['department_id', 'last_name', 'first_name',
-                   'middle_initial', 'star_no', 'unit_id', 'job_title',
+                   'middle_initial', 'suffix', 'star_no',
                    'unique_internal_identifier']]
-modf.columns = ['dept_id', 'last', 'first', 'mi', 'badge',
-                'unit_id', 'job_title', 'unique_internal_identifier']
-modf = modf.set_index(['dept_id', 'last', 'first', 'mi', 'badge',
-                       'unit_id', 'job_title'])
-df = df.set_index(['dept_id', 'last', 'first', 'mi', 'badge',
-                   'unit_id', 'job_title'])
-# it would be nice if we could auto update the sheet with this
-df = df.join(modf['unique_internal_identifier'], how='left')
+modf.columns = ['dept_id', 'last', 'first', 'mi', 'suffix',
+                'badge', 'unique_internal_identifier']
+
+# try exact match first
+df['uuid'] = df['uuid'].fillna('')
+df['unique_internal_identifier'] = \
+    pd.merge(df, modf,
+             left_on='uuid',
+             right_on='unique_internal_identifier',
+             how='left')['unique_internal_identifier']
+
+# create lowercase name fields for both (with no special characters) 
+# to match on - l f m s
+df = pd.concat([df, df[['last','first','mi','suffix']]\
+    .apply(lambda x: x.fillna('').str.lower().str.replace('[^a-z]', '', regex=True))\
+    .rename(columns=lambda x: x[0])], axis=1)
+modf = pd.concat([modf, modf[['last','first','mi','suffix']]\
+    .apply(lambda x: x.fillna('').str.lower().str.replace('[^a-z]', '', regex=True))\
+    .rename(columns=lambda x: x[0])], axis=1)
+df.loc[:,['l', 'f', 'm', 's']].fillna('', inplace=True)
+modf.loc[:,['l', 'f', 'm', 's']].fillna('', inplace=True)
+
+
+modf = modf.set_index(['dept_id', 'l', 'f', 'm', 's', 'badge'])
+df = df.set_index(['dept_id', 'l', 'f', 'm', 's', 'badge'])
+df['uuid1'] = df.join(modf['unique_internal_identifier'], how='left', lsuffix='1')['unique_internal_identifier']
+df['unique_internal_identifier'].fillna(df['uuid1'], inplace=True)
+# it would be nice if we could update the sheet with this
+modf.reset_index(inplace=True)
+df.reset_index(inplace=True)
+
+# second try - match without badge
+modf = modf.set_index(['dept_id', 'l', 'f', 'm', 's'])
+df = df.set_index(['dept_id', 'l', 'f', 'm', 's'])
+#df.loc[:,['unique_internal_identifier']].fillna(modf['unique_internal_identifier'], inplace=True)
+df['uuid2'] = df.join(modf['unique_internal_identifier'], how='left', lsuffix='1')['unique_internal_identifier']
+df['unique_internal_identifier'].fillna(df['uuid2'], inplace=True)
+modf.reset_index(inplace=True)
+df.reset_index(inplace=True)
+
+# third try - match first letter of middle name/initial
+modf['mi_true'] = modf['m'].str[0].fillna('')
+df['mi_true'] = df['m'].str[0].fillna('')
+modf = modf.set_index(['dept_id', 'l', 'f', 'mi_true', 's'])
+df = df.set_index(['dept_id', 'l', 'f', 'mi_true', 's'])
+#df.loc[:,['unique_internal_identifier']].fillna(modf['unique_internal_identifier'], inplace=True)
+df['uuid3'] = df.join(modf['unique_internal_identifier'], how='left', lsuffix='1')['unique_internal_identifier']
+df['unique_internal_identifier'].fillna(df['uuid3'], inplace=True)
+modf.reset_index(inplace=True)
 df.reset_index(inplace=True)
 
 # if there's duplicate uuids, drop all but the first one
@@ -250,10 +291,4 @@ df_export.columns = ['last_name',
 
 df_export.to_csv('gsheets_export.csv', index=False)
 
-# for updating the sheet's UUID column with
-df_reup = df.loc[:, ['last',
-                     'first',
-                     'mi',
-                     'unique_internal_identifier',
-                     'department']]
-df_reup.to_csv('reup.csv', index=False)
+
