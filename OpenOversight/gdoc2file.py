@@ -19,7 +19,7 @@ from sqlalchemy.sql import text
 load_dotenv(find_dotenv())
 # The ID and range of the spreadsheet to sample.
 SAMPLE_SPREADSHEET_ID = os.environ.get('SPREADSHEET_ID')
-SAMPLE_RANGE = '!A2:M'
+SAMPLE_RANGE = '!A2:N'
 
 API_KEY = os.environ.get('API_KEY')
 
@@ -63,7 +63,7 @@ all_rows = [[y.translate(NOPRINT_TRANS_TABLE) for y in x] for x in all_rows]
 
 df = pd.DataFrame(all_rows)
 
-df.columns = ['last', 'first', 'mi', 'photo', 'badge', 'job_title',
+df.columns = ['last', 'first', 'mi', 'suffix' 'photo', 'badge', 'job_title',
               'unit', 'gender', 'race', 'hired', 'salary',
               'department', 'uuid']
 # remove header rows
@@ -194,7 +194,7 @@ df['unique_internal_identifier'] = \
              right_on='unique_internal_identifier',
              how='left')['unique_internal_identifier']
 
-# create lowercase name fields for both (with no special characters) 
+# create lowercase name fields for both (with no special characters)
 # to match on - l f m s
 df = pd.concat([df, df[['last','first','mi','suffix']]\
     .apply(lambda x: x.fillna('').str.lower().str.replace('[^a-z]', '', regex=True))\
@@ -217,7 +217,6 @@ df.reset_index(inplace=True)
 # second try - match without badge
 modf = modf.set_index(['dept_id', 'l', 'f', 'm', 's'])
 df = df.set_index(['dept_id', 'l', 'f', 'm', 's'])
-#df.loc[:,['unique_internal_identifier']].fillna(modf['unique_internal_identifier'], inplace=True)
 df['uuid2'] = df.join(modf['unique_internal_identifier'], how='left', lsuffix='1')['unique_internal_identifier']
 df['unique_internal_identifier'].fillna(df['uuid2'], inplace=True)
 modf.reset_index(inplace=True)
@@ -228,7 +227,6 @@ modf['mi_true'] = modf['m'].str[0].fillna('')
 df['mi_true'] = df['m'].str[0].fillna('')
 modf = modf.set_index(['dept_id', 'l', 'f', 'mi_true', 's'])
 df = df.set_index(['dept_id', 'l', 'f', 'mi_true', 's'])
-#df.loc[:,['unique_internal_identifier']].fillna(modf['unique_internal_identifier'], inplace=True)
 df['uuid3'] = df.join(modf['unique_internal_identifier'], how='left', lsuffix='1')['unique_internal_identifier']
 df['unique_internal_identifier'].fillna(df['uuid3'], inplace=True)
 modf.reset_index(inplace=True)
