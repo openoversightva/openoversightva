@@ -63,7 +63,7 @@ all_rows = [[y.translate(NOPRINT_TRANS_TABLE) for y in x] for x in all_rows]
 
 df = pd.DataFrame(all_rows)
 
-df.columns = ['last', 'first', 'mi', 'suffix' 'photo', 'badge', 'job_title',
+df.columns = ['last', 'first', 'mi', 'suffix', 'photo', 'badge', 'job_title',
               'unit', 'gender', 'race', 'hired', 'salary',
               'department', 'uuid']
 # remove header rows
