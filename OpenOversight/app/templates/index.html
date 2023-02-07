@@ -26,12 +26,10 @@
                 <a href="/find" id="cpd" class="btn btn-lg btn-primary">
                     Find an officer
                	</a>
+                <div class="small-horizontal-padding"></div>
                 <a href="/search" id="cpd" class="btn btn-lg btn-primary">
                     Search all officers
                 </a>
-                <a href="/search" id="cpd" class="btn btn-lg btn-primary">
-                    Search all officers
-               	</a>
             </div>
 
             <div class="col-lg-6 col-half-border bg-white">
@@ -41,12 +39,19 @@
                 <div class="text-gray-lighter">Contribute to the database</div>
                 <p>
                     Have a photo containing uniformed law enforcement officers? Drop them here.
-                    Alternatively, for high security uploads of photos or videos, you can use our
-                    <a href="https://lucyparsonslabs.com/securedrop/" target="_blank">SecureDrop</a> tool.
+                    <!--Alternatively, for high security uploads of photos or videos, you can use our
+                    <a href="https://lucyparsonslabs.com/securedrop/" target="_blank">SecureDrop</a> tool.-->
                 </p>
                 <a class="btn btn-lg btn-primary" href="{{ url_for('main.submit_data') }}">
                     Submit Image
                 </a>
+
+                <h1><small>Tell Your Story</small></h1>
+                <div class="text-gray-lighter">Add an incident to the community database.</div>
+                <p>
+                   Report an encounter with a police officer. This does not submit a report to the police department.
+                </p>
+                <a class="btn btn-lg btn-primary" href="/incidents/new">Submit New Incident</a>
             </div>
 
         </div>

@@ -213,7 +213,8 @@ def update_officer_from_row(row, officer, update_static_fields=False):
                         officer.last_name,
                         e
                     )
-                    raise Exception(msg)
+                    #raise Exception(msg)
+                    continue  # skip this field but keep going
             else:
                 new_value = row[fieldname]
             if old_value is None:
