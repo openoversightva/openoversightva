@@ -3,11 +3,14 @@ from us import states
 # Choices are a list of (value, label) tuples
 SUFFIX_CHOICES = [('', '-'), ('Jr', 'Jr'), ('Sr', 'Sr'), ('II', 'II'),
                   ('III', 'III'), ('IV', 'IV'), ('V', 'V')]
-RACE_CHOICES = [('BLACK', 'Black'), ('WHITE', 'White'), ('ASIAN', 'Asian'),
+RACE_CHOICES = [('Not Sure', 'Not Sure'),
+                ('BLACK', 'Black'),
+                ('WHITE', 'White'),
+                ('ASIAN', 'Asian'),
                 ('HISPANIC', 'Hispanic'),
                 ('NATIVE AMERICAN', 'Native American'),
                 ('PACIFIC ISLANDER', 'Pacific Islander'),
-                ('Other', 'Other'), ('Not Sure', 'Not Sure')]
+                ('Other', 'Other'), ]
 
 GENDER_CHOICES = [('Not Sure', 'Not Sure'), ('M', 'Male'), ('F', 'Female'), ('Other', 'Other')]
 

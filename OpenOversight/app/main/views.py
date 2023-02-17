@@ -196,8 +196,34 @@ def get_started_labeling():
         flash('Invalid username or password.')
     else:
         current_app.logger.info(form.errors)
-    departments = Department.query.all()
-    return render_template('label_data.html', departments=departments, form=form)
+    departments = Department.query.order_by(Department.name.asc())
+
+    depts_images = []
+    for department in departments:
+        has_sort = False
+        has_face = False
+
+        sort_query = Image.query.filter_by(contains_cops=None) \
+                             .filter_by(department_id=department.id)
+
+        sort = get_random_image(sort_query)
+
+        if sort:
+            has_sort = True
+
+        face_query = Image.query.filter_by(contains_cops=True) \
+                               .filter_by(department_id=department.id) \
+                               .filter_by(is_tagged=False)
+        
+        face = get_random_image(face_query)
+
+        if face:
+            has_face = True
+        
+        if sort or face:
+            depts_images.append(department)
+
+    return render_template('label_data.html', departments=depts_images, form=form)
 
 
 @main.route('/sort/department/<int:department_id>', methods=['GET', 'POST'])
