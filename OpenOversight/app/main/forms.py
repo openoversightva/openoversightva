@@ -268,8 +268,12 @@ class EditOfficerForm(Form):
                                              Optional()])
     suffix = SelectField('Suffix', choices=SUFFIX_CHOICES, default='',
                          validators=[AnyOf(allowed_values(SUFFIX_CHOICES))])
-    race = SelectField('Race', choices=RACE_CHOICES, coerce=lambda x: x or None,
-                       validators=[AnyOf(allowed_values(RACE_CHOICES))])
+    race = SelectField(
+        'Race', 
+        choices=RACE_CHOICES, 
+        coerce=lambda x: x or None,
+        #coerce=lambda x: None if x == 'Not Sure' else x,
+        validators=[AnyOf(allowed_values(RACE_CHOICES))])
     gender = SelectField(
         'Gender',
         choices=GENDER_CHOICES,
