@@ -280,6 +280,10 @@ def officer_profile(officer_id):
                               .order_by(Job.order.asc())\
                               .all()
 
+    form.unit.query = Unit.query\
+                              .filter_by(department_id=officer.department_id)\
+                              .all()
+
     try:
         faces = Face.query.filter_by(officer_id=officer_id).order_by(Face.featured.desc()).all()
         assignments = Assignment.query.filter_by(officer_id=officer_id).all()
@@ -318,6 +322,8 @@ def add_assignment(officer_id):
                               .filter_by(department_id=officer.department_id)\
                               .order_by(Job.order.asc())\
                               .all()
+
+    flash(form.unit.query)
     if not officer:
         flash('Officer not found')
         abort(404)
@@ -358,6 +364,11 @@ def edit_assignment(officer_id, assignment_id):
                               .filter_by(department_id=officer.department_id)\
                               .order_by(Job.order.asc())\
                               .all()
+
+    form.unit.query = Unit.query\
+                              .filter_by(department_id=officer.department_id)\
+                              .all()
+                              
     form.job_title.data = Job.query.filter_by(id=assignment.job_id).one()
     if form.unit.data and type(form.unit.data) == int:
         form.unit.data = Unit.query.filter_by(id=form.unit.data).one()
