@@ -77,7 +77,7 @@
             <li><a class="navbar-link" href="/browse">Agencies (A-Z)</a></li>
             <li><a class="navbar-link" href="/incidents">Reports</a></li>
             <li><a class="navbar-link" href="/submit">Submit Images</a></li>
-            <li><a class="navbar-link" href="/label">Sign-Up</a></li>
+            <li><a class="navbar-link" href="/label">Sign Up</a></li>
             <!--<li><a class="navbar-link" href="/about">About</a></li>-->
             {% if current_user and current_user.is_administrator %}
               <li><a class="navbar-link" href="/auth/users/">Users</a></li>
@@ -149,7 +149,7 @@
             <a href="/search" class="btn-unstyled">Search All Cops</a><br>
             <a href="/browse" class="btn-unstyled">Agencies (A-Z)</a><br>
             <a href="{{ url_for('main.submit_data') }}" class="btn-unstyled">Submit Images</a><br>
-            <a href="{{ url_for('main.get_started_labeling') }}" class="btn-unstyled">Sign-Up</a><br>
+            <a href="{{ url_for('main.get_started_labeling') }}" class="btn-unstyled">Sign Up</a><br>
             <!--<a href="{{ url_for('main.about_oo') }}" class="btn-unstyled">About</a><br>-->
           </p>
         </div>
