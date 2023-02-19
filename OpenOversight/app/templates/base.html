@@ -72,12 +72,13 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li><a class="navbar-link" href="/browse">Browse</a></li>
-            <li><a class="navbar-link" href="/search">Search all Officers</a></li>
-            <li><a class="navbar-link" href="/incidents">Incidents</a></li>
+            <li><a class="navbar-link" href="/search">Search All Cops</a></li>
+            <!--<li><a class="navbar-link" href="/search">Search all Officers</a></li>-->
+            <li><a class="navbar-link" href="/browse">Agencies (A-Z)</a></li>
+            <li><a class="navbar-link" href="/incidents">Reports</a></li>
             <li><a class="navbar-link" href="/submit">Submit Images</a></li>
-            <li><a class="navbar-link" href="/label">Volunteer</a></li>
-            <li><a class="navbar-link" href="/about">About</a></li>
+            <li><a class="navbar-link" href="/label">Sign-Up</a></li>
+            <!--<li><a class="navbar-link" href="/about">About</a></li>-->
             {% if current_user and current_user.is_administrator %}
               <li><a class="navbar-link" href="/auth/users/">Users</a></li>
             {% endif%}
@@ -124,7 +125,7 @@
       <div class="row text-center horizontal-padding">
 
         <div class="col-sm-4">
-          <h5>OpenOversightVA</h5>
+          <h5>OpenOversight<span style="color:#f9285c">VA</span></h5>
           <p class="font-weight-300">
             This is a fork of OpenOversight by Lucy Parsons Labs in Chicago, IL. <br>
             <a href="https://lucyparsonslabs.com/" target="_blank" class="btn-unstyled">Lucy Parsons Labs</a><br>
@@ -145,10 +146,11 @@
         <div class="col-sm-4">
           <h5>Navigation</h5>
           <p class="font-weight-300">
-            <a href="{{ url_for('main.get_officer') }}" class="btn-unstyled">Find an Officer</a><br>
+            <a href="/search" class="btn-unstyled">Search All Cops</a><br>
+            <a href="/browse" class="btn-unstyled">Agencies (A-Z)</a><br>
             <a href="{{ url_for('main.submit_data') }}" class="btn-unstyled">Submit Images</a><br>
-            <a href="{{ url_for('main.get_started_labeling') }}" class="btn-unstyled">Volunteer</a><br>
-            <a href="{{ url_for('main.about_oo') }}" class="btn-unstyled">About</a><br>
+            <a href="{{ url_for('main.get_started_labeling') }}" class="btn-unstyled">Sign-Up</a><br>
+            <!--<a href="{{ url_for('main.about_oo') }}" class="btn-unstyled">About</a><br>-->
           </p>
         </div>
 

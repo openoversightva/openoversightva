@@ -5,30 +5,39 @@
 
     <div class="text-center">
         <div class="hero-section">
-            <div class="hero">Help Us Build Police Transparency in Virginia</div>
-            <div class="subhero">OpenOversightVA: A public, searchable database of law enforcement officers in Virginia.</div>
+            <div class="hero">No Secret Police</div>
+            <div class="subhero">OpenOversight<span style="color:#f9285c">VA</span>: A public, searchable database of law enforcement officers in Virginia. Find names, badge numbers, officer complaints, salaries, work histories, and more.</div>
         </div>
 
         <div class="row display-flex vertical-padding horizontal-padding sink-row text-left">
             <div class="col-lg-6 col-half-border bg-white">
                 <h1>
-                    <small>Browse or Find a Cop</small>
+                    <small>Search for an Officer, Browse Departments, or Read Complaints</small>
                 </h1>
-                <div class="text-gray-lighter">Search the Open Oversight VA database</div>
+                <div class="text-gray-lighter">Search the cop database</div>
 
                 <p>
-                    Search our public database for officers in your city or identify an officer with whom you have had a negative interaction.
+                    Search our public database of police officers in your city. We have over 20,000 Virginia officers from over 216 police departments and sheriff's offices in our database. We are always adding more.
                 </p>
-                <a href="/browse" class="btn btn-lg btn-primary">
-                    Browse by department
-                </a>
-                <div class="small-horizontal-padding"></div>
                 <a href="/find" id="cpd" class="btn btn-lg btn-primary">
-                    Find an officer
+                    Search All Cops
                	</a>
                 <div class="small-horizontal-padding"></div>
+                
+                <a href="/browse" class="btn btn-lg btn-primary">
+                    Browse Departments
+                </a>
+                <!--<div class="small-horizontal-padding"></div>
                 <a href="/search" id="cpd" class="btn btn-lg btn-primary">
                     Search all officers
+                </a>-->
+                <div class="small-horizontal-padding"></div>
+                <a href="/label" id="cpd" class="btn btn-lg btn-primary">
+                    Identify a Cop
+                </a>
+                <div class="small-horizontal-padding"></div>
+                <a href="/incidents" id="cpd" class="btn btn-lg btn-primary">
+                    View Reports
                 </a>
             </div>
 
@@ -38,53 +47,47 @@
                 </h1>
                 <div class="text-gray-lighter">Contribute to the database</div>
                 <p>
-                    Have a photo containing uniformed law enforcement officers? Drop them here.
+                    Got a photo of a cop in uniform? Drop it here and let's identify them.
                     <!--Alternatively, for high security uploads of photos or videos, you can use our
                     <a href="https://lucyparsonslabs.com/securedrop/" target="_blank">SecureDrop</a> tool.-->
                 </p>
                 <a class="btn btn-lg btn-primary" href="{{ url_for('main.submit_data') }}">
-                    Submit Image
+                    Submit Cop Photos
                 </a>
 
                 <h1><small>Tell Your Story</small></h1>
-                <div class="text-gray-lighter">Add an incident to the community database.</div>
+                <div class="text-gray-lighter">Add an report to the community database.</div>
                 <p>
                    Report an encounter with a police officer. This does not submit a report to the police department.
                 </p>
-                <a class="btn btn-lg btn-primary" href="/incidents/new">Submit New Incident</a>
+                <a class="btn btn-lg btn-primary" href="/incidents/new">Submit New Report</a>
             </div>
 
         </div>
     </div>
     <div class="hr-banner">
-        Want to help? Here are two ways...
+        <div class="here">Contribute your time</div>
+        Want to help? We need people to do this work. Just as importantly, we need people to fund it.
     </div>
 
     <div class="row display-flex">
         <div class="col-lg-6 bg-light-gray col-half-no-border text-left">
             <h1>
-                <small>Volunteer</small>
+                <small>Work With Us</small>
             </h1>
             <p>
-                We're looking for volunteers to help us sort through images. If you're interested in helping out, please
-                sign up!
+                We're looking for volunteers to help us collect images, submit FOIA records, and aggregate incidents of police brutality. If this sounds like fun to you, sign up and join us.
             </p>
             <a class="btn btn-lg btn-secondary" href="{{ url_for('main.get_started_labeling') }}">
-                Put me to work
+                Sign-Up
             </a>
         </div>
         <div class="col-lg-6 bg-blue-gray col-half-no-border text-left">
             <h1>
-                <small>Donate</small>
+                <small>Fund Us</small>
             </h1>
             <p>
-                <!--TODO check on link + copy-->
-                COMING SOON!!
-                <br>
-                We are entirely volunteer funded and directed. Donations are greatly appreciated, and can be funded
-                through PayPal, YouCaring, or Bitcoin.
-                <br>
-                Note: We are an IRS 501(c)3 not-for-profit and all donations are tax deductible!
+                Open Oversight Virginia is completely and fully the work of volunteer researchers. We do not receive regular funding and would welcome your donations to support our work. You can contribute to our work financially by subscribing to our <a href="https://www.patreon.com/openoversightvirginia" target="_new">Patreon</a>, PayPal, or OpenCollective.
             </p>
             <!--<a class="btn btn-lg btn-secondary" href="https://lucyparsonslabs.com/support/" target="_blank">
                 Donate
