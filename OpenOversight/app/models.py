@@ -190,6 +190,8 @@ class Assignment(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     officer_id = db.Column(db.Integer, db.ForeignKey('officers.id', ondelete='CASCADE'))
     baseofficer = db.relationship('Officer')
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id', ondelete='CASCADE'))
+    department = db.relationship('Department')
     star_no = db.Column(db.String(120), index=True, unique=False, nullable=True)
     job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=False)
     job = db.relationship('Job')
@@ -279,6 +281,24 @@ class Image(BaseModel):
     def __repr__(self):
         return '<Image ID {}: {}>'.format(self.id, self.filepath)
 
+
+class Document(BaseModel):
+    __tablename__ = 'documents'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filepath = db.Column(db.String(255), unique=False)
+    hash_doc = db.Column(db.String(120), unique=False, nullable=True)
+
+    # Track when the image was put into our database
+    date_inserted = db.Column(db.DateTime, index=True, unique=False, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    user = db.relationship('User', backref='documents')
+
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
+    department = db.relationship('Department', backref='documents')
+
+    def __repr__(self):
+        return '<Document ID {}: {}>'.format(self.id, self.filepath)
 
 incident_links = db.Table(
     'incident_links',
