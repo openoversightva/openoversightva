@@ -190,6 +190,8 @@ class Assignment(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     officer_id = db.Column(db.Integer, db.ForeignKey('officers.id', ondelete='CASCADE'))
     baseofficer = db.relationship('Officer')
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id', ondelete='CASCADE'))
+    department = db.relationship('Department')
     star_no = db.Column(db.String(120), index=True, unique=False, nullable=True)
     job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=False)
     job = db.relationship('Job')
