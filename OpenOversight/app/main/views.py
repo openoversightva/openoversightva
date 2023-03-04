@@ -3,8 +3,10 @@ from datetime import date
 import io
 import os
 import re
+import base64
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql.expression import cast
 from sqlalchemy.orm import selectinload
 import sys
 from traceback import format_exc
@@ -22,17 +24,20 @@ from ..utils import (serve_image, compute_leaderboard_stats, get_random_image,
                      replace_list, create_note, set_dynamic_default, roster_lookup,
                      create_description, filter_by_form,
                      crop_image, create_incident, get_or_create, dept_choices,
-                     upload_image_to_s3_and_store_in_db)
+                     upload_image_to_s3_and_store_in_db,
+                     upload_document_to_s3_and_store_in_db,
+                     allowed_doc_file)
 
 from .forms import (FindOfficerForm, FindOfficerIDForm, AddUnitForm,
                     FaceTag, AssignmentForm, DepartmentForm, AddOfficerForm,
                     EditOfficerForm, IncidentForm, TextForm, EditTextForm,
-                    AddImageForm, EditDepartmentForm, BrowseForm, SalaryForm, OfficerLinkForm)
+                    AddImageForm, EditDepartmentForm, BrowseForm, SalaryForm, OfficerLinkForm,
+                    AddDocumentForm, DocumentsForm)
 from .model_view import ModelView
 from .choices import GENDER_CHOICES, RACE_CHOICES, AGE_CHOICES
 from ..models import (db, Image, User, Face, Officer, Assignment, Department,
                       Unit, Incident, Location, LicensePlate, Link, Note,
-                      Description, Salary, Job)
+                      Description, Salary, Job, Document)
 
 from ..auth.forms import LoginForm
 from ..auth.utils import admin_required, ac_or_admin_required
@@ -968,6 +973,117 @@ def submit_complaint():
                            officer_star=request.args.get('officer_star'),
                            officer_image=request.args.get('officer_image'))
 
+@main.route('/documents')
+def show_documents(page=1, department=[], title=None):
+    form = DocumentsForm()
+    form_data = form.data
+    form_data['department'] = department
+    form_data['title'] = title
+
+    DOCUMENTS_PER_PAGE = int(current_app.config['OFFICERS_PER_PAGE'])
+
+    # Set form data based on URL
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('title'):
+        form_data['title'] = request.args.get('title')
+    if request.args.get('department'):
+        form_data['department'] = request.args.getlist('department')
+
+    documents =  Document.query
+    if request.args.get('title'):
+        documents = documents.filter(db.or_(Document.title.ilike('%%{}%%'.format(form_data['title'])),
+            Document.description.ilike('%%{}%%'.format(form_data['title'])))
+        )
+    if request.args.get('department') and request.args.get('department') != "-1":
+        documents = documents.filter(
+            Document.department_id == request.args.get('department')
+        )
+    documents = documents.order_by(Document.date_inserted.desc())
+    documents = documents.paginate(page, DOCUMENTS_PER_PAGE, False)
+    departments = Department.query.order_by(Department.name.asc())
+
+    departmentlist = [(department.id, department.name) for department in departments]
+
+    choices = {
+        'department': departmentlist,
+    }
+
+    next_url = url_for('main.show_documents',
+                       page=documents.next_num, department=form_data['department'], title=form_data['title'])
+    prev_url = url_for('main.show_documents',
+                       page=documents.prev_num, department=form_data['department'], title=form_data['title'])
+
+    return render_template(
+        'documents.html',
+        form=form,
+        documents=documents,
+        form_data=form_data,
+        choices=choices,
+        next_url=next_url,
+        prev_url=prev_url)
+
+@main.route('/documents/delete/<int:document_id>', methods=['GET'])
+@login_required
+@ac_or_admin_required
+def delete_document(document_id):
+    document = Document.query.filter_by(id=document_id).first()
+
+    if not document:
+        flash('Document not found')
+        abort(404)
+
+    if not current_user.is_administrator and current_user.is_area_coordinator:
+        if current_user.ac_department_id != document.department.department_id:
+            abort(403)
+
+    try:
+        db.session.delete(document)
+        db.session.commit()
+        flash('Deleted the document')
+    except:  # noqa
+        flash('Unknown error occurred')
+        exception_type, value, full_tback = sys.exc_info()
+        current_app.logger.error('Error deleting document: {}'.format(
+            ' '.join([str(exception_type), str(value),
+                      format_exc()])
+        ))
+    return redirect(url_for('main.show_documents'))
+
+@main.route('/documents/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+@limiter.limit('5/minute')
+def submit_document():
+    form = AddDocumentForm()
+    if form.validate_on_submit():
+        try:
+            file_parts = form.file.data.split(",")
+            file_data = file_parts[1]
+            data_parts = file_parts[0].split(";")
+            content_type = data_parts[0].split(":")[1]
+            file_to_upload = base64.b64decode(file_data)
+            title = form.title.data
+            description = form.description.data
+            department_id = form.department.data.id
+            document = upload_document_to_s3_and_store_in_db(file_to_upload, current_user.get_id(), 
+                                department_id=department_id, title=title, description=description,
+                                content_type=content_type)
+            flash("Document was successfully uploaded")
+        except Exception:
+            flash("An error occurred while uploading")
+        return redirect("/documents/new")
+    else:
+        preferred_dept_id = Department.query.first().id
+        # try to use preferred department if available
+        try:
+            if User.query.filter_by(id=current_user.get_id()).one().dept_pref:
+                preferred_dept_id = User.query.filter_by(id=current_user.get_id()).one().dept_pref
+            return render_template('submit_document.html', form=form, preferred_dept_id=preferred_dept_id)
+        # that is, an anonymous user has no id attribute
+        except (AttributeError, NoResultFound):
+            preferred_dept_id = Department.query.first().id
+            return render_template('submit_document.html', form=form, preferred_dept_id=preferred_dept_id)
 
 @sitemap_include
 @main.route('/submit', methods=['GET', 'POST'])
@@ -1215,6 +1331,20 @@ def upload(department_id, officer_id=None):
     else:
         return jsonify(error="Server error encountered. Try again later."), 500
 
+@main.route('/upload/documents', methods=['POST'])
+@limiter.limit('250/minute')
+def doc_upload(department_id):
+ 
+    file_to_upload = request.files['file']
+    if not allowed_doc_file(file_to_upload.filename):
+        return jsonify(error="File type not allowed!"), 415
+    image = upload_document_to_s3_and_store_in_db(file_to_upload, current_user.get_id(), department_id=department_id)
+
+    if image:
+        db.session.add(image)
+        return jsonify(success='Success!'), 200
+    else:
+        return jsonify(error="Server error encountered. Try again later."), 500
 
 @sitemap_include
 @main.route('/about')

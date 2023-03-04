@@ -11,6 +11,7 @@ import botocore
 import datetime
 import hashlib
 import os
+import io
 import random
 import sys
 from traceback import format_exc
@@ -26,7 +27,8 @@ from PIL import Image as Pimage
 from PIL.PngImagePlugin import PngImageFile
 
 from .models import (db, Officer, Assignment, Job, Image, Face, User, Unit, Department,
-                     Incident, Location, LicensePlate, Link, Note, Description, Salary)
+                     Incident, Location, LicensePlate, Link, Note, Description, Salary,
+                     Document)
 from .main.choices import RACE_CHOICES, GENDER_CHOICES
 
 # Ensure the file is read/write by the creator only
@@ -207,6 +209,11 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
 
+def allowed_doc_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_DOC_EXTENSIONS']
+
+
 def get_random_image(image_query):
     if image_query.count() > 0:
         rand = random.randrange(0, image_query.count())
@@ -235,6 +242,30 @@ def upload_obj_to_s3(file_obj, dest_filename):
     file_ending = imghdr.what(None, h=file_obj.read())
     file_obj.seek(0)
     s3_content_type = "image/%s" % file_ending
+    s3_path = '{}/{}'.format(s3_folder, s3_filename)
+    s3_client.upload_fileobj(file_obj,
+                             current_app.config['S3_BUCKET_NAME'],
+                             s3_path,
+                             ExtraArgs={'ContentType': s3_content_type, 'ACL': 'public-read'})
+
+    config = s3_client._client_config
+    config.signature_version = botocore.UNSIGNED
+    url = boto3.resource(
+        's3', config=config).meta.client.generate_presigned_url(
+        'get_object',
+        Params={'Bucket': current_app.config['S3_BUCKET_NAME'],
+                'Key': s3_path})
+
+    return url
+
+
+def upload_doc_to_s3(file_obj, dest_filename, content_type):
+    s3_client = boto3.client('s3')
+
+    # Folder to store files in on S3 is first two chars of dest_filename
+    s3_folder = dest_filename[0:2]
+    s3_filename = dest_filename[2:]
+    s3_content_type = content_type
     s3_path = '{}/{}'.format(s3_folder, s3_filename)
     s3_client.upload_fileobj(file_obj,
                              current_app.config['S3_BUCKET_NAME'],
@@ -499,6 +530,36 @@ def crop_image(image, crop_data=None, department_id=None):
     pimage.save(cropped_image_buf, image_type)
 
     return upload_image_to_s3_and_store_in_db(cropped_image_buf, current_user.get_id(), department_id)
+
+
+def upload_document_to_s3_and_store_in_db(doc_buf, user_id, department_id, title, description, content_type):
+    doc_type = "Document"
+    doc_data = io.BytesIO(doc_buf)
+    hash_doc = compute_hash(doc_buf)
+    existing_doc = Document.query.filter_by(hash_doc=hash_doc).first()
+    if existing_doc:
+        return existing_doc
+    try:
+        new_filename = '{}.{}'.format(hash_doc, doc_type)
+        url = upload_doc_to_s3(doc_data, new_filename, content_type)
+        new_doc = Document(filepath=url, hash_doc=hash_doc,
+                          url=url,
+                          date_inserted=datetime.datetime.now(),
+                          department_id=department_id,
+                          title=title,
+                          description=description,
+                          user_id=user_id
+                          )
+        db.session.add(new_doc)
+        db.session.commit()
+        return new_doc
+    except ClientError:
+        exception_type, value, full_tback = sys.exc_info()
+        current_app.logger.error('Error uploading to S3: {}'.format(
+            ' '.join([str(exception_type), str(value),
+                      format_exc()])
+        ))
+        return None
 
 
 def upload_image_to_s3_and_store_in_db(image_buf, user_id, department_id=None):

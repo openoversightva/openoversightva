@@ -37,7 +37,9 @@ class BaseConfig(object):
     # Upload Settings
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024
     ALLOWED_EXTENSIONS = set(['jpeg', 'jpg', 'jpe', 'png', 'gif', 'webp'])
-
+    ALLOWED_DOC_EXTENSIONS = set(['jpeg', 'jpg', 'jpe', 'png', 'gif', 'webp',
+        'pdf', 'doc', 'docx', 'xls', 'xlxs', 'ppt', 'pptx',
+    ])
     # User settings
     APPROVE_REGISTRATIONS = os.environ.get('APPROVE_REGISTRATIONS', False)
 

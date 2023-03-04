@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block title %}Documents - OpenOversightVA{% endblock %}
+{% block meta %}<meta name="description" content="Search for documents">{% endblock %}
+{% block content %}
+<div class="container" role="main">
+  <h1>All Documents</h1>
+  <div class="row">
+    <div class="filter-sidebar col-sm-3">
+      <h3 class="sidebar-title">Filter documents</h3>
+      <form class="form" method="get" role="form">
+        <div class="panel">
+          <div class="panel-heading" data-toggle="collapse" data-target="#filter-name">
+            <h3 class="panel-title accordion-toggle">Title / Description</h3>
+          </div>
+          <div class="collapse in" id="filter-title">
+            <div class="panel-body">
+              <div class="form-group">
+                <input type="text" class="form-control" id="title" name="title" value="{{ form_data['title'] or '' }}" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-heading" data-toggle="collapse" data-target="#filter-gender">
+            <h3 class="panel-title accordion-toggle">Department</h3>
+          </div>
+          <div class="collapse in" id="filter-gender">
+            <div class="panel-body">
+              <div class="form-group select">
+                <select class="form-control" id="department" name="department">
+                  <option value="-1">All Departments</option>
+                  {% for choice in choices['department'] %}
+                      <option value="{{ choice[0] }}" {% if choice[0]|string in form_data['department'] %} SELECTED{% endif %}>{{ choice[1] }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+      </form>
+      {% if current_user.is_administrator %}
+        <p>
+          <a class="btn btn-lg btn-primary" href="{{ url_for('main.submit_document') }}">
+            Add a Document
+          </a>
+        </p>
+      {% endif %}
+    </div>
+    <div class="search-results col-sm-9">
+    {% with paginate=documents, location='top' %}
+      {% include "partials/paginate_nav.html" %}
+    {% endwith %}
+    <ul class="list-group">
+      {% for document in documents.items %}
+        <li class="list-group-item">
+          <div class="row">
+            <div class="col-md-8 col-xs-12">
+              <dt>Title</dt>
+              <a href="{{ document.url }}">
+                {{ document.title }}
+              </a>
+            </div>
+            <div class="col-md-4 col-xs-12">
+              <dl>
+                <dt>Department</dt>
+                <dd>{{ document.department.name|default('Unknown') }}</dd>
+              </dl>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12 col-xs-12">
+              <dl>
+                <dt>Description</dt>
+                <dd>{{ document.description }}</dd>
+              </dl>
+            </div>
+          </div>
+          {% if current_user.is_administrator %}
+          <div class="row">
+            <div class="col-md-12 col-xs-12">
+              <a href="/documents/delete/{{document.id}}">
+                <button class='btn btn-danger' type="submit">Delete</button>
+              </a>
+            </div>
+          </div>
+          {% endif %}
+          
+        </li>
+      {% endfor %}
+    </ul>
+    {% with paginate=documents, location='bottom' %}
+      {% include "partials/paginate_nav.html" %}
+    {% endwith %}
+  </div> <!-- /.search-results -->
+  </div> <!-- /.row -->
+</div> <!-- /.container -->
+{% endblock content %}

@@ -312,6 +312,16 @@ class AddImageForm(Form):
         query_factory=dept_choices,
         get_label='name')
 
+class AddDocumentForm(Form):
+    department = QuerySelectField(
+        'Department',
+        validators=[DataRequired()],
+        query_factory=dept_choices,
+        get_label='name')
+    title = StringField(validators=[DataRequired()])
+    description = TextAreaField(validators=[Optional()])
+    file = HiddenField(validators=[DataRequired(message='Please upload a file first.')])
+    submit = SubmitField(label='Submit')
 
 class DateFieldForm(Form):
     date_field = DateField('Date*', validators=[DataRequired()])
@@ -405,6 +415,13 @@ class IncidentForm(DateFieldForm):
     creator_id = HiddenField(validators=[DataRequired(message='Incidents must have a creator id.')])
     last_updated_id = HiddenField(validators=[DataRequired(message='Incidents must have a user id for editing.')])
 
+    submit = SubmitField(label='Submit')
+
+
+class DocumentsForm(Form):
+    department = QuerySelectField('department', validators=[Optional()], get_label='name',
+                            get_pk=lambda department: department.name)  # query set in view function
+    title = StringField('Title')
     submit = SubmitField(label='Submit')
 
 
