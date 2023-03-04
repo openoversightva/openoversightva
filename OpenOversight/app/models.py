@@ -256,6 +256,29 @@ class Face(BaseModel):
     def __repr__(self):
         return '<Tag ID {}: {} - {}>'.format(self.id, self.officer_id, self.img_id)
 
+class Document(BaseModel):
+    __tablename__ = 'documents'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filepath = db.Column(db.String(255), unique=False)
+    previewpath = db.Column(db.String(255), unique=False)
+    hash_doc = db.Column(db.String(120), unique=False, nullable=True)
+
+    # Track when the image was put into our database
+    date_inserted = db.Column(db.DateTime, index=True, unique=False, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    user = db.relationship('User', backref='documents')
+
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
+    department = db.relationship('Department', backref='documents')
+
+    title = db.Column(db.String(100), index=True)
+    url = db.Column(db.Text(), nullable=False)
+    doc_type = db.Column(db.String(100), index=True)
+    description = db.Column(db.Text(), nullable=True)
+
+    def __repr__(self):
+        return '<Document ID {}: {}>'.format(self.id, self.filepath)
 
 class Image(BaseModel):
     __tablename__ = 'raw_images'
