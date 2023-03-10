@@ -19,7 +19,7 @@ from sqlalchemy.sql import text
 load_dotenv(find_dotenv())
 # The ID and range of the spreadsheet to sample.
 SAMPLE_SPREADSHEET_ID = os.environ.get('SPREADSHEET_ID')
-SAMPLE_RANGE = '!A2:N'
+SAMPLE_RANGE = '!A2:X'
 
 API_KEY = os.environ.get('API_KEY')
 
@@ -40,6 +40,7 @@ try:
     try:     # ignore these sheets
         sheet_names.remove('Updates')
         sheet_names.remove('Dashboard')
+        sheet_names.remove('2023-02-20')
     except ValueError:
         print("Error: Updates or Dashboard sheets are missing, ignoring")
 
@@ -63,11 +64,13 @@ all_rows = [[y.translate(NOPRINT_TRANS_TABLE) for y in x] for x in all_rows]
 
 df = pd.DataFrame(all_rows)
 
-df.columns = ['last', 'first', 'mi', 'suffix', 'photo', 'badge', 'job_title',
-              'unit', 'gender', 'race', 'hired', 'salary',
-              'department', 'uuid']
+df.columns = ['last', 'first', 'mi', 'suffix', 'uuid', 'badge', 'job_title',
+              'unit', 'gender', 'race', 'hired', 
+              'salary','overtime_pay','TotalPay2022','salary_year',
+              'Salary2021', 'Overtime2021', 'TotalPay2021', '2021YR', 'Salary2020', 'Overtime2020', 'TotalPay2020', '2020YR',
+              'department']
 # remove header rows
-df = df.loc[df['photo'] != 'Photo']
+df = df.loc[df['badge'] != 'Badge']
 # also drop any rows with a null department
 # (usually just the department name rows)
 df = df.dropna(subset=['department'])
@@ -179,6 +182,7 @@ with engine.connect() as connection:
         and j.department_id = o.department_id
     ''', connection)
 odf.replace([None], np.nan, inplace=True)
+odf = odf.sort_values(['id'])
 
 modf = odf.loc[:, ['department_id', 'last_name', 'first_name',
                    'middle_initial', 'suffix', 'star_no',
@@ -205,19 +209,30 @@ modf = pd.concat([modf, modf[['last','first','mi','suffix']]\
 df.loc[:,['l', 'f', 'm', 's']].fillna('', inplace=True)
 modf.loc[:,['l', 'f', 'm', 's']].fillna('', inplace=True)
 
-
+"""
 modf = modf.set_index(['dept_id', 'l', 'f', 'm', 's', 'badge'])
+# ignore duplicates of this type
+modf1 = modf.loc[~modf.index.duplicated(keep='first')]
 df = df.set_index(['dept_id', 'l', 'f', 'm', 's', 'badge'])
-df['uuid1'] = df.join(modf['unique_internal_identifier'], how='left', lsuffix='1')['unique_internal_identifier']
+df['uuid1'] = np.nan
+df.loc[~df.index.duplicated(keep='first'), 'uuid1'] = df.loc[~df.index.duplicated(keep='first')]\
+    .join(modf1['unique_internal_identifier'], how='left',
+          lsuffix='1')['unique_internal_identifier']
 df['unique_internal_identifier'].fillna(df['uuid1'], inplace=True)
 # it would be nice if we could update the sheet with this
 modf.reset_index(inplace=True)
 df.reset_index(inplace=True)
-
+"""
 # second try - match without badge
 modf = modf.set_index(['dept_id', 'l', 'f', 'm', 's'])
+# ignore duplicates of this type
+modf2 = modf.loc[~modf.index.duplicated(keep='first')]
 df = df.set_index(['dept_id', 'l', 'f', 'm', 's'])
-df['uuid2'] = df.join(modf['unique_internal_identifier'], how='left', lsuffix='1')['unique_internal_identifier']
+df['uuid2'] = np.nan
+df.loc[~df.index.duplicated(keep='first'), 'uuid2'] = df[~df.index.duplicated(keep='first')]\
+    .join(modf2['unique_internal_identifier'], how='left',
+          lsuffix='1')\
+    .drop_duplicates()['unique_internal_identifier']
 df['unique_internal_identifier'].fillna(df['uuid2'], inplace=True)
 modf.reset_index(inplace=True)
 df.reset_index(inplace=True)
@@ -225,12 +240,20 @@ df.reset_index(inplace=True)
 # third try - match first letter of middle name/initial
 modf['mi_true'] = modf['m'].str[0].fillna('')
 df['mi_true'] = df['m'].str[0].fillna('')
+
 modf = modf.set_index(['dept_id', 'l', 'f', 'mi_true', 's'])
+# ignore duplicates of this type
+modf3 = modf.loc[~modf.index.duplicated(keep='first')]
 df = df.set_index(['dept_id', 'l', 'f', 'mi_true', 's'])
-df['uuid3'] = df.join(modf['unique_internal_identifier'], how='left', lsuffix='1')['unique_internal_identifier']
+df['uuid3'] = np.nan
+df.loc[~df.index.duplicated(keep='first'),'uuid3'] = df[~df.index.duplicated(keep='first')]\
+    .join(modf3['unique_internal_identifier'], how='left',
+          lsuffix='1')\
+    .drop_duplicates()['unique_internal_identifier']
 df['unique_internal_identifier'].fillna(df['uuid3'], inplace=True)
 modf.reset_index(inplace=True)
 df.reset_index(inplace=True)
+
 
 # if there's duplicate uuids, drop all but the first one
 df.loc[df.duplicated(['unique_internal_identifier']),
@@ -244,11 +267,18 @@ df.loc[((df['badge'] == '') & (df['unique_internal_identifier'].isna())),
     .apply(lambda z: str(uuid.uuid4()))
 
 # required fields for salary to work
-df['salary_year'] = 2022    # datetime.now().year
+#df['salary_year'] = 2022    # datetime.now().year
 df['salary_is_fiscal_year'] = 'true'
 df['salary'] = df['salary'].str.replace('$', '', regex=False)\
     .str.replace(',', '', regex=False)\
     .str.replace(' ', '', regex=False)\
+    .str.replace('-', '', regex=False)\
+    .str.replace('/', '', regex=False)\
+    .str.lower().replace('[A-Za-z]', '', regex=True)
+df['overtime_pay'] = df['overtime_pay'].str.replace('$', '', regex=False)\
+    .str.replace(',', '', regex=False)\
+    .str.replace(' ', '', regex=False)\
+    .str.replace('-', '', regex=False)\
     .str.replace('/', '', regex=False)\
     .str.lower().replace('[A-Za-z]', '', regex=True)
 
@@ -265,6 +295,7 @@ df_export = df.loc[:, ['last',
                        'job_title',
                        'badge',
                        'salary',
+                       'overtime_pay',
                        'dept_id',
                        'unit_id',
                        'unique_internal_identifier',
@@ -281,6 +312,7 @@ df_export.columns = ['last_name',
                      'job_title',
                      'star_no',  # badge
                      'salary',
+                     'overtime_pay',
                      'department_id',
                      'unit_id',
                      'unique_internal_identifier',
@@ -289,4 +321,6 @@ df_export.columns = ['last_name',
 
 df_export.to_csv('gsheets_export.csv', index=False)
 
-
+print("Finished. Next step, run:")
+print("flask bulk-add-officers --update-static-fields gsheets_export.csv")
+print("(make sure env is activated)")

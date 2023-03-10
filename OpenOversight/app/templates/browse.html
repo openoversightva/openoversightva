@@ -21,6 +21,9 @@
             <a class="btn btn-lg btn-primary" href="/incidents/?department_id=1">
               Incidents
             </a>
+            <a class="btn btn-lg btn-primary" href="https://openoversightva.com/documents?title=&department=1">
+       	       Documents
+       	    </a>
         </p>
       </div>
     </p>
@@ -42,8 +45,11 @@
             <a class="btn btn-lg btn-primary" href="{{ url_for('main.incident_api', department_id=department.id) }}">
                Incidents
             </a>
-        </p>
-        {% endif %}
+          {% endif %}
+            <a class="btn btn-lg btn-primary" href="https://openoversightva.com/documents?title=&department={{ department.id }}">
+               Documents
+            </a>
+          </p>
       </div>
     </p>
   {% endfor %}
