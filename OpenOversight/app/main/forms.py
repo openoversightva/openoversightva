@@ -312,6 +312,16 @@ class AddImageForm(Form):
         query_factory=dept_choices,
         get_label='name')
 
+class AddDocumentForm(Form):
+    department = QuerySelectField(
+        'Department',
+        validators=[DataRequired()],
+        query_factory=dept_choices,
+        get_label='name')
+    title = StringField(validators=[DataRequired()])
+    description = TextAreaField(validators=[Optional()])
+    file = HiddenField(validators=[DataRequired(message='Please upload a file first.')])
+    submit = SubmitField(label='Submit')
 
 class DateFieldForm(Form):
     date_field = DateField('Date*', validators=[DataRequired()])
@@ -408,6 +418,13 @@ class IncidentForm(DateFieldForm):
     submit = SubmitField(label='Submit')
 
 
+class DocumentsForm(Form):
+    department = QuerySelectField('department', validators=[Optional()], get_label='name',
+                            get_pk=lambda department: department.name)  # query set in view function
+    title = StringField('Title')
+    submit = SubmitField(label='Submit')
+
+
 class BrowseForm(Form):
     rank = QuerySelectField('rank', validators=[Optional()], get_label='job_title',
                             get_pk=lambda job: job.job_title)  # query set in view function
@@ -422,4 +439,6 @@ class BrowseForm(Form):
                           validators=[AnyOf(allowed_values(AGE_CHOICES))])
     max_age = SelectField('maximum age', default=100, choices=AGE_CHOICES,
                           validators=[AnyOf(allowed_values(AGE_CHOICES))])
+    department = QuerySelectField('department', validators=[Optional()], get_label='name',
+                            get_pk=lambda department: department.name)  # query set in view function
     submit = SubmitField(label='Submit')
