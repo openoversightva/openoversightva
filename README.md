@@ -1,10 +1,10 @@
-![](docs/img/lpl-logo.png)
+# OpenOversight Virginia 
 
-# OpenOversight [![Build Status](https://travis-ci.org/lucyparsons/OpenOversight.svg?branch=develop)](https://travis-ci.org/lucyparsons/OpenOversight) [![Coverage Status](https://coveralls.io/repos/github/lucyparsons/OpenOversight/badge.svg?branch=develop)](https://coveralls.io/github/lucyparsons/OpenOversight?branch=develop) [![Documentation Status](https://readthedocs.org/projects/openoversight/badge/?version=latest)](https://openoversight.readthedocs.io/en/latest/?badge=latest) [![Join the chat at https://gitter.im/OpenOversight/Lobby](https://badges.gitter.im/OpenOversight/Lobby.svg)](https://gitter.im/OpenOversight/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+OpenOversight Virginia is a fork of OpenOversight, a Lucy Parsons Labs project to improve law enforcement accountability through public and crowdsourced data. We maintain a database of officer demographic information and provide digital galleries of photographs. This is done to help people identify law enforcement officers for filing complaints and in order for the public to see work-related information about law enforcement officers that interact with the public.
 
-OpenOversight is a Lucy Parsons Labs project to improve law enforcement accountability through public and crowdsourced data. We maintain a database of officer demographic information and provide digital galleries of photographs. This is done to help people identify law enforcement officers for filing complaints and in order for the public to see work-related information about law enforcement officers that interact with the public.
+This project is maintained entirely by a team of volunteers - collaboration, partnerships, and contributions are welcome. If you would like to contribute code or documentation, please see our [contributing guide](/CONTRIB.md) and [code of conduct](/CODE_OF_CONDUCT.md). 
 
-This project is written and maintained by [@lucyparsonslabs](https://twitter.com/lucyparsonslabs) with collaboration, partnerships, and contributions welcome. If you would like to contribute code or documentation, please see our [contributing guide](/CONTRIB.md) and [code of conduct](/CODE_OF_CONDUCT.md). If you prefer to contribute in other ways, please submit images to our platform or talk to us about how to help sort and tag images. This project is live, and we are currently soliciting photographs to add to the database.
+If you would like to volunteer in any way, please reach out to [openoversightva@riseup.net]
 
 ## Note to Law Enforcement
 
@@ -12,14 +12,14 @@ Please contact our legal representation with requests, questions, or concerns of
 
 ## Issues
 
-Please use [our issue tracker](https://github.com/lucyparsons/OpenOversight//issues/new) to submit issues or suggestions.
+Please use [our issue tracker](https://github.com/openoversightva/openoversight/issues/new) to submit issues or suggestions.
 
 ## Developer Quickstart
 
 Make sure you have Docker installed and then:
 
 ```
-git clone https://github.com/lucyparsons/OpenOversight.git
+git clone https://github.com/openoversightva/openoversight.git
 cd OpenOversight
 make dev
 ```
