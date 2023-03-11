@@ -118,7 +118,8 @@ def edit_existing_assignment(assignment, form):
 
     job = form.job_title.data
     assignment.job_id = job.id
-
+    dept = form.dept.data
+    assignment.department_id = dept.id
     if form.unit.data:
         officer_unit = form.unit.data.id
     else:

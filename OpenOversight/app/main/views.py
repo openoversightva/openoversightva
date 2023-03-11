@@ -377,6 +377,7 @@ def edit_assignment(officer_id, assignment_id):
         if not ac_can_edit_officer(officer, current_user):
             abort(403)
 
+    dept = Department.query.order_by(Department.name.asc())
     assignment = Assignment.query.filter_by(id=assignment_id).one()
     form = AssignmentForm(obj=assignment)
     form.job_title.query = Job.query\
@@ -389,8 +390,11 @@ def edit_assignment(officer_id, assignment_id):
                               .all()
                               
     form.job_title.data = Job.query.filter_by(id=assignment.job_id).one()
+    form.dept.data = Department.query.filter_by(id=assignment.department_id).one()
     if form.unit.data and type(form.unit.data) == int:
         form.unit.data = Unit.query.filter_by(id=form.unit.data).one()
+    if form.dept.data and type(form.dept.data) == int:
+        form.dept.data = Department.query.filter_by(id=form.unit.data).one()
     if form.validate_on_submit():
         form.job_title.data = Job.query.filter_by(id=int(form.job_title.raw_data[0])).one()
         assignment = edit_existing_assignment(assignment, form)
