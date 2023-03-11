@@ -249,6 +249,7 @@ class Face(BaseModel):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     user = db.relationship('User', backref='faces')
     featured = db.Column(db.Boolean, nullable=False, default=False, server_default='false')
+    recog_processed = db.Column(db.Boolean, nullable=False, default=False, server_default='false')
 
     __table_args__ = (UniqueConstraint('officer_id', 'img_id',
                       name='unique_faces'), )
