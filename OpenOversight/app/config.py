@@ -35,7 +35,7 @@ class BaseConfig(object):
     S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 
     # Upload Settings
-    MAX_CONTENT_LENGTH = 100 * 1024 * 1024
+    MAX_CONTENT_LENGTH = 500 * 1024 * 1024
     ALLOWED_EXTENSIONS = set(['jpeg', 'jpg', 'jpe', 'png', 'gif', 'webp'])
     ALLOWED_DOC_EXTENSIONS = set(['jpeg', 'jpg', 'jpe', 'png', 'gif', 'webp',
         'pdf', 'doc', 'docx', 'xls', 'xlxs', 'ppt', 'pptx',
