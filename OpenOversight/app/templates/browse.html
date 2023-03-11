@@ -22,7 +22,7 @@
               Incidents
             </a>
             <a class="btn btn-lg btn-primary" href="https://openoversightva.com/documents?title=&department=1">
-       	       Documents
+              Library
        	    </a>
         </p>
       </div>
@@ -46,9 +46,11 @@
                Incidents
             </a>
           {% endif %}
+          {% if department.documents %}
             <a class="btn btn-lg btn-primary" href="https://openoversightva.com/documents?title=&department={{ department.id }}">
-               Documents
+               Library
             </a>
+          {% endif %}
           </p>
       </div>
     </p>
