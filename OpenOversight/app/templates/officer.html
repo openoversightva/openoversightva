@@ -167,6 +167,7 @@
       <h3>Assignment History</h3>
       <table class="table table-hover">
           <tr>
+            <th><b>Department</b></th>
             <th><b>Job Title</b></th>
             <th><b>Badge No.</b></th>
             <th><b>Unit</b></th>
@@ -180,6 +181,7 @@
         <tbody>
           {% for assignment in assignments|rejectattr('star_date','ne',None) %}
           <tr>
+            <td>{{ assignment.department.name }}</td>
             <td>{{ assignment.job.job_title }}</td>
             <td>{{ assignment.star_no }}</td>
             <td>{% if assignment.unit_id %}{{ assignment.unit.descrip }}{% endif %}</td>
@@ -207,6 +209,7 @@
           {% endfor %}
           {% for assignment in assignments|rejectattr('star_date','none')|sort(attribute='star_date',reverse=True) %}
           <tr>
+            <td>{{ assignment.department.name }}</td>
             <td>{{ assignment.job.job_title }}</td>
             <td>{{ assignment.star_no }}</td>
             <td>{% if assignment.unit_id %}{{ assignment.unit.descrip }}{% endif %}</td>
@@ -247,6 +250,15 @@
             <td><b>New badge number:</b></td>
             <td>{{ form.star_no }}
                   {% for error in form.star_no.errors %}
+                      <p><span style="color: red;">[{{ error }}]</span></p>
+                  {% endfor %}
+            </td>
+          </tr>
+
+          <tr>
+            <td><b>New department:</b></td>
+            <td>{{ form.dept }}
+                  {% for error in form.dept.errors %}
                       <p><span style="color: red;">[{{ error }}]</span></p>
                   {% endfor %}
             </td>

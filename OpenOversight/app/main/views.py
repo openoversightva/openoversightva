@@ -300,6 +300,10 @@ def officer_profile(officer_id):
                               .filter_by(department_id=officer.department_id)\
                               .all()
 
+    depts_dict = [dept_choice.toCustomDict() for dept_choice in dept_choices()]
+
+    set_dynamic_default(form.dept, officer.department)
+    
     try:
         faces = Face.query.filter_by(officer_id=officer_id).order_by(Face.featured.desc()).all()
         assignments = Assignment.query.filter_by(officer_id=officer_id).all()
@@ -339,7 +343,6 @@ def add_assignment(officer_id):
                               .order_by(Job.order.asc())\
                               .all()
 
-    flash(form.unit.query)
     if not officer:
         flash('Officer not found')
         abort(404)
@@ -374,6 +377,7 @@ def edit_assignment(officer_id, assignment_id):
         if not ac_can_edit_officer(officer, current_user):
             abort(403)
 
+    dept = Department.query.order_by(Department.name.asc())
     assignment = Assignment.query.filter_by(id=assignment_id).one()
     form = AssignmentForm(obj=assignment)
     form.job_title.query = Job.query\
@@ -386,8 +390,11 @@ def edit_assignment(officer_id, assignment_id):
                               .all()
                               
     form.job_title.data = Job.query.filter_by(id=assignment.job_id).one()
+    form.dept.data = Department.query.filter_by(id=assignment.department_id).one()
     if form.unit.data and type(form.unit.data) == int:
         form.unit.data = Unit.query.filter_by(id=form.unit.data).one()
+    if form.dept.data and type(form.dept.data) == int:
+        form.dept.data = Department.query.filter_by(id=form.unit.data).one()
     if form.validate_on_submit():
         form.job_title.data = Job.query.filter_by(id=int(form.job_title.raw_data[0])).one()
         assignment = edit_existing_assignment(assignment, form)
