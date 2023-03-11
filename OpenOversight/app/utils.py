@@ -21,7 +21,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.sql.expression import cast
 from sqlalchemy.orm import selectinload
 import imghdr as imghdr
-from flask import current_app, url_for
+from flask import current_app, url_for, flash
 from flask_login import current_user
 from PIL import Image as Pimage
 from PIL.PngImagePlugin import PngImageFile
@@ -92,6 +92,11 @@ def add_new_assignment(officer_id, form):
     else:
         unit_id = None
 
+    if form.dept.data:
+        department_id = form.dept.data.id
+    else:
+        department_id = None
+
     job = Job.query\
              .filter_by(department_id=form.job_title.data.department_id,
                         job_title=form.job_title.data.job_title)\
@@ -102,7 +107,8 @@ def add_new_assignment(officer_id, form):
                                 job_id=job.id,
                                 unit_id=unit_id,
                                 star_date=form.star_date.data,
-                                resign_date=form.resign_date.data)
+                                resign_date=form.resign_date.data,
+                                department_id = department_id)
     db.session.add(new_assignment)
     db.session.commit()
 

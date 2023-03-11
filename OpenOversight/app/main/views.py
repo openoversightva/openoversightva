@@ -300,6 +300,10 @@ def officer_profile(officer_id):
                               .filter_by(department_id=officer.department_id)\
                               .all()
 
+    depts_dict = [dept_choice.toCustomDict() for dept_choice in dept_choices()]
+
+    set_dynamic_default(form.dept, officer.department)
+    
     try:
         faces = Face.query.filter_by(officer_id=officer_id).order_by(Face.featured.desc()).all()
         assignments = Assignment.query.filter_by(officer_id=officer_id).all()
@@ -339,7 +343,6 @@ def add_assignment(officer_id):
                               .order_by(Job.order.asc())\
                               .all()
 
-    flash(form.unit.query)
     if not officer:
         flash('Officer not found')
         abort(404)

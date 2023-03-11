@@ -105,6 +105,8 @@ class FaceTag(Form):
 class AssignmentForm(Form):
     star_no = StringField('Badge Number', default='', validators=[
         Regexp(r'\w*'), Length(max=50)])
+    dept = QuerySelectField('dept', validators=[DataRequired()],
+                            query_factory=dept_choices, get_label='name')
     job_title = QuerySelectField('Job Title', validators=[DataRequired()],
                                  get_label='job_title', get_pk=lambda x: x.id)  # query set in view function
     unit = QuerySelectField('Unit', validators=[Optional()],
