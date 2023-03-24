@@ -4,11 +4,13 @@ import io
 import os
 import re
 import base64
+import requests
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import cast
 from sqlalchemy.orm import selectinload
 import sys
+import boto3
 from traceback import format_exc
 
 from flask import (abort, render_template, request, redirect, url_for,
@@ -32,7 +34,7 @@ from .forms import (FindOfficerForm, FindOfficerIDForm, AddUnitForm,
                     FaceTag, AssignmentForm, DepartmentForm, AddOfficerForm,
                     EditOfficerForm, IncidentForm, TextForm, EditTextForm,
                     AddImageForm, EditDepartmentForm, BrowseForm, SalaryForm, OfficerLinkForm,
-                    AddDocumentForm, DocumentsForm)
+                    AddDocumentForm, DocumentsForm, SearchFaceForm)
 from .model_view import ModelView
 from .choices import GENDER_CHOICES, RACE_CHOICES, AGE_CHOICES
 from ..models import (db, Image, User, Face, Officer, Assignment, Department,
@@ -1103,6 +1105,61 @@ def submit_document():
             preferred_dept_id = Department.query.first().id
             return render_template('submit_document.html', form=form, preferred_dept_id=preferred_dept_id)
 
+@main.route('/faces', methods=['GET', 'POST'])
+# @limiter.limit('1/minute')
+def submit_face():
+    form = SearchFaceForm()
+    officer_faces = None
+    officers = None
+    if form.validate_on_submit():
+        try:
+            file_parts = form.file.data.split(",")
+            file_data = file_parts[1]
+            data_parts = file_parts[0].split(";")
+            content_type = data_parts[0].split(":")[1]
+            file_to_upload = base64.b64decode(file_data)
+            
+            image = {'Bytes': io.BytesIO(file_to_upload).read()}
+
+            session = boto3.Session(aws_access_key_id=os.environ.get('FACE_ACCESS_KEY_ID'),
+                aws_secret_access_key=os.environ.get('FACE_SECRET_ACCESS_KEY'),
+                region_name="us-east-1")
+            client = session.client('rekognition')
+
+            collection_id = "lol"
+
+            response=client.search_faces_by_image(CollectionId=collection_id,
+                                    Image=image,
+                                    FaceMatchThreshold=70,
+                                    MaxFaces=1)
+            
+            officer_faces = []
+            matches = response["FaceMatches"]
+            if not matches or len(matches) == 0:
+                flash("No mtches could be found")
+                officer_faces = None
+            else:
+                for face in matches:
+                    external = face.get("Face")
+                    officer_face = Face.query.filter(Face.img_id == external.get("ExternalImageId")).first()
+                    officer_faces.append(officer_face)
+
+                officers = []
+                for officer_face in officer_faces:
+                    officer = Officer.query.filter(Officer.id == officer_face.officer_id).first()
+                    
+                    officer_image = sorted(officer.face, key=lambda x: x.featured, reverse=True)
+
+                    # could do some extra work to not lazy load images but load them all together
+                    # but we would want to ensure to only load the first picture of each officer
+                    if officer_image and officer_image[0].image:
+                        officer.image = officer_image[0].image.filepath
+                    officers.append(officer)
+        except Exception:
+            flash("An error occurred while uploading")
+ 
+    return render_template('submit_face.html', form=form, officer_faces=officer_faces, officers=officers)
+
 @sitemap_include
 @main.route('/submit', methods=['GET', 'POST'])
 @limiter.limit('5/minute')
@@ -1699,3 +1756,59 @@ main.add_url_rule(
     '/officer/<int:officer_id>/link/<int:obj_id>/delete',
     view_func=OfficerLinkApi.as_view('link_api_delete'),
     methods=['GET', 'POST'])
+
+@main.route('/process_faces',
+            methods=['GET'])
+@login_required
+@admin_required
+def process_faces():
+
+    session = boto3.Session(aws_access_key_id=os.environ.get('FACE_ACCESS_KEY_ID'),
+                aws_secret_access_key=os.environ.get('FACE_SECRET_ACCESS_KEY'),
+                region_name="us-east-1")
+    client = session.client('rekognition')
+
+    collection_id = "lol"
+    # Create a collection
+    try:
+        flash('Creating collection:' + collection_id)
+        response = client.create_collection(CollectionId=collection_id)
+        flash('Status code: ' + str(response['StatusCode']))
+    except Exception as e:
+        flash(collection_id + ' already created')
+        pass;
+    
+    faces_to_process = Face.query.filter_by(recognition_ready=False).limit(100)
+    for face in faces_to_process:
+        #get the image
+        image = Image.query.filter_by(id=face.img_id).first()
+        if not "/static" in image.filepath:
+            img_response = requests.get(image.filepath)
+            image = {'Bytes': io.BytesIO(img_response.content).read()}
+            try:
+                response = client.index_faces(
+                    CollectionId=collection_id, Image=image,
+                    ExternalImageId=str(face.img_id),
+                    DetectionAttributes=['ALL'])
+                flash(response)
+            except Exception as e:
+                pass
+
+            face.recognition_ready= True
+            db.session.commit()
+        """response = client.index_faces(CollectionId=collection_id,
+                                  Image={'S3Object': {'Bucket': bucket, 'Name': photo}},
+                                  ExternalImageId=photo,
+                                  MaxFaces=1,
+                                  QualityFilter="AUTO",
+                                  DetectionAttributes=['ALL'])
+        """
+        # print('Results for ' + photo)
+        # print('Faces indexed:')
+        # for faceRecord in response['FaceRecords']:
+        #     print('  Face ID: ' + faceRecord['Face']['FaceId'])
+        #     print('  Location: {}'.format(faceRecord['Face']['BoundingBox']))
+
+    flash(faces_to_process.count())
+
+    return render_template('process_faces.html')

@@ -33,6 +33,9 @@ class BaseConfig(object):
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_DEFAULT_REGION = os.environ.get('AWS_DEFAULT_REGION')
     S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
+    FACE_ACCESS_KEY_ID = os.environ.get('FACE_ACCESS_KEY_ID')
+    FACE_SECRET_ACCESS_KEY = os.environ.get('FACE_SECRET_ACCESS_KEY')
+
 
     # Upload Settings
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024

@@ -325,6 +325,10 @@ class AddDocumentForm(Form):
     file = HiddenField(validators=[DataRequired(message='Please upload a file first.')])
     submit = SubmitField(label='Submit')
 
+class SearchFaceForm(Form):
+    file = HiddenField(validators=[DataRequired(message='Please upload a picture first.')])
+    submit = SubmitField(label='Submit')
+
 class DateFieldForm(Form):
     date_field = DateField('Date*', validators=[DataRequired()])
     time_field = TimeField('Time', validators=[Optional()])
