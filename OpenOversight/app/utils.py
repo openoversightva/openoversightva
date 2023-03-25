@@ -14,6 +14,7 @@ import os
 import io
 import random
 import sys
+import mimetypes
 from traceback import format_exc
 from distutils.util import strtobool
 
@@ -541,6 +542,9 @@ def crop_image(image, crop_data=None, department_id=None):
 
 def upload_document_to_s3_and_store_in_db(doc_buf, user_id, department_id, title, description, content_type):
     doc_type = "Document"
+    guess_type = mimetypes.guess_extension(content_type, strict=False)
+    if guess_type:
+        doc_type = guess_type[1:]
     doc_data = io.BytesIO(doc_buf)
     hash_doc = compute_hash(doc_buf)
     existing_doc = Document.query.filter_by(hash_doc=hash_doc).first()
