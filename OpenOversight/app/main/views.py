@@ -36,7 +36,7 @@ from .forms import (FindOfficerForm, FindOfficerIDForm, AddUnitForm,
                     AddImageForm, EditDepartmentForm, BrowseForm, SalaryForm, OfficerLinkForm,
                     AddDocumentForm, DocumentsForm, SearchFaceForm)
 from .model_view import ModelView
-from .choices import GENDER_CHOICES, RACE_CHOICES, AGE_CHOICES
+from .choices import GENDER_CHOICES, RACE_CHOICES, AGE_CHOICES, RACE_CHOICES_SEARCH
 from ..models import (db, Image, User, Face, Officer, Assignment, Department,
                       Unit, Incident, Location, LicensePlate, Link, Note,
                       Description, Salary, Job, Document)
@@ -112,7 +112,8 @@ def get_officer():
 
 @main.route('/search')
 def search_officer(page=1, race=[], gender=[], min_age='16', max_age='100', name=None,
-                   badge=None, unique_internal_identifier=None, department=[]):
+                   badge=None, unique_internal_identifier=None, department=[],
+                   first_name=None):
     form = BrowseForm()
     form_data = form.data
     form_data['race'] = race
@@ -120,6 +121,7 @@ def search_officer(page=1, race=[], gender=[], min_age='16', max_age='100', name
     form_data['min_age'] = min_age
     form_data['max_age'] = max_age
     form_data['name'] = name
+    form_data['first_name'] = first_name
     form_data['badge'] = badge
     form_data['department'] = department
     form_data['unique_internal_identifier'] = unique_internal_identifier
@@ -135,6 +137,8 @@ def search_officer(page=1, race=[], gender=[], min_age='16', max_age='100', name
         page = int(request.args.get('page'))
     if request.args.get('name'):
         form_data['name'] = request.args.get('name')
+    if request.args.get('first_name'):
+        form_data['first_name'] = request.args.get('first_name')
     if request.args.get('badge'):
         form_data['badge'] = request.args.get('badge')
     if request.args.get('unique_internal_identifier'):
@@ -169,18 +173,20 @@ def search_officer(page=1, race=[], gender=[], min_age='16', max_age='100', name
 
     choices = {
         'department': departmentlist,
-        'race': RACE_CHOICES,
+        'race': RACE_CHOICES_SEARCH,
         'gender': GENDER_CHOICES
     }
 
     next_url = url_for('main.search_officer',
                        page=officers.next_num, race=form_data['race'], gender=form_data['gender'],
                        min_age=form_data['min_age'], max_age=form_data['max_age'], name=form_data['name'], badge=form_data['badge'],
-                       unique_internal_identifier=form_data['unique_internal_identifier'], department=form_data["department"])
+                       unique_internal_identifier=form_data['unique_internal_identifier'], department=form_data["department"],
+                       first_name=form_data['first_name'])
     prev_url = url_for('main.search_officer',
                        page=officers.prev_num, race=form_data['race'], gender=form_data['gender'],
                        min_age=form_data['min_age'], max_age=form_data['max_age'], name=form_data['name'], badge=form_data['badge'],
-                       unique_internal_identifier=form_data['unique_internal_identifier'], department=form_data["department"])
+                       unique_internal_identifier=form_data['unique_internal_identifier'], department=form_data["department"],
+                       first_name=form_data['first_name'])
 
     return render_template(
         'search.html',
