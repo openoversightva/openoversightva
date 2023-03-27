@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}¬
+{% block title %}Facial Recognition Search{% endblock %}
+{% block meta %}
+<meta name="description" content="Facial Recognition Search">
+{% endblock %}
+{% block head %}
+<link href="{{ url_for('static', filename='css/dropzone.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/dropzone-override.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container theme-showcase" role="main">
+   {% if officer_faces %}
+   <div class="page-header">
+      <h1>Face Scan Results</small></h1>
+   </div>
+   <div class="form-group">
+      <div class="search-results col-sm-9">
+         <ul class="list-group">
+           {% for officer in officers %}
+             <li class="list-group-item">
+                 <div class="row">
+                   <div class="col-md-6 col-xs-12">
+                     <a href="{{ url_for('main.officer_profile', officer_id=officer.id) }}">
+                       <img src="{{ officer.image | default('/static/images/placeholder.png') }}" class="img-responsive thumbnail" alt="{{ officer.full_name() }}">
+                     </a>
+                   </div>
+                   <div class="col-md-6 col-xs-12">
+                     <h2>
+                       <a href="{{ url_for('main.officer_profile', officer_id=officer.id) }}" id="officer-profile-{{ loop.index }}">{{ officer.full_name() }}</a>
+                       <small>{{ officer.badge_number()|default('') }}</small>
+                     </h2>
+                     <div class="row">
+                       <div class="col-md-12 col-xs-12">
+                         <dl>
+                           <dt>Department</dt>
+                           <dd>{{ officer.department.name|default('Unknown') }}</dd>
+                         </dl>
+                       </div>
+                     </div>
+                     <div class="row">
+                       <div class="col-md-6 col-xs-6">
+                         <dl>
+                           <dt>Job Title</dt>
+                           <dd>{{ officer.job_title()|default('Unknown') }}</dd>
+                           <dt>Race</dt>
+                           <dd>{{ officer.race_label()|default('Unknown')|lower|title }}</dd>
+                         </dl>
+                       </div>
+                       <div class="col-md-6 col-xs-6">
+                         <dl>
+                           <dt>Gender</dt>
+                           <dd>{{ officer.gender_label()|default('Unknown') }}</dd>
+                           <dt>Number of Photos</dt>
+                           <dd>{{ officer.face | count }}</dd>
+                         </dl>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+             </li>
+           {% endfor %}
+         </ul>
+       </div> <!-- /.search-results -->
+   {% else %}
+   <div class="page-header">
+      <h1>Find a Face</small></h1>
+   </div>
+      <div class="form-group">
+         <form class="form"  name = "docform" id = "docform" enctype="multipart/form-data" method="post" role="form" label="deptselect">
+            <p>This works best with a cropped picture of one face. If you want to identify multiple cops
+               please crop the image and repeat the process with each image. We can only process .jpg and .png images.
+            </p>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {{ wtf.form_field(form.file) }}
+            <div id="my-cop-dropzone"  class='dropzone'>
+            </div>
+            <p>Drag a picture from your computer directly into the box above or click the box to launch a finder window. If you are on mobile, you can click the box above to select a document.</p>
+            {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+         </form>
+      {% endif %}
+      <br>
+   </div>
+
+ 
+
+   
+   <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+   <script src="{{ url_for('static', filename='js/dropzone.js') }}"></script>
+
+   <script>
+   var csrf_token = "{{ csrf_token() }}";
+
+   Dropzone.autoDiscover = false;
+   const getURL = (file) => {
+      return "/upload/documents/" + dept_id;
+   }
+
+   let myDropzone = new Dropzone("#my-cop-dropzone", {
+      method: "post",
+      url: getURL,
+      uploadMultiple: false,
+      parallelUploads: 50,
+      autoProcessQueue: false,
+      acceptedFiles: "image/jpeg,image/png,image/jpg",
+      maxFiles: 50,
+      headers: {
+        'X-CSRF-TOKEN': csrf_token
+      },
+      init: function() {
+         this.on("error", function(file, responseText) {
+            file.previewTemplate.appendChild(document.createTextNode(responseText));
+         });
+      },
+      accept: function(file) {
+        let fileReader = new FileReader();
+        fileReader.readAsDataURL(file);
+        fileReader.onloadend = function() {
+            let content = fileReader.result;
+            $('#file').val(content);
+            file.previewElement.classList.add("dz-success");
+        }
+        file.previewElement.classList.add("dz-complete");
+    }
+   });
+   </script>
+</div>
+
+{% endblock %}
