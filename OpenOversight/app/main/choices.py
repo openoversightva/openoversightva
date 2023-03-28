@@ -12,6 +12,15 @@ RACE_CHOICES = [('Not Sure', 'Not Sure'),
                 ('PACIFIC ISLANDER', 'Pacific Islander'),
                 ('Other', 'Other'), ]
 
+# For the search all form don't display Not Sure since its filtering officers
+RACE_CHOICES_SEARCH = [('BLACK', 'Black'),
+                ('WHITE', 'White'),
+                ('ASIAN', 'Asian'),
+                ('HISPANIC', 'Hispanic'),
+                ('NATIVE AMERICAN', 'Native American'),
+                ('PACIFIC ISLANDER', 'Pacific Islander'),
+                ('Other', 'Other'), ]
+
 GENDER_CHOICES = [('Not Sure', 'Not Sure'), ('M', 'Male'), ('F', 'Female'), ('Other', 'Other')]
 
 STATE_CHOICES = [('', '')] + [(state.abbr, state.name) for state in states.STATES]
