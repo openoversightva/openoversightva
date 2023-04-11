@@ -92,7 +92,7 @@
                 <li><a class="navbar-link" href="{{ url_for('main.profile', username=current_user.username) }}">Profile</a></li>
                 <li><a class="navbar-link" href="{{ url_for('auth.change_password') }}">Change Password</a></li>
                 <li><a class="navbar-link" href="{{ url_for('auth.change_email_request') }}">Change Email</a></li>
-		<li><a href="{{ url_for('auth.change_dept') }}">Change Default Department</a></li>
+		            <li><a href="{{ url_for('auth.change_dept') }}">Change Default Department</a></li>
                 <li><a class="navbar-link" href="{{ url_for('auth.logout') }}">Log Out</a></li>
               </ul>
             </li>
@@ -128,19 +128,21 @@
         <div class="col-sm-4">
           <h5>OpenOversight<span style="color:#f9285c">VA</span></h5>
           <p class="font-weight-300">
-            This is a fork of OpenOversight by Lucy Parsons Labs in Chicago, IL. <br>
-            <a href="https://lucyparsonslabs.com/" target="_blank" class="btn-unstyled">Lucy Parsons Labs</a><br>
+            Virginia's only statewide police transparency database. <br>
+            Codebase and concept thanks to the original 
+            <a href="https://lucyparsonslabs.com/" target="_blank" class="btn-unstyled">Lucy Parsons Labs</a>
+            instance by Lucy Parsons Labs in Chicago, IL.<br> We are volunteer-run and donation-funded. <br>
             <!--<a href="https://lucyparsonslabs.com/securedrop/" target="_blank" class="btn-unstyled">SecureDrop</a><br>
-            --><a href="{{ url_for('main.all_data') }}" target="_blank" class="btn-unstyled">Download department data</a>
+            --><a href="{{ url_for('main.all_data') }}" target="_blank" class="btn-unstyled">Download Our Data</a>
           </p>
         </div>
 
         <div class="col-sm-4">
-          <h5>Contact</h5>
+          <h5>Contact Us</h5>
           <p>
-            <a href="https://twitter.com/openoversightva"><i class="fa fa-twitter-square fa-3x social"></i></a>
-            <a href="https://github.com/openoversightva"><i class="fa fa-github fa-3x social"></i></a>
-            <a href="mailto:openoversightva@riseup.net"><i class="fa fa-envelope-square fa-3x social"></i></a><br>
+            <a href="https://twitter.com/openoversightva">Admin</a>
+            <a href="https://github.com/openoversightva">Legal</a>
+            <a href="#">Press</a><br>
             <a href="/privacy" class="btn">Privacy Policy</a>
           </p>
         </div>
