@@ -114,6 +114,7 @@ class AssignmentForm(Form):
                             allow_blank=True, blank_text=u'None')
     star_date = DateField('Assignment start date', validators=[Optional()])
     resign_date = DateField('Assignment end date', validators=[Optional(), validate_end_date])
+    is_edit = False
 
 
 class SalaryForm(Form):

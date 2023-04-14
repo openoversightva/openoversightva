@@ -11,8 +11,9 @@
 <div class="col-md-6">
     <form class="form" method="post" role="form">
         {{ form.hidden_tag() }}
+        {{ form.is_edit }}
         {{ wtf.form_errors(form, hiddens="only") }}
-        {{ wtf.form_field(form.dept) }}
+        {{ wtf.form_field(form.dept, disabled=form.is_edit ) }}
         {{ wtf.form_field(form.star_no) }}
         {{ wtf.form_field(form.job_title) }}
         {{ wtf.form_field(form.unit) }}
