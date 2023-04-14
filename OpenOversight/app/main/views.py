@@ -388,13 +388,14 @@ def edit_assignment(officer_id, assignment_id):
     dept = Department.query.order_by(Department.name.asc())
     assignment = Assignment.query.filter_by(id=assignment_id).one()
     form = AssignmentForm(obj=assignment)
+
     form.job_title.query = Job.query\
-                              .filter_by(department_id=officer.department_id)\
+                              .filter_by(department_id=assignment.department_id)\
                               .order_by(Job.order.asc())\
                               .all()
 
     form.unit.query = Unit.query\
-                              .filter_by(department_id=officer.department_id)\
+                              .filter_by(department_id=assignment.department_id)\
                               .all()
                               
     form.job_title.data = Job.query.filter_by(id=assignment.job_id).one()
