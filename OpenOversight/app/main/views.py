@@ -285,7 +285,6 @@ def profile(username):
         department = None
     return render_template('profile.html', user=user, department=department)
 
-
 @main.route('/officer/<int:officer_id>', methods=['GET', 'POST'])
 def officer_profile(officer_id):
     form = AssignmentForm()
@@ -373,6 +372,32 @@ def add_assignment(officer_id):
 
         return redirect(url_for('main.officer_profile', officer_id=officer_id))
 
+@main.route('/officer/<int:officer_id>/assignment/<int:assignment_id>/delete', methods=['GET'])
+@login_required
+@ac_or_admin_required
+def delete_assignment(officer_id, assignment_id):
+    assignment = Assignment.query.filter_by(id=assignment_id).first()
+
+    if not assignment:
+        flash('Assignment not found')
+        abort(404)
+
+    if not current_user.is_administrator and current_user.is_area_coordinator:
+        if current_user.ac_department_id != assignment.officer.department_id:
+            abort(403)
+
+    try:
+        db.session.delete(assignment)
+        db.session.commit()
+        flash('Deleted this assignment')
+    except:  # noqa
+        flash('Unknown error occurred')
+        exception_type, value, full_tback = sys.exc_info()
+        current_app.logger.error('Error deleting assignment: {}'.format(
+            ' '.join([str(exception_type), str(value),
+                      format_exc()])
+        ))
+    return redirect(url_for('main.officer_profile', officer_id=officer_id))
 
 @main.route('/officer/<int:officer_id>/assignment/<int:assignment_id>',
             methods=['GET', 'POST'])

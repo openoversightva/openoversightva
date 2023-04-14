@@ -203,6 +203,11 @@
                 <span class='sr-only'>Edit</span>
                 <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
               </a>
+              <a href="{{ url_for('main.delete_assignment', officer_id=officer.id,
+                          assignment_id=assignment.id) }}">
+                <span class='sr-only'>Delete</span>
+                <i class="fa fa-trash-o" aria-hidden="true"></i>
+              </a>
               {% endif %}
             </td>
           </tr>
@@ -230,6 +235,11 @@
                           assignment_id=assignment.id) }}">
                 <span class='sr-only'>Edit</span>
                 <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+              </a>
+              <a href="{{ url_for('main.delete_assignment', officer_id=officer.id,
+                          assignment_id=assignment.id) }}">
+                <span class='sr-only'>Delete</span>
+                <i class="fa fa-trash-o" aria-hidden="true"></i>
               </a>
               {% endif %}
             </td>
