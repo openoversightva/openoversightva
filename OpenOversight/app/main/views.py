@@ -400,6 +400,7 @@ def edit_assignment(officer_id, assignment_id):
                               
     form.job_title.data = Job.query.filter_by(id=assignment.job_id).one()
     form.dept.data = Department.query.filter_by(id=assignment.department_id).one()
+    form.is_edit = True
     if form.unit.data and type(form.unit.data) == int:
         form.unit.data = Unit.query.filter_by(id=form.unit.data).one()
     if form.dept.data and type(form.dept.data) == int:
