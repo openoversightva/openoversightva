@@ -756,6 +756,18 @@ def get_dept_ranks(department_id=None, is_sworn_officer=None):
 
     return jsonify(rank_list)
 
+@main.route('/units')
+def get_dept_units(department_id=None):
+    if not department_id:
+        department_id = request.args.get('department_id')
+
+    if department_id:
+        units = Unit.query.filter_by(department_id=department_id)
+        unit_list = list(set([(unit.id, unit.descrip) for unit in units]))
+    else:
+        units = Unit.query.all()  # Not filtering by is_sworn_officer
+        unit_list = list(set([(unit.id, unit.descrip) for unit in units]))  # Prevent duplicate units
+    return jsonify(unit_list)
 
 @main.route('/officer/new', methods=['GET', 'POST'])
 @login_required

@@ -9,7 +9,7 @@
     <h1>Add Officer</h1>
 </div>
 <div class="col-md-6">
-    <form class="form" method="post" role="form" id="add-officer-form" data-jobs-url="{{ url_for('main.get_dept_ranks') }}">
+    <form class="form" method="post" role="form" id="add-officer-form" data-jobs-url="{{ url_for('main.get_dept_ranks') }}" data-units-url="{{ url_for('main.get_dept_units') }}">
         {{ form.hidden_tag() }}
         {{ wtf.form_errors(form, hiddens="only") }}
         {{ wtf.form_field(form.department) }}
