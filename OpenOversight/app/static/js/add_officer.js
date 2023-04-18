@@ -13,6 +13,18 @@ function set_jobs() {
       );
     }
   });
+  var units_url = $('#add-officer-form').data('units-url');
+  var units = $.ajax({
+    url: units_url,
+    data: {department_id: dept_id}
+  }).done(function(units) {
+    $('#unit').replaceWith('<select class="form-control" id="unit" name="unit">');
+    for (i = 0; i < units.length; i++) {
+      $('select#unit').append(
+        $('<option></option>').attr("value", units[i][0]).text(units[i][1])
+      );
+    }
+  });
 }
 
 $(document).ready(function() {
