@@ -287,6 +287,7 @@ def profile(username):
 
 @main.route('/officer/<int:officer_id>', methods=['GET', 'POST'])
 def officer_profile(officer_id):
+    jsloads = ['js/dynamic_lists.js', 'js/add_assignment.js']
     form = AssignmentForm()
     try:
         officer = Officer.query.filter_by(id=officer_id).one()
@@ -331,7 +332,7 @@ def officer_profile(officer_id):
             officer.image_width = faces[0].face_width
             officer.image_height = faces[0].face_height
     return render_template('officer.html', officer=officer, paths=face_paths,
-                           faces=faces, assignments=assignments, form=form)
+                           faces=faces, assignments=assignments, form=form, jsloads=jsloads)
 
 
 @sitemap.register_generator

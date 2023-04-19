@@ -156,7 +156,8 @@ def add_officer_profile(form, current_user):
                             star_no=form.star_no.data,
                             job_id=form.job_id.data,
                             unit=officer_unit,
-                            star_date=form.employment_date.data)
+                            star_date=form.employment_date.data,
+                            department_id=form.department.data.id)
     db.session.add(assignment)
     if form.links.data:
         for link in form.data['links']:
