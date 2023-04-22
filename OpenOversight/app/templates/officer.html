@@ -251,74 +251,73 @@
       {% if current_user.is_administrator
           or (current_user.is_area_coordinator and current_user.ac_department_id == officer.department_id) %}
       <h3>Add Assignment<small> Admin only</small></h3>
-      <table class="table">
-        <tbody>
-          <form action="{{ url_for('main.add_assignment', officer_id=officer.id) }}" id="add-assignment-form" method="post" data-jobs-url="{{ url_for('main.get_dept_ranks') }}" data-units-url="{{ url_for('main.get_dept_units') }}">
-          {{ form.hidden_tag() }}
+      <form action="{{ url_for('main.add_assignment', officer_id=officer.id) }}" id="add-assignment-form" method="post" data-jobs-url="{{ url_for('main.get_dept_ranks') }}" data-units-url="{{ url_for('main.get_dept_units') }}">
+        <table class="table">
+          <tbody></tbody>
+            {{ form.hidden_tag() }}
 
-          <tr>
-            <td><b>New badge number:</b></td>
-            <td>{{ form.star_no }}
-                  {% for error in form.star_no.errors %}
-                      <p><span style="color: red;">[{{ error }}]</span></p>
-                  {% endfor %}
-            </td>
-          </tr>
+            <tr>
+              <td><b>New badge number:</b></td>
+              <td>{{ form.star_no }}
+                    {% for error in form.star_no.errors %}
+                        <p><span style="color: red;">[{{ error }}]</span></p>
+                    {% endfor %}
+              </td>
+            </tr>
 
-          <tr>
-            <td><b>New department:</b></td>
-            <td>{{ form.dept }}
-                  {% for error in form.dept.errors %}
-                      <p><span style="color: red;">[{{ error }}]</span></p>
-                  {% endfor %}
-            </td>
-          </tr>
+            <tr>
+              <td><b>New department:</b></td>
+              <td>{{ form.dept }}
+                    {% for error in form.dept.errors %}
+                        <p><span style="color: red;">[{{ error }}]</span></p>
+                    {% endfor %}
+              </td>
+            </tr>
 
-          <tr>
-            <td><b>New job title:</b></td>
-            <td>{{ form.job_title }}
-                  {% for error in form.job_title.errors %}
-                      <p><span style="color: red;">[{{ error }}]</span></p>
-                  {% endfor %}
-            </td>
-          </tr>
+            <tr>
+              <td><b>New job title:</b></td>
+              <td>{{ form.job_title }}
+                    {% for error in form.job_title.errors %}
+                        <p><span style="color: red;">[{{ error }}]</span></p>
+                    {% endfor %}
+              </td>
+            </tr>
 
-          <tr>
-            <td><b>New unit:</b></td>
-            <td>{{ form.unit }}
-                  {% for error in form.unit.errors %}
-                      <p><span style="color: red;">[{{ error }}]</span></p>
-                  {% endfor %}
-            </td>
-          </tr>
+            <tr>
+              <td><b>New unit:</b></td>
+              <td>{{ form.unit }}
+                    {% for error in form.unit.errors %}
+                        <p><span style="color: red;">[{{ error }}]</span></p>
+                    {% endfor %}
+              </td>
+            </tr>
 
-          <tr>
-            <td><b>Start date of new assignment:</b></td>
-            <td>{{ form.star_date }}
-                  {% for error in form.star_date.errors %}
-                      <p><span style="color: red;">[{{ error }}]</span></p>
-                  {% endfor %}
-            </td>
-          </tr>
+            <tr>
+              <td><b>Start date of new assignment:</b></td>
+              <td>{{ form.star_date }}
+                    {% for error in form.star_date.errors %}
+                        <p><span style="color: red;">[{{ error }}]</span></p>
+                    {% endfor %}
+              </td>
+            </tr>
 
-          <tr>
-            <td><b>End date of new assignment:</b></td>
-            <td>{{ form.resign_date }}
-                  {% for error in form.resign_date.errors %}
-                      <p><span style="color: red;">[{{ error }}]</span></p>
-                  {% endfor %}
-            </td>
-          </tr>
+            <tr>
+              <td><b>End date of new assignment:</b></td>
+              <td>{{ form.resign_date }}
+                    {% for error in form.resign_date.errors %}
+                        <p><span style="color: red;">[{{ error }}]</span></p>
+                    {% endfor %}
+              </td>
+            </tr>
 
-          <tr>
-            <td>
-              <input type="submit" value="Add Assignment" name="add-assignment" class="btn-sm btn-primary"/>
-            </td>
-          </tr>
-
-          </form>
-        </tbody>
-      </table>
+            <tr>
+              <td>
+                <input type="submit" value="Add Assignment" name="add-assignment" class="btn-sm btn-primary"/>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
       {% endif %}
     </div> {# end col #}
 

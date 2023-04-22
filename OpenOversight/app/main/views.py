@@ -347,7 +347,7 @@ def add_assignment(officer_id):
     form = AssignmentForm()
     officer = Officer.query.filter_by(id=officer_id).first()
     form.job_title.query = Job.query\
-                              .filter_by(department_id=officer.department_id)\
+                              .filter_by(department_id=form.dept.data.id)\
                               .order_by(Job.order.asc())\
                               .all()
 
