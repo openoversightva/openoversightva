@@ -9,10 +9,18 @@
 {% if current_user and current_user.is_authenticated %}
 <div class="container theme-showcase" role="main">
     <div class="text-center frontpage-leads">
-      <h1><small>Volunteer</small></h1>
+      <h2>Volunteer</h2>
+
+      <p>
+        Want to get involved? <a href="https://github.com/openoversightva/openoversight/wiki">Take a look at our wiki.</a>
+      </p>
+      <p>
+        If you want to contribute code, please visit our github and review the <a href="https://github.com/openoversightva/openoversight#readme">readme</a>. You might also be interested in the CONTRIB and DEPLOY docs.
+      </p>
     </div>
 
     <div class="text-center frontpage-leads">
+      <h3>Classify images of officers</h3>
       <p>
         <a class="btn btn-lg btn-primary" href="{{ url_for('main.get_tutorial') }}">
           <span class="glyphicon glyphicon-alert tutorial" aria-hidden="true"></span>
