@@ -8,8 +8,11 @@
   <div class="text-center frontpage-leads">
     <h1><small>Browse a Department</small></h1>
   </div>
+  <div id="dept-search-box">
+    <input id="dept-search" type="text" placeholder="Enter text to filter list">
+  </div>
   <p>
-    <div class="text-center frontpage-leads">
+    <div id="dept-list" class="text-center frontpage-leads">
       <div class="btn-group">
         <h2>Decertified, Dismissed, & Wandering Ex-Police
       </h2>
@@ -57,5 +60,22 @@
   {% endfor %}
   </div>
 </div>
+
+<script type="text/javascript">
+
+$( document ).ready(function() {
+  $('#dept-search').on('input', function() {
+      $('#dept-list .btn-group').hide();
+      var txt = $('#dept-search').val();
+      console.log(txt);
+      $('#dept-list .btn-group').each(function(){
+         if($(this).text().toUpperCase().indexOf(txt.toUpperCase()) != -1){
+             $(this).show();
+         }
+      });
+  });
+});
+
+</script>
 
 {% endblock %}
