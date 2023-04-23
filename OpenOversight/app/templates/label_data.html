@@ -12,10 +12,13 @@
       <h2>Volunteer</h2>
 
       <p>
-        Want to get involved? <a href="https://github.com/openoversightva/openoversight/wiki">Take a look at our wiki.</a>
+        Welcome to volunteering!
       </p>
       <p>
-        If you want to contribute code, please visit our github and review the <a href="https://github.com/openoversightva/openoversight#readme">readme</a>. You might also be interested in the CONTRIB and DEPLOY docs.
+        Not sure where to start? <a href="https://github.com/openoversightva/openoversight/wiki">Take a look at our wiki.</a>
+      </p>
+      <p>
+        If you want to contribute code, please visit our github and review the <a href="https://github.com/openoversightva/openoversight#readme">README</a>. You might also be interested in the CONTRIB and DEPLOY docs.
       </p>
     </div>
 
@@ -85,16 +88,13 @@
 {% else %}
 
 <div role="main">
-    <div class="text-center">
-        <div class="hero-section">
-            <div class="hero">
-                Volunteer
-            </div>
-            <div class="subhero">
-                Help OpenOversight create transparency with the first public, searchable
-                database of law enforcement officers.
-            </div>
+    <div class="text-center frontpage-leads">
+        <div class="container horizontal-padding bg-blue-gray">
+            <h2>Volunteer</h2>
+
+            <h3>Help OpenOversight create transparency with the first public, searchable database of law enforcement officers.</h3>
         </div>
+
         <div class="container horizontal-padding">
             <h2 class="horizontal-padding font-weight-300">
                 How you can help
@@ -103,40 +103,82 @@
                 <div class="col-lg-4 horizontal-padding">
                     <span class="fa fa-picture-o fa-2x"></span>
                     <p class="lead margin-less">
-                        Sort Images
+                        Agency Rosters
                     </p>
                     <div class="font-weight-300">
-                        Sort submitted images into those with and without officers.
+                        Volunteers submit open data requests to law enforcement agencies, then clean up and format the documents they receive.
                     </div>
                 </div>
-                <div class="col-lg-4 horizontal-padding"">
+                <div class="col-lg-4 horizontal-padding">
                     <span class="fa fa-users fa-2x"></span>
                     <p class="lead margin-less">
-                        Identify Officers
+                        Incidents
                     </p>
                     <div class="font-weight-300">
-                        Have a photo containing uniformed officers?
+                        Volunteers track reported incidents of police shootings, lawsuits, and complaints - recording details and documenting allegations.
                     </div>
                 </div>
-                <div class="col-lg-4 horizontal-padding"">
+                <div class="col-lg-4 horizontal-padding">
                     <span class="fa fa-envelope fa-2x"></span>
                     <p class="lead margin-less">
-                        Contact Us
+                        Policies
                     </p>
                     <div class="font-weight-300">
-                        Reach out with any questions, concerns, or ways you'd like to get involved.
+                        Volunteers request and process policy documents from agencies.
+                    </div>
+                </div>
+            </div>
+            <!--              -----           -->
+            <div class="row pb-50">
+                <div class="col-lg-4 horizontal-padding">
+                    <span class="fa fa-picture-o fa-2x"></span>
+                    <p class="lead margin-less">
+                        Investigative Journalism
+                    </p>
+                    <div class="font-weight-300">
+                        Volunteers investigate problem officers, tracking their history across agencies.
+                    </div>
+                </div>
+                <div class="col-lg-4 horizontal-padding">
+                    <span class="fa fa-users fa-2x"></span>
+                    <p class="lead margin-less">
+                        Press
+                    </p>
+                    <div class="font-weight-300">
+                        Volunteers write news releases, do interviews, and engage with the public on behalf of Open Oversight Virginia.
+                    </div>
+                </div>
+                <div class="col-lg-4 horizontal-padding">
+                    <span class="fa fa-envelope fa-2x"></span>
+                    <p class="lead margin-less">
+                        Technology
+                    </p>
+                    <div class="font-weight-300">
+                        Volunteers code, fix bugs, manage servers, and play with data.
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="row display-flex vertical-padding">
-            <div class="col-lg-6 col-half-no-border bg-blue-gray bordered-box">
+            <div class="col-lg-6 col-half-no-border bg-blue-gray">
                 <div class="text-center">
+                    <h1>
+                        <small>Interested in volunteering?</small>
+                    </h1>
+                    <div class="horizontal-padding">
+                        <a class="btn btn-lg btn-info" href="{{ url_for('auth.register') }}">
+                            Sign Up
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-half-no-border bg-blue-gray bordered-box">
+                <div class="text-center" style="width: 80%">
                     <h1>
                         <small>Log In</small>
                     </h1>
-                </div>
+
                     <form class="form" method="post" role="form">
                         {{ form.hidden_tag() }}
                         {{ wtf.form_errors(form, hiddens="only") }}
@@ -150,20 +192,10 @@
                             {% endif %}
                         </div>
                     </form>
-                <p class="text-center">
-                    <a href="{{ url_for('auth.password_reset_request') }}">Forgot Password</a>
-                </p>
-            </div>
-            <div class="col-lg-6 col-half-no-border bg-blue-gray">
-                <div class="text-center">
-                    <h1>
-                        <small>Interested in volunteering?</small>
-                    </h1>
-                    <div class="horizontal-padding">
-                        <a class="btn btn-lg btn-info" href="{{ url_for('auth.register') }}">
-                            Sign Up
-                        </a>
-                    </div>
+
+                    <p>
+                        <a href="{{ url_for('auth.password_reset_request') }}">Forgot Password</a>
+                    </p>
                 </div>
             </div>
         </div>
