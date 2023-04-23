@@ -25,6 +25,18 @@ officer_incidents = db.Table('officer_incidents',
                              db.Column('officer_id', db.Integer, db.ForeignKey('officers.id'), primary_key=True),
                              db.Column('incident_id', db.Integer, db.ForeignKey('incidents.id'), primary_key=True))
 
+document_tags = db.Table('document_tags',
+                             db.Column('document_id', db.Integer, db.ForeignKey('documents.id'), primary_key=True),
+                             db.Column('tag_id', db.Integer, db.ForeignKey('tags.id'), primary_key=True))
+
+officer_tags = db.Table('officer_tags',
+                             db.Column('officer_id', db.Integer, db.ForeignKey('officers.id'), primary_key=True),
+                             db.Column('tag_id', db.Integer, db.ForeignKey('tags.id'), primary_key=True))
+
+incidents_tags = db.Table('incidents_tags',
+                             db.Column('incident_id', db.Integer, db.ForeignKey('incidents.id'), primary_key=True),
+                             db.Column('tag_id', db.Integer, db.ForeignKey('tags.id'), primary_key=True))
+
 
 class Department(BaseModel):
     __tablename__ = 'departments'
@@ -112,6 +124,10 @@ class Officer(BaseModel):
     links = db.relationship(
         'Link',
         secondary=officer_links,
+        backref=db.backref('officers', lazy=True))
+    tags = db.relationship(
+        'Tag',
+        secondary=officer_tags,
         backref=db.backref('officers', lazy=True))
     notes = db.relationship('Note', back_populates='officer', order_by='Note.date_created')
     descriptions = db.relationship('Description', back_populates='officer', order_by='Description.date_created')
@@ -279,6 +295,11 @@ class Document(BaseModel):
     doc_type = db.Column(db.String(100), index=True)
     description = db.Column(db.Text(), nullable=True)
 
+    tags = db.relationship(
+        'Tag',
+        secondary=document_tags,
+        backref=db.backref('documents', lazy=True))
+    
     def __repr__(self):
         return '<Document ID {}: {}>'.format(self.id, self.filepath)
 
@@ -413,6 +434,10 @@ class Incident(BaseModel):
         secondary=officer_incidents,
         lazy='subquery',
         backref=db.backref('incidents'))
+    tags = db.relationship(
+        'Tag',
+        secondary=incidents_tags,
+        backref=db.backref('incidents', lazy=True))
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
     department = db.relationship('Department', backref='incidents', lazy=True)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -509,6 +534,13 @@ class User(UserMixin, BaseModel):
 
     def __repr__(self):
         return '<User %r>' % self.username
+
+
+class Tag(BaseModel):
+    __tablename__ = 'tags'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tag = db.Column(db.String(100), index=True)
 
 
 @login_manager.user_loader
