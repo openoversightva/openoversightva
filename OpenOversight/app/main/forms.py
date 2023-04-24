@@ -326,6 +326,16 @@ class AddDocumentForm(Form):
     file = HiddenField(validators=[DataRequired(message='Please upload a file first.')])
     submit = SubmitField(label='Submit')
 
+class EditDocumentForm(Form):
+    department = QuerySelectField(
+        'Department',
+        validators=[DataRequired()],
+        query_factory=dept_choices,
+        get_label='name')
+    title = StringField(validators=[DataRequired()])
+    description = TextAreaField(validators=[Optional()])
+    submit = SubmitField(label='Submit')
+
 class SearchFaceForm(Form):
     file = HiddenField(validators=[DataRequired(message='Please upload a picture first.')])
     submit = SubmitField(label='Submit')

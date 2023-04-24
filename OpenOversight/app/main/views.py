@@ -34,7 +34,7 @@ from .forms import (FindOfficerForm, FindOfficerIDForm, AddUnitForm,
                     FaceTag, AssignmentForm, DepartmentForm, AddOfficerForm,
                     EditOfficerForm, IncidentForm, TextForm, EditTextForm,
                     AddImageForm, EditDepartmentForm, BrowseForm, SalaryForm, OfficerLinkForm,
-                    AddDocumentForm, DocumentsForm, SearchFaceForm)
+                    AddDocumentForm, DocumentsForm, SearchFaceForm, EditDocumentForm)
 from .model_view import ModelView
 from .choices import GENDER_CHOICES, RACE_CHOICES, AGE_CHOICES, RACE_CHOICES_SEARCH
 from ..models import (db, Image, User, Face, Officer, Assignment, Department,
@@ -1115,6 +1115,27 @@ def delete_document(document_id):
                       format_exc()])
         ))
     return redirect(url_for('main.show_documents'))
+
+@main.route('/documents/<int:document_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_document(document_id):
+    document = Document.query.filter_by(id=document_id).one()
+
+    dept = Department.query.order_by(Department.name.asc())
+
+    form = EditDocumentForm(obj=document)
+
+    if form.validate_on_submit():
+        document.title = form.title.data
+        document.description = form.description.data
+        document.department_id = form.department.data.id
+        db.session.commit()
+        flash('Edited document ID {}'.format(document_id))
+        return redirect(url_for('main.edit_document', document_id=document_id))
+    else:
+        current_app.logger.info(form.errors)
+    return render_template('edit_document.html', form=form)
 
 @main.route('/documents/new', methods=['GET', 'POST'])
 @login_required
