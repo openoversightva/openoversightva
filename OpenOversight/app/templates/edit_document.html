@@ -18,10 +18,48 @@
          {{ wtf.form_field(form.department) }}
          {{ wtf.form_field(form.title) }}
          {{ wtf.form_field(form.description) }}
+         <div class="form-group "><label class="control-label" for="tags">Tags</label>
+            <select class="form-control" id="tags" name="tags[]" multiple="multiple"></select>
+         </div>
          {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
       </form>
       <br>
    </div>
 </div>
 
+<script>
+   $(document).ready(function() {
+      $("#tags").select2({
+      tags: true,
+      tokenSeparators: [',', ' '],
+      dataType: 'json',
+      ajax: {
+         url: '/tags',
+         processResults: function(data) {
+            return {
+            results: $.map(data.results, function(obj) {
+               return {
+                  id: obj.id,
+                  text: obj.text
+               };
+            })
+            };
+         }
+         }
+      })
+
+      // Fetch the existing tags and add
+      var tagsSelect = $('#tags');
+      $.ajax({
+         type: 'GET',
+         url: "/tags/documents/{{ document_id }}"
+      }).then(function (data) {
+         // create the option and append to Select2
+         $.each(data.results, function(i, item) {
+            var option = new Option(item.text, item.id, true, true);
+            tagsSelect.append(option).trigger('change');
+         });
+      });
+   });
+</script>
 {% endblock %}

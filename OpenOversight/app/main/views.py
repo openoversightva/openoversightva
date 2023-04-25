@@ -39,7 +39,7 @@ from .model_view import ModelView
 from .choices import GENDER_CHOICES, RACE_CHOICES, AGE_CHOICES, RACE_CHOICES_SEARCH
 from ..models import (db, Image, User, Face, Officer, Assignment, Department,
                       Unit, Incident, Location, LicensePlate, Link, Note,
-                      Description, Salary, Job, Document)
+                      Description, Salary, Job, Document, Tag)
 
 from ..auth.forms import LoginForm
 from ..auth.utils import admin_required, ac_or_admin_required
@@ -757,6 +757,25 @@ def get_dept_ranks(department_id=None, is_sworn_officer=None):
 
     return jsonify(rank_list)
 
+@main.route('/tags', methods=['GET'])
+def get_tags(term=""):
+    args = request.args
+    term = args["q"]
+    tags = Tag.query.filter(Tag.tag.ilike('%%{}%%'.format(term)))
+    
+    tag_list = list({'id':tag.id,'text':tag.tag} for tag in tags)
+    results = {"results":tag_list}
+    return jsonify(results)
+
+@main.route('/tags/documents/<int:document_id>', methods=['GET'])
+def get_document_tags(document_id=None):
+    document = Document.query.filter_by(id=document_id).one()
+    tags = document.tags
+    
+    tag_list = list({'id':tag.id,'text':tag.tag} for tag in tags)
+    results = {"results":tag_list}
+    return jsonify(results)
+
 @main.route('/units')
 def get_dept_units(department_id=None):
     if not department_id:
@@ -1127,6 +1146,22 @@ def edit_document(document_id):
     form = EditDocumentForm(obj=document)
 
     if form.validate_on_submit():
+        new_tags = request.form.getlist('tags[]')
+        tags = []
+        for new_tag in new_tags:
+            if (new_tag.isdigit()):
+                tag = Tag.query.filter_by(id=new_tag).first()
+                if tag is not None:
+                    tags.append(tag)
+            else:
+                tag = db.session.add(Tag(
+                            tag=new_tag
+                        ))
+                db.session.commit()
+                tag = Tag.query.filter_by(tag=new_tag).first()
+                tags.append(tag)
+
+        document.tags = tags
         document.title = form.title.data
         document.description = form.description.data
         document.department_id = form.department.data.id
@@ -1135,7 +1170,7 @@ def edit_document(document_id):
         return redirect(url_for('main.edit_document', document_id=document_id))
     else:
         current_app.logger.info(form.errors)
-    return render_template('edit_document.html', form=form)
+    return render_template('edit_document.html', form=form, document_id=document_id)
 
 @main.route('/documents/new', methods=['GET', 'POST'])
 @login_required
@@ -1156,6 +1191,23 @@ def submit_document():
             document = upload_document_to_s3_and_store_in_db(file_to_upload, current_user.get_id(), 
                                 department_id=department_id, title=title, description=description,
                                 content_type=content_type)
+            new_tags = request.form.getlist('tags[]')
+            tags = []
+            for new_tag in new_tags:
+                if (new_tag.isdigit()):
+                    tag = Tag.query.filter_by(id=new_tag).first()
+                    if tag is not None:
+                        tags.append(tag)
+                else:
+                    tag = db.session.add(Tag(
+                                tag=new_tag
+                            ))
+                    db.session.commit()
+                    tag = Tag.query.filter_by(tag=new_tag).first()
+                    tags.append(tag)
+
+            document.tags = tags
+            db.session.commit()
             flash("Document was successfully uploaded")
         except Exception:
             flash("An error occurred while uploading")
