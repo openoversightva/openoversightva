@@ -7,6 +7,8 @@
 {% block head %}
 <link href="{{ url_for('static', filename='css/dropzone.css') }}" rel="stylesheet">
 <link href="{{ url_for('static', filename='css/dropzone-override.css') }}" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -20,6 +22,9 @@
          {{ wtf.form_field(form.department) }}
          {{ wtf.form_field(form.title) }}
          {{ wtf.form_field(form.description) }}
+         <div class="form-group "><label class="control-label" for="tags">Tags</label>
+            <select class="form-control" id="tags" name="tags[]" multiple="multiple"></select>
+         </div>
          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
          {{ wtf.form_field(form.file) }}
          <div id="my-cop-dropzone"  class='dropzone'>
@@ -88,5 +93,27 @@
    });
    </script>
 </div>
+<script>
+$(document).ready(function() {
+   $("#tags").select2({
+      tags: true,
+      tokenSeparators: [',', ' '],
+      dataType: 'json',
+      ajax: {
+         url: '/tags',
+         processResults: function(data) {
+            return {
+            results: $.map(data.results, function(obj) {
+               return {
+                  id: obj.id,
+                  text: obj.text
+               };
+            })
+            };
+         }
+      }
+   });
+});
+</script>
 
 {% endblock %}
