@@ -74,6 +74,7 @@ class ModelView(MethodView):
 
         if not form:
             form = self.get_edit_form(obj)
+
             # if the object doesn't have a creator id set, st it to current user
             if hasattr(obj, 'creator_id') and hasattr(form, 'creator_id') and getattr(obj, 'creator_id'):
                 form.creator_id.data = obj.creator_id

@@ -69,6 +69,7 @@
               </dl>
             </div>
           </div>
+          {% if document.description %}
           <div class="row">
             <div class="col-md-12 col-xs-12">
               <dl>
@@ -77,6 +78,23 @@
               </dl>
             </div>
           </div>
+          {% endif %}
+          {% if document.tags %}
+          <div class="row">
+            <div class="col-md-12 col-xs-12">
+              <dl>
+                <dt>Tags</dt>
+                <dd>
+                  {% for tag in document.tags %}
+                    <a  href="{{ url_for('main.search_tags', tag_id=tag.id) }}">
+                      {{tag.tag}}
+                    </a>&nbsp;|
+                    {% endfor %}
+                </dd>
+              </dl>
+            </div>
+          </div>
+          {% endif %}
           {% if current_user.is_administrator %}
           <div class="row">
             <div class="col-md-12 col-xs-12">

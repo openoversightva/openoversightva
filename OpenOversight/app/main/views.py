@@ -34,7 +34,9 @@ from .forms import (FindOfficerForm, FindOfficerIDForm, AddUnitForm,
                     FaceTag, AssignmentForm, DepartmentForm, AddOfficerForm,
                     EditOfficerForm, IncidentForm, TextForm, EditTextForm,
                     AddImageForm, EditDepartmentForm, BrowseForm, SalaryForm, OfficerLinkForm,
-                    AddDocumentForm, DocumentsForm, SearchFaceForm, EditDocumentForm)
+                    AddDocumentForm, DocumentsForm, SearchFaceForm, EditDocumentForm,
+                    SearchTagForm)
+
 from .model_view import ModelView
 from .choices import GENDER_CHOICES, RACE_CHOICES, AGE_CHOICES, RACE_CHOICES_SEARCH
 from ..models import (db, Image, User, Face, Officer, Assignment, Department,
@@ -757,6 +759,24 @@ def get_dept_ranks(department_id=None, is_sworn_officer=None):
 
     return jsonify(rank_list)
 
+@main.route('/search_tags/<int:tag_id>')
+def search_tags(tag_id=None):
+    form = SearchTagForm()
+    form_data = form.data
+
+    tag = Tag.query.filter_by(id=tag_id).first()
+    documents = tag.documents
+    incidents = tag.incidents
+
+    return render_template(
+        'search_tags.html',
+        form=form,
+        tag=tag,
+        documents=documents,
+        incidents=incidents,
+        form_data=form_data,
+        tag_id=tag_id,)
+
 @main.route('/tags', methods=['GET'])
 def get_tags(term=""):
     args = request.args
@@ -771,6 +791,15 @@ def get_tags(term=""):
 def get_document_tags(document_id=None):
     document = Document.query.filter_by(id=document_id).one()
     tags = document.tags
+    
+    tag_list = list({'id':tag.id,'text':tag.tag} for tag in tags)
+    results = {"results":tag_list}
+    return jsonify(results)
+
+@main.route('/tags/incidents/<int:incident_id>', methods=['GET'])
+def get_incident_tags(incident_id=None):
+    incident = Incident.query.filter_by(id=incident_id).one()
+    tags = incident.tags
     
     tag_list = list({'id':tag.id,'text':tag.tag} for tag in tags)
     results = {"results":tag_list}
@@ -1600,6 +1629,8 @@ class IncidentApi(ModelView):
         no_license_plates = len(obj.license_plates)
         no_links = len(obj.links)
         no_officers = len(obj.officers)
+        tags = obj.tags
+        
         for link in form.links:
             if link.creator_id.data:
                 continue
@@ -1613,6 +1644,8 @@ class IncidentApi(ModelView):
         form.license_plates.min_entries = no_license_plates
         form.links.min_entries = no_links
         form.officers.min_entries = no_officers
+        form.incident_id = obj.id
+        form.tags = tags
         if not form.date_field.data and obj.date:
             form.date_field.data = obj.date
         if not form.time_field.data and obj.time:
@@ -1622,6 +1655,7 @@ class IncidentApi(ModelView):
     def populate_obj(self, form, obj):
         # remove all fields not directly on the Incident model
         # use utils to add them to the current object
+        
         address = form.data.pop('address')
         del form.address
         if address['city']:
@@ -1635,6 +1669,22 @@ class IncidentApi(ModelView):
         if links and links[0]['url']:
             replace_list(links, obj, 'links', Link, db)
 
+        new_tags = request.form.getlist('tags[]')
+        tags = []
+        for new_tag in new_tags:
+            if (new_tag.isdigit()):
+                tag = Tag.query.filter_by(id=new_tag).first()
+                if tag is not None:
+                    tags.append(tag)
+            else:
+                tag = db.session.add(Tag(
+                            tag=new_tag
+                        ))
+                db.session.commit()
+                tag = Tag.query.filter_by(tag=new_tag).first()
+                tags.append(tag)
+
+        obj.tags = tags
         officers = form.data.pop('officers')
         del form.officers
         if officers:
