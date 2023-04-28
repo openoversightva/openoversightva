@@ -29,7 +29,7 @@ from PIL.PngImagePlugin import PngImageFile
 
 from .models import (db, Officer, Assignment, Job, Image, Face, User, Unit, Department,
                      Incident, Location, LicensePlate, Link, Note, Description, Salary,
-                     Document)
+                     Document, Tag)
 from .main.choices import RACE_CHOICES, GENDER_CHOICES
 
 # Ensure the file is read/write by the creator only
@@ -447,6 +447,7 @@ def create_incident(self, form):
         'officers': [],
         'license_plates': [],
         'links': [],
+        'tags': [],
         'address': '',
         'creator_id': form.creator_id.data,
         'last_updated_id': form.last_updated_id.data
@@ -488,6 +489,7 @@ def create_incident(self, form):
         report_number=form.data['report_number'],
         license_plates=fields['license_plates'],
         links=fields['links'],
+        #tags=tags,
         creator_id=fields['creator_id'],
         last_updated_id=fields['last_updated_id'])
 

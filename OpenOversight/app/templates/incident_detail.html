@@ -46,6 +46,18 @@
 				{% with detail=True %}
 					{% include 'partials/incident_fields.html' %}
 				{% endwith %}
+				{% if incident.tags %}
+				<tr>
+					<td><strong>Tags</strong></td>
+					<td>
+					{% for tag in incident.tags %}
+						<a  href="{{ url_for('main.search_tags', tag_id=tag.id) }}">
+						{{tag.tag}}
+						</a>&nbsp;|
+					{% endfor %}
+					</td>
+				</tr>
+			{% endif %}
 			</tbody>
 		</table>
 			</div>

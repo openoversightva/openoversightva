@@ -8,70 +8,113 @@
   <div class="row">
     <div class="search-results col-sm-6">
       <h2>Documents</h2>
-        <ul class="list-group">
-          {% for document in documents %}
-            <li class="list-group-item">
-              <div class="row">
-                <div class="col-md-8 col-xs-12">
-                  <dt>Title</dt>
-                  <a href="{{ document.url }}">
-                    {{ document.title }}
-                  </a>
+        {% if documents %}
+          <ul class="list-group">
+            {% for document in documents %}
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col-md-8 col-xs-12">
+                    <dt>Title</dt>
+                    <a href="{{ document.url }}">
+                      {{ document.title }}
+                    </a>
+                  </div>
+                  <div class="col-md-4 col-xs-12">
+                    <dl>
+                      <dt>Department</dt>
+                      <dd>{{ document.department.name|default('Unknown') }}</dd>
+                    </dl>
+                  </div>
                 </div>
-                <div class="col-md-4 col-xs-12">
-                  <dl>
-                    <dt>Department</dt>
-                    <dd>{{ document.department.name|default('Unknown') }}</dd>
-                  </dl>
+                {% if document.description %}
+                <div class="row">
+                  <div class="col-md-12 col-xs-12">
+                    <dl>
+                      <dt>Description</dt>
+                      <dd>{{ document.description }}</dd>
+                    </dl>
+                  </div>
                 </div>
-              </div>
-              {% if document.description %}
-              <div class="row">
-                <div class="col-md-12 col-xs-12">
-                  <dl>
-                    <dt>Description</dt>
-                    <dd>{{ document.description }}</dd>
-                  </dl>
+                {% endif %}
+                <div class="row">
+                  <div class="col-md-12 col-xs-12">
+                    <dl>
+                      <dt>Tags</dt>
+                      <dd>
+                        {% for tag in document.tags %}
+                          <a  href="{{ url_for('main.search_tags', tag_id=tag.id) }}">
+                            {{tag.tag}}
+                          </a>&nbsp;|
+                          {% endfor %}
+                      </dd>
+                    </dl>
+                  </div>
                 </div>
-              </div>
-              {% endif %}
-              <div class="row">
-                <div class="col-md-12 col-xs-12">
-                  <dl>
-                    <dt>Tags</dt>
-                    <dd>
-                      {% for tag in document.tags %}
-                        <a  href="{{ url_for('main.search_tags', tag_id=tag.id) }}">
-                          {{tag.tag}}
-                        </a>&nbsp;|
-                        {% endfor %}
-                    </dd>
-                  </dl>
+                {% if current_user.is_administrator %}
+                <div class="row">
+                  <div class="col-md-12 col-xs-12">
+                    <a href="/documents/delete/{{document.id}}">
+                      <button class='btn btn-danger' type="submit">Delete</button>
+                    </a>
+                    <a href="/documents/{{document.id}}/edit">
+                      <button class='btn' type="submit">Edit</button>
+                    </a>
+                  </div>
                 </div>
-              </div>
-              {% if current_user.is_administrator %}
-              <div class="row">
-                <div class="col-md-12 col-xs-12">
-                  <a href="/documents/delete/{{document.id}}">
-                    <button class='btn btn-danger' type="submit">Delete</button>
-                  </a>
-                  <a href="/documents/{{document.id}}/edit">
-                    <button class='btn' type="submit">Edit</button>
-                  </a>
-                </div>
-              </div>
-              {% endif %}
-              <hr>
-            </li>
-          {% endfor %}
-        </ul>
+                {% endif %}
+                <hr>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>There are no documents.</p>
+        {% endif %}
       </div>
       <div class="search-results col-sm-6">
         <h2>Incidents</h2>
         {% if incidents %}
-        {% else %}
-          <h3>No incidents with that tag (coming soon)</h3>
-        {% endif %}
+          <ul class="list-group">
+            <table class='table table-hover table-responsive'>
+              <tbody>
+              {% for incident in incidents %}
+                {% if not loop.first %}
+                <tr class="border:none"><td colspan="2">&nbsp;</td></tr>
+                {% endif %}
+                <tr>
+                  <td colspan="2" style="border-top: 0; ">
+                  <h3>
+                      <a href="{{ url_for('main.incident_api', obj_id=incident.id)}}">
+                      Incident
+                      {% if incident.report_number %}
+                        {{ incident.report_number }}
+                      {% else %}
+                      {{ incident.id}}
+                            {% endif %}
+                    </a>
+                  </h3>
+              </td>
+                </tr>
+                {% include 'partials/incident_fields.html' %}
+              {% if incident.tags %}
+                <tr>
+                  <td><strong>Tags</strong></td>
+                  <td>
+                  {% for tag in incident.tags %}
+                    <a  href="{{ url_for('main.search_tags', tag_id=tag.id) }}">
+                    {{tag.tag}}
+                    </a>&nbsp;|
+                  {% endfor %}
+                  </td>
+                </tr>
+              {% endif %}
+              {% endfor %}
+              </tbody>
+              </table>
+            {% else %}
+              <p>There are no incidents.</p>
+            {% endif %}
+          </ul>
+       
       </div>
   </div> <!-- /.search-results -->
   </div> <!-- /.row -->

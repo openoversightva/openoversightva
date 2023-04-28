@@ -35,6 +35,18 @@
 			</td>
 		    </tr>
 		    {% include 'partials/incident_fields.html' %}
+			{% if incident.tags %}
+				<tr>
+					<td><strong>Tags</strong></td>
+					<td>
+					{% for tag in incident.tags %}
+						<a  href="{{ url_for('main.search_tags', tag_id=tag.id) }}">
+						{{tag.tag}}
+						</a>&nbsp;|
+					{% endfor %}
+					</td>
+				</tr>
+			{% endif %}
 		  {% endfor %}
 		  </tbody>
 		  </table>
