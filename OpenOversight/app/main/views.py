@@ -34,7 +34,9 @@ from .forms import (FindOfficerForm, FindOfficerIDForm, AddUnitForm,
                     FaceTag, AssignmentForm, DepartmentForm, AddOfficerForm,
                     EditOfficerForm, IncidentForm, TextForm, EditTextForm,
                     AddImageForm, EditDepartmentForm, BrowseForm, SalaryForm, OfficerLinkForm,
-                    AddDocumentForm, DocumentsForm, SearchFaceForm, EditDocumentForm)
+                    AddDocumentForm, DocumentsForm, SearchFaceForm, EditDocumentForm,
+                    SearchTagForm)
+
 from .model_view import ModelView
 from .choices import GENDER_CHOICES, RACE_CHOICES, AGE_CHOICES, RACE_CHOICES_SEARCH
 from ..models import (db, Image, User, Face, Officer, Assignment, Department,
@@ -756,6 +758,22 @@ def get_dept_ranks(department_id=None, is_sworn_officer=None):
         rank_list = list(set([(rank.id, rank.job_title) for rank in ranks]))  # Prevent duplicate ranks
 
     return jsonify(rank_list)
+
+@main.route('/search_tags/<int:tag_id>')
+def search_tags(tag_id=None):
+    form = SearchTagForm()
+    form_data = form.data
+
+    tag = Tag.query.filter_by(id=tag_id).first()
+    documents = tag.documents
+
+    return render_template(
+        'search_tags.html',
+        form=form,
+        tag=tag,
+        documents=documents,
+        form_data=form_data,
+        tag_id=tag_id,)
 
 @main.route('/tags', methods=['GET'])
 def get_tags(term=""):

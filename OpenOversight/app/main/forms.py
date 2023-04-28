@@ -460,3 +460,7 @@ class BrowseForm(Form):
     department = QuerySelectField('department', validators=[Optional()], get_label='name',
                             get_pk=lambda department: department.name)  # query set in view function
     submit = SubmitField(label='Submit')
+
+class SearchTagForm(Form):
+
+    submit = SubmitField(label='Submit')
