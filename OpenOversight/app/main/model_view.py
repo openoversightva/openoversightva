@@ -6,7 +6,7 @@ from flask import render_template, redirect, request, url_for, flash, abort, cur
 from flask.views import MethodView
 from flask_login import login_required, current_user
 from ..auth.utils import ac_or_admin_required
-from ..models import db
+from ..models import db, Tag
 from ..utils import add_department_query, set_dynamic_default
 
 
@@ -57,6 +57,24 @@ class ModelView(MethodView):
             new_obj = self.create_function(form)
             db.session.add(new_obj)
             db.session.commit()
+            if (type(new_obj).__name__ == "Incident"):
+                new_tags = request.form.getlist('tags[]')
+                tags = []
+                for new_tag in new_tags:
+                    if (new_tag.isdigit()):
+                        tag = Tag.query.filter_by(id=new_tag).first()
+                        if tag is not None:
+                            tags.append(tag)
+                    else:
+                        tag = db.session.add(Tag(
+                                    tag=new_tag
+                                ))
+                        db.session.commit()
+                        tag = Tag.query.filter_by(tag=new_tag).first()
+                        tags.append(tag)
+
+                new_obj.tags = tags
+                db.session.commit()
             flash('{} created!'.format(self.model_name))
             return self.get_redirect_url(obj_id=new_obj.id)
         else:
