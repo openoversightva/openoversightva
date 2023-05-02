@@ -1619,6 +1619,7 @@ class IncidentApi(ModelView):
         if request.args.get('officer_id'):
             form.officers[0].oo_id.data = request.args.get('officer_id')
 
+        form.tags = request.form.getlist('tags[]')
         for link in form.links:
             link.creator_id.data = current_user.id
         return form
