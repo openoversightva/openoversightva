@@ -9,7 +9,7 @@ from wtforms.validators import (DataRequired, InputRequired, AnyOf, NumberRange,
                                 Length, Optional, URL, ValidationError)
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 
-from ..utils import unit_choices, dept_choices
+from ..utils import unit_choices, dept_choices, tag_choices
 from .choices import SUFFIX_CHOICES, GENDER_CHOICES, RACE_CHOICES, STATE_CHOICES, LINK_CHOICES, AGE_CHOICES
 from ..formfields import TimeField
 from ..widgets import BootstrapListWidget, FormFieldWidget
@@ -334,6 +334,21 @@ class EditDocumentForm(Form):
         get_label='name')
     title = StringField(validators=[DataRequired()])
     description = TextAreaField(validators=[Optional()])
+    submit = SubmitField(label='Submit')
+
+class EditTagForm(Form):
+    tag = StringField(validators=[DataRequired()])
+
+    submit = SubmitField(label='Submit')
+
+class MergeTagForm(Form):
+    tag = StringField(validators=[DataRequired()])
+
+    merge_tags = QuerySelectField(
+        'Tag To Merge',
+        validators=[DataRequired()],
+        query_factory=tag_choices,
+        get_label='tag')
     submit = SubmitField(label='Submit')
 
 class SearchFaceForm(Form):

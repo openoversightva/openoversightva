@@ -63,6 +63,11 @@
             <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
             Add New Department
         </a>
+        <a href="{{ url_for('main.manage_tags') }}"
+              class="btn btn-primary" role="button">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            Manage Tags
+        </a>
       {% endif %}
       {% if current_user.is_administrator or current_user.is_area_coordinator %}
         <a href="{{ url_for('main.add_officer') }}"

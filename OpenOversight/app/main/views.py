@@ -35,7 +35,7 @@ from .forms import (FindOfficerForm, FindOfficerIDForm, AddUnitForm,
                     EditOfficerForm, IncidentForm, TextForm, EditTextForm,
                     AddImageForm, EditDepartmentForm, BrowseForm, SalaryForm, OfficerLinkForm,
                     AddDocumentForm, DocumentsForm, SearchFaceForm, EditDocumentForm,
-                    SearchTagForm)
+                    SearchTagForm, EditTagForm, MergeTagForm)
 
 from .model_view import ModelView
 from .choices import GENDER_CHOICES, RACE_CHOICES, AGE_CHOICES, RACE_CHOICES_SEARCH
@@ -1982,3 +1982,68 @@ def process_faces():
     flash(faces_to_process.count())
 
     return render_template('process_faces.html')
+
+@main.route('/manage_tags', methods=['GET'])
+@login_required
+@admin_required
+def manage_tags():
+    tags = Tag.query.order_by(Tag.tag.asc())
+    return render_template('manage_tags.html', tags=tags)
+
+@main.route('/manage_tags/<int:tag_id>/edit', methods=['GET','POST'])
+@login_required
+@admin_required
+def edit_tags(tag_id=None):
+    tag = Tag.query.filter_by(id=tag_id).one()
+    form = EditTagForm(obj=tag)
+
+    if form.validate_on_submit():
+        tag.tag = form.tag.data
+        db.session.commit()
+        flash("The tag was updated successfully")
+        return redirect(url_for('main.manage_tags'))
+    return render_template('edit_tag.html', form=form, tag_id=tag_id)
+
+@main.route('/manage_tags/<int:tag_id>/merge', methods=['GET','POST'])
+@login_required
+@admin_required
+def merge_tag(tag_id=None):
+    tag = Tag.query.filter_by(id=tag_id).one()
+    form = MergeTagForm(obj=tag)
+
+    if form.validate_on_submit():
+        merge_id = form.merge_tags.data.id
+        new_tag = Tag.query.filter_by(id=merge_id).one()
+        documents = tag.documents
+        for document in documents:
+            document.tags.append(new_tag)
+        incidents = tag.incidents
+        for incident in incidents:
+            incident.tags.append(new_tag)
+        db.session.delete(tag)
+        db.session.commit()
+        
+        return redirect(url_for('main.manage_tags'))
+    return render_template('merge_tag.html', form=form, tag_id=tag_id, tag=tag)
+
+@main.route('/manage_tags/<int:tag_id>/delete', methods=['GET'])
+@login_required
+@admin_required
+def delete_docinc_tag(tag_id):
+    tag = Tag.query.filter_by(id=tag_id).first()
+    if not tag:
+        flash('Tag not found')
+        abort(404)
+
+    try:
+        db.session.delete(tag)
+        db.session.commit()
+        flash('Deleted the tag')
+    except:  # noqa
+        flash('Unknown error occurred')
+        exception_type, value, full_tback = sys.exc_info()
+        current_app.logger.error('Error deleting tag: {}'.format(
+            ' '.join([str(exception_type), str(value),
+                      format_exc()])
+        ))
+    return redirect(url_for('main.manage_tags'))
