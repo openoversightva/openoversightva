@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block title %}Browse OpenOversight{% endblock %}
+{% block meta %}<meta name="description" content="Browse a department on OpenOversight.">{% endblock %}
+{% block content %}
+
+<div class="container theme-showcase" role="main">
+  <div class="text-center frontpage-leads">
+    <h1><small>Manage Tags</small></h1>
+  </div>
+  <p>
+  <div id="tag-list" class="text-center">
+    {% for tag in tags %}
+      <p>
+        <div class="btn-group">
+          <h2>
+            <a href="{{ url_for('main.edit_tags', tag_id=tag.id) }}">
+              {{ tag.tag }}
+            </a>
+          </h2>
+              <p>
+                Documents ({{ tag.documents | length }})
+                | 
+                Incidents ({{ tag.incidents | length }})
+              </p>
+          </div>
+      </p>
+    {% endfor %}
+  
+  </div>
+  </p>
+</div>
+
+{% endblock %}
