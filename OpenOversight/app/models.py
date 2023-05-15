@@ -1,5 +1,5 @@
 import re
-from datetime import date
+from datetime import date, datetime
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_sqlalchemy.model import DefaultMeta
@@ -327,6 +327,17 @@ class Image(BaseModel):
 
     def __repr__(self):
         return '<Image ID {}: {}>'.format(self.id, self.filepath)
+
+# for blog
+class Post(BaseModel):
+    __tablename__ = 'posts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    user = db.relationship('User', backref='posts')
+    created = db.Column(db.DateTime, index=True, unique=False, nullable=True)
+    title = db.Column(db.String(255), unique=False)
+    body = db.Column(db.Text, unique=False)
 
 
 incident_links = db.Table(

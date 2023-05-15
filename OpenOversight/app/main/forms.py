@@ -479,3 +479,8 @@ class BrowseForm(Form):
 class SearchTagForm(Form):
 
     submit = SubmitField(label='Submit')
+
+class PostForm(Form):
+    title = StringField('Title')
+    body = TextAreaField('Post Body')
+    submit = SubmitField(label='Submit')
