@@ -75,7 +75,6 @@
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
             <li><a class="navbar-link" href="/search">Search All Cops</a></li>
-            <!--<li><a class="navbar-link" href="/search">Search all Officers</a></li>-->
             <li><a class="navbar-link" href="/browse">Agencies (A-Z)</a></li>
             <li><a class="navbar-link" href="/incidents">Reports</a></li>
             <li><a class="navbar-link" href="/documents">FOIA Library</a></li>
@@ -151,6 +150,7 @@
         <div class="col-sm-4">
           <h5>Navigation</h5>
           <p class="font-weight-300">
+            <a href="{{ url_for('main.show_posts') }}" class="btn-unstyled">News</a><br>
             <a href="/search" class="btn-unstyled">Search All Cops</a><br>
             <a href="/browse" class="btn-unstyled">Agencies (A-Z)</a><br>
             <a href="{{ url_for('main.submit_data') }}" class="btn-unstyled">Submit Images</a><br>

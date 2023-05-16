@@ -2074,7 +2074,25 @@ def show_posts(page=1):
         next_url=next_url,
         prev_url=prev_url)
 
-@main.route('/news/delete/<int:post_id>', methods=['GET'])
+@main.route('/news/<int:post_id>')
+def show_post(post_id):
+    post =  Post.query.filter_by(id=post_id).first()
+    if not post:
+        flash('Post not found')
+        abort(404)
+    return render_template(
+        'news/view.html',
+        post=post)
+
+@main.route('/news/latest')
+def show_latest_post():
+    posts =  Post.query
+    post = posts.order_by(Post.created.desc()).first()
+    return render_template(
+        'news/view_raw.html',
+        post=post)
+
+@main.route('/news/<int:post_id>/delete', methods=['GET'])
 @login_required
 @ac_or_admin_required
 def delete_post(post_id):

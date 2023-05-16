@@ -9,7 +9,7 @@
             <div class="subhero">OpenOversight<span style="color:#f9285c">VA</span>: A public, searchable database of law enforcement officers in Virginia. Find names, badge numbers, officer complaints, salaries, work histories, and more.</div>
         </div>
 
-        <div class="row display-flex vertical-padding horizontal-padding sink-row text-left">
+        <div class="row display-flex vertical-padding horizontal-padding sink-row text-left" id="index-left">
             <div class="col-lg-6 col-half-border bg-white">
                 <h1>
                     <small>Search for an Officer, Browse Departments, or Read Complaints</small>
@@ -22,51 +22,40 @@
                 <a href="/search" id="cpd" class="btn btn-lg btn-primary">
                     Search All Cops
                	</a>
+
                 <div class="small-horizontal-padding"></div>
-                
                 <a href="/browse" class="btn btn-lg btn-primary">
                     Browse Departments
                 </a>
+
+                <div class="small-horizontal-padding"></div>
+                <a href="/submit" class="btn btn-lg btn-primary">
+                    Submit Cop Photos
+                </a>
+                Upload photos of officers in uniform.
                 <div class="small-horizontal-padding"></div>
                 <a href="/faces" id="cpd" class="btn btn-lg btn-primary">
                     Facial Recognition Search
                 </a>
-                <div class="small-horizontal-padding"></div>
-                <a href="/label" id="cpd" class="btn btn-lg btn-primary">
-                    Identify a Cop
-                </a>
+                Try out our new beta feature!
                 <div class="small-horizontal-padding"></div>
                 <a href="/incidents" id="cpd" class="btn btn-lg btn-primary">
-                    View Reports
+                    Incident Reports
                 </a>
-            </div>
+                Add a police officer encounter to the community database. This does not submit a report to the police department.
 
-            <div class="col-lg-6 col-half-border bg-white">
-                <h1>
-                    <small>View our FOIA Library</small>
-                </h1>
-                <a class="btn btn-lg btn-primary" href="{{ url_for('main.show_documents') }}">
+                <div class="small-horizontal-padding"></div>
+                <a href="/documents" id="cpd" class="btn btn-lg btn-primary">
                     Search the Library
                 </a>
-                <h1>
-                    <small>Submit an Image</small>
-                </h1>
-                <div class="text-gray-lighter">Contribute to the database</div>
-                <p>
-                    Got a photo of a cop in uniform? Drop it here and let's identify them.
-                    <!--Alternatively, for high security uploads of photos or videos, you can use our
-                    <a href="https://lucyparsonslabs.com/securedrop/" target="_blank">SecureDrop</a> tool.-->
-                </p>
-                <a class="btn btn-lg btn-primary" href="{{ url_for('main.submit_data') }}">
-                    Submit Cop Photos
-                </a>
+                View our library of FOIA documents.
+            </div>
 
-                <h1><small>Tell Your Story</small></h1>
-                <div class="text-gray-lighter">Add an report to the community database.</div>
-                <p>
-                   Report an encounter with a police officer. This does not submit a report to the police department.
-                </p>
-                <a class="btn btn-lg btn-primary" href="/incidents/new">Submit New Report</a>
+            <div class="col-lg-6 col-half-border bg-white" id="news">
+                <h1>
+                    <small>Latest News (<a href="/news/">more</a>)</small>
+                </h1>
+                <iframe src="/news/latest" class="embed"></iframe>
             </div>
 
         </div>

@@ -391,6 +391,7 @@ a > .tutorial{
 .small-horizontal-padding {
     padding-top: 10px;
     padding-bottom: 10px;
+    clear: left;
 }
 
 .sink-row {
@@ -565,4 +566,27 @@ tr:hover .row-actions {
 }
 #dept-search { 
 
+}
+
+body.embed { /* on news/latest page */
+  margin: 0;
+  padding: 0;
+}
+iframe.embed { /* on index.html */
+    border: 0px solid #000;
+    width: 100%;
+    margin-top: 50px;
+}
+div#news {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+}
+div#news h1 {
+    position: absolute;
+}
+
+div#index-left a.btn {
+    float: left;
+    margin-right: 20px;
 }

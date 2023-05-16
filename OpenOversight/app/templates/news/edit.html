@@ -20,5 +20,9 @@
       <br>
    </div>
 
+  {% if (current_user.id == post.user_id) or current_user.is_administrator %}
+    <a class="action" href="{{ url_for('main.delete_post', post_id=post.id) }}" style="color:red">Delete Post</a>
+  {% endif %}
+
 </div>
 {% endblock %}
