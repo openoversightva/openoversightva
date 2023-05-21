@@ -107,8 +107,8 @@ class AssignmentForm(Form):
         Regexp(r'\w*'), Length(max=50)])
     dept = QuerySelectField('dept', validators=[DataRequired()],
                             query_factory=dept_choices, get_label='name')
-    job_title = QuerySelectField('Job Title', validators=[DataRequired()],
-                                 get_label='job_title', get_pk=lambda x: x.id)  # query set in view function
+    job_title = QuerySelectField('Job Title', validators=[Optional()],
+                                 get_label='job_title')  # query set in view function
     unit = QuerySelectField('Unit', validators=[Optional()],
                             query_factory=unit_choices, get_label='descrip',
                             allow_blank=True, blank_text=u'None')

@@ -349,15 +349,16 @@ def add_assignment(officer_id):
     form = AssignmentForm()
     officer = Officer.query.filter_by(id=officer_id).first()
     form.job_title.query = Job.query\
-                              .filter_by(department_id=officer.department_id)\
                               .order_by(Job.order.asc())\
                               .all()
+                              # .filter_by(department_id=officer.department_id)\
 
     if not officer:
         flash('Officer not found')
         abort(404)
 
     if form.validate_on_submit():
+        flash("validated")
         if (current_user.is_administrator
                 or (current_user.is_area_coordinator and officer.department_id == current_user.ac_department_id)):
             try:
