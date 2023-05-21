@@ -1,5 +1,5 @@
 import csv
-from datetime import date
+from datetime import date, datetime
 import io
 import os
 import re
@@ -35,13 +35,13 @@ from .forms import (FindOfficerForm, FindOfficerIDForm, AddUnitForm,
                     EditOfficerForm, IncidentForm, TextForm, EditTextForm,
                     AddImageForm, EditDepartmentForm, BrowseForm, SalaryForm, OfficerLinkForm,
                     AddDocumentForm, DocumentsForm, SearchFaceForm, EditDocumentForm,
-                    SearchTagForm, EditTagForm, MergeTagForm)
+                    SearchTagForm, EditTagForm, MergeTagForm, PostForm)
 
 from .model_view import ModelView
 from .choices import GENDER_CHOICES, RACE_CHOICES, AGE_CHOICES, RACE_CHOICES_SEARCH
 from ..models import (db, Image, User, Face, Officer, Assignment, Department,
                       Unit, Incident, Location, LicensePlate, Link, Note,
-                      Description, Salary, Job, Document, Tag)
+                      Description, Salary, Job, Document, Tag, Post)
 
 from ..auth.forms import LoginForm
 from ..auth.utils import admin_required, ac_or_admin_required
@@ -2048,3 +2048,112 @@ def delete_docinc_tag(tag_id):
                       format_exc()])
         ))
     return redirect(url_for('main.manage_tags'))
+
+
+## News/Blog posts
+@main.route('/news/')
+def show_posts(page=1):
+
+    POSTS_PER_PAGE = int(current_app.config['OFFICERS_PER_PAGE'])
+
+    # Set form data based on URL
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+
+    posts =  Post.query
+    posts = posts.order_by(Post.created.desc())
+    posts = posts.paginate(page, POSTS_PER_PAGE, False)
+
+    next_url = url_for('main.show_posts',
+                       page=posts.next_num)
+    prev_url = url_for('main.show_posts',
+                       page=posts.prev_num)
+
+    return render_template(
+        'news/index.html',
+        posts=posts,
+        next_url=next_url,
+        prev_url=prev_url)
+
+@main.route('/news/<int:post_id>')
+def show_post(post_id):
+    post =  Post.query.filter_by(id=post_id).first()
+    if not post:
+        flash('Post not found')
+        abort(404)
+    return render_template(
+        'news/view.html',
+        post=post)
+
+@main.route('/news/latest')
+def show_latest_post():
+    posts =  Post.query
+    post = posts.order_by(Post.created.desc()).first()
+    return render_template(
+        'news/view_raw.html',
+        post=post)
+
+@main.route('/news/<int:post_id>/delete', methods=['GET'])
+@login_required
+@ac_or_admin_required
+def delete_post(post_id):
+    post = Post.query.filter_by(id=post_id).first()
+
+    if not post:
+        flash('Post not found')
+        abort(404)
+
+    if not current_user.is_administrator:
+        if current_user.id != post.user_id:
+            abort(403)
+
+    try:
+        db.session.delete(post)
+        db.session.commit()
+        flash('Deleted the post')
+    except:  # noqa
+        flash('Unknown error occurred')
+        exception_type, value, full_tback = sys.exc_info()
+        current_app.logger.error('Error deleting post: {}'.format(
+            ' '.join([str(exception_type), str(value),
+                      format_exc()])
+        ))
+    return redirect(url_for('main.show_posts'))
+
+@main.route('/news/<int:post_id>/edit', methods=['GET', 'POST'])
+@login_required
+@ac_or_admin_required
+def edit_post(post_id):
+    post = Post.query.filter_by(id=post_id).one()
+
+    form = PostForm(obj=post)
+
+    if form.validate_on_submit():
+        post.title = form.title.data
+        post.body = form.body.data
+        db.session.commit()
+        flash('Edited post ID {}'.format(post_id))
+        return redirect(url_for('main.show_posts'))
+    else:
+        current_app.logger.info(form.errors)
+    return render_template('news/edit.html', form=form, post=post)
+
+@main.route('/news/new', methods=['GET', 'POST'])
+@login_required
+@ac_or_admin_required
+def submit_post():
+    form = PostForm()
+    if form.validate_on_submit():
+        title = form.title.data
+        body = form.body.data
+        user_id = current_user.id
+        new_post = Post(user_id = user_id,
+                            created=datetime.now(),
+                            title = title,
+                            body = body)
+        db.session.add(new_post)
+        db.session.commit()
+        flash("Post created")
+        return redirect("/news/")
+    else:
+        return render_template('news/create.html', form=form)

@@ -8,21 +8,21 @@
     {% block meta %}
     <meta name="description" content="A public, searchable database of law enforcement officers in Virginia">
     <meta name="author" content="OpenOversightVA/Lucy Parsons Labs">
-    <!-- meta image by Andrew Ringle https://flickr.com/photos/vcucns/50409297772/ -->
-    <meta name="image" content="/static/images/jeb_stuart_by_andrew_ringle_20200621_tw.jpg">
+    <!-- meta image by Alan Levine https://flickr.com/photos/37996646802@N01/21400154080 -->
+    <meta name="image" content="/static/images/cops_checking_apps_21400154080_twitter.jpg">
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@abolishRPD">
     <meta name="twitter:title" content="Open Oversight VA">
     <meta name="twitter:description" content="A public, searchable database of law enforcement officers in Virginia">
-    <meta name="twitter:image" content="https://openoversightva.com/static/images/jeb_stuart_by_andrew_ringle_20200621_tw.jpg">
+    <meta name="twitter:image" content="/static/images/cops_checking_apps_21400154080_twitter.jpg">
     <!-- Open Graph -->
-    <meta property="og:image" content="https://openoversightva.com/static/images/jeb_stuart_by_andrew_ringle_20200621_fb.jpg">
+    <meta property="og:image" content="/static/images/cops_checking_apps_21400154080_facebook.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:title" content="Open Oversight VA">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://openoversightva.com/">
+    <meta property="og:url" content="https://openoversightva.org/">
     <meta property="og:description" content="A public, searchable database of law enforcement officers in Virginia">
     <meta property="og:site_name" content="OpenOversightVA">
     {% endblock %}
@@ -75,7 +75,6 @@
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
             <li><a class="navbar-link" href="/search">Search All Cops</a></li>
-            <!--<li><a class="navbar-link" href="/search">Search all Officers</a></li>-->
             <li><a class="navbar-link" href="/browse">Agencies (A-Z)</a></li>
             <li><a class="navbar-link" href="/incidents">Reports</a></li>
             <li><a class="navbar-link" href="/documents">FOIA Library</a></li>
@@ -151,6 +150,7 @@
         <div class="col-sm-4">
           <h5>Navigation</h5>
           <p class="font-weight-300">
+            <a href="{{ url_for('main.show_posts') }}" class="btn-unstyled">News</a><br>
             <a href="/search" class="btn-unstyled">Search All Cops</a><br>
             <a href="/browse" class="btn-unstyled">Agencies (A-Z)</a><br>
             <a href="{{ url_for('main.submit_data') }}" class="btn-unstyled">Submit Images</a><br>

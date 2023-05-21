@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Create a News Post{% endblock %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+<div class="container theme-showcase" role="main">
+  <div class="text-center frontpage-leads">
+    <h1><small>New Post</small></h1>
+  </div>
+
+  <div class="form-group">
+      <form class="form"  name = "postform" id = "postform" enctype="multipart/form-data" method="post" role="form">
+         {{ wtf.form_field(form.title) }}
+         {{ wtf.form_field(form.body) }}
+         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+         {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+      </form>
+      <br>
+   </div>
+
+</div>
+{% endblock %}

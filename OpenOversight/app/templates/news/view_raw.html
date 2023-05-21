@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <!-- Bundled CSS -->
+    <link href="{{ url_for('static', filename='dist/index.css') }}" rel="stylesheet">
+    <!-- Custom styles for this template -->
+    <link href="{{ url_for('static', filename='css/openoversight.css') }}" rel="stylesheet">
+    <!-- Embedded video styles -->
+    <link href="{{ url_for('static', filename='css/responsive_embed.css') }}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <!-- jQuery UI -->
+    <link href="{{ url_for('static', filename='css/jquery-ui.min.css') }}" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <!-- Bootstrap -->
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  </head>
+  <body role="document" class="embed">
+  {% if (post) %}
+    <article class="post">
+      <header>
+        <div>
+          <h1>{{ post.title }}</h1>
+          <div class="about">by {{ post.user.username }} on {{ post.created.strftime('%Y-%m-%d') }}</div>
+        </div>
+      </header>
+      <p class="body">{{ post.body }}</p>
+    </article>
+  {% else %}
+
+  {% endif %}
+</body>
+</html>
