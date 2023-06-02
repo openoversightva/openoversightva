@@ -20,7 +20,7 @@
           <a class="action" href="{{ url_for('main.edit_post', post_id=post.id) }}">Edit</a>
         {% endif %}
       </header>
-      <p class="body">{{ post.body }}</p>
+      <p class="body">{{ post.body|markdown }}</p>
     </article>
     {% if not loop.last %}
       <hr>
