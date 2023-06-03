@@ -482,5 +482,5 @@ class SearchTagForm(Form):
 
 class PostForm(Form):
     title = StringField('Title')
-    body = TextAreaField('Post Body')
+    body = TextAreaField('Post Body', render_kw={'class': 'form-control', 'rows': 10})
     submit = SubmitField(label='Submit')

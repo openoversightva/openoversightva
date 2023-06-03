@@ -29,7 +29,7 @@
           <div class="about">by {{ post.user.username }} on {{ post.created.strftime('%Y-%m-%d') }}</div>
         </div>
       </header>
-      <p class="body">{{ post.body }}</p>
+      <p class="body">{{ post.body|markdown }}</p>
     </article>
   {% else %}
 
