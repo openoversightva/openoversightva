@@ -35,13 +35,16 @@ from .forms import (FindOfficerForm, FindOfficerIDForm, AddUnitForm,
                     EditOfficerForm, IncidentForm, TextForm, EditTextForm,
                     AddImageForm, EditDepartmentForm, BrowseForm, SalaryForm, OfficerLinkForm,
                     AddDocumentForm, DocumentsForm, SearchFaceForm, EditDocumentForm,
-                    SearchTagForm, EditTagForm, MergeTagForm, PostForm)
+                    SearchTagForm, EditTagForm, MergeTagForm, PostForm,
+                    AddSheetForm, SheetMapForm, SheetMatchForm)
 
 from .model_view import ModelView
+from ..sheet_import import (upload_sheet, insert_sheet_details, prep_ref_data, 
+                            match_officers, load_sheet)
 from .choices import GENDER_CHOICES, RACE_CHOICES, AGE_CHOICES, RACE_CHOICES_SEARCH
 from ..models import (db, Image, User, Face, Officer, Assignment, Department,
                       Unit, Incident, Location, LicensePlate, Link, Note,
-                      Description, Salary, Job, Document, Tag, Post)
+                      Description, Salary, Job, Document, Tag, Post, Sheet, SheetDetail)
 
 from ..auth.forms import LoginForm
 from ..auth.utils import admin_required, ac_or_admin_required
@@ -1334,6 +1337,111 @@ def check_input(str_input):
     else:
         return str(str_input).replace(",", " ")  # no commas allowed
 
+@main.route('/admin', methods=['GET'])
+@login_required
+@admin_required
+def admin_page():
+    return render_template(
+        'admin.html')
+
+# This is the page to upload a new spreadsheet containing a roster
+# It just uploads it to s3, nothing fancy.
+@main.route('/sheets/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+@limiter.limit('5/minute')
+def submit_sheet():
+    form = AddSheetForm()
+    if form.validate_on_submit():
+        try:
+            file_data = form.file.data
+            sheet = upload_sheet(file_data, current_user.get_id())
+            flash("Sheet was successfully uploaded")
+            return redirect(url_for('main.sheet_map', sheet_id=sheet.id))
+        except Exception as e:
+            import traceback
+            flash("An error occurred while uploading")
+            flash(traceback.format_exc())
+        return redirect("/sheets/new")
+    else:
+        return render_template('import/import_csv.html', form=form)
+
+# Step 2 - insert the spreadsheet columns to database fields
+@main.route('/sheets/mapping/<int:sheet_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def sheet_map(sheet_id):
+    form = SheetMapForm()
+
+    if form.errors:
+        flash(form.errors)
+
+    try:
+        sheet = Sheet.query.filter_by(id=sheet_id).one()
+    except NoResultFound:
+        abort(404)
+    #except:
+    #    abort(500)
+    form.id = sheet_id
+
+    if form.validate_on_submit():
+        try:
+            #sheet_id = form.id
+            #column_mapping = form.column_mapping
+            #flash("trying to insert")
+            insert_sheet_details(sheet)
+            flash("Sheet details inserted")
+            return redirect(url_for('main.sheet_match', sheet_id=sheet_id))
+        except Exception:
+            import traceback
+            flash("An error occurred while uploading")
+            flash(traceback.format_exc())
+        return redirect(url_for('main.sheet_map', sheet_id=sheet_id))
+    else:
+        return render_template('import/mapping.html', form=form, sheet=sheet)
+
+# Step 3 - Identification - for each record, try to figure out if it's
+# an insert (new officer) or update (existing officer in that department)
+# ie, we just need to know if there's an existing OFFICER.ID or not
+@main.route('/sheets/match/<int:sheet_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def sheet_match(sheet_id):
+    form = SheetMatchForm()
+    form.id = sheet_id
+
+    if form.validate_on_submit():
+        if 'submit' in request.form:
+            try:
+                # clean data, insert ref data (depts, units, jobs)
+                prep_ref_data(sheet_id)
+                flash("Cleaned data. Created any new departments, unit, jobs needed.")
+                # try to look up officer_ids for updates instead of inserts
+                match_officers(sheet_id)
+                flash("Attempted to find best officer matches. Please verify.")
+            except Exception:
+                import traceback
+                flash("Match error:")
+                flash(traceback.format_exc())
+        elif 'load' in request.form:
+            try:
+                load_sheet(sheet_id)
+                flash("Records inserted/updated in database. Check status column for more details")
+            except Exception:
+                import traceback
+                flash("Load error:")
+                flash(traceback.format_exc())
+        else:
+            flash("Unknown button pressed. Ignoring")
+        return redirect(url_for('main.sheet_match', sheet_id=sheet_id))
+    else:
+        try:
+            sheet = Sheet.query.filter_by(id=sheet_id).one()
+        except NoResultFound:
+            abort(404)
+        details = SheetDetail.query.filter_by(sheet_id=sheet_id)\
+            .order_by(SheetDetail.row_id).all()
+        return render_template('import/match.html', form=form, sheet=sheet, details=details)
 
 @main.route('/download/department/<int:department_id>', methods=['GET'])
 @limiter.limit('5/minute')

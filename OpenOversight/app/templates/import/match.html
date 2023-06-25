@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}¬
+{% block title %}Import Roster - Stage 3{% endblock %}
+{% block meta %}
+<meta name="description" content="Import a roster, part 3">
+{% endblock %}
+{% block head %}
+<script src="/static/js/jquery.csv.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container theme-showcase" role="main">
+
+   <div class="page-header">
+      <h1>Import a Roster, part 3</h1>
+   </div>
+   <div class="form-group">
+      <form class="form"  name = "SheetMatchForm" id = "SheetMatchForm" enctype="multipart/form-data" method="post" role="form">
+         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+         <table class="table table-hover">
+            <tbody>
+              <tr>
+                <td><b>Sheet created by</b></td>
+                <td>{{ sheet.user.username }}</td>
+              </tr>
+              <tr>
+                <td><b>Sheet created on</b></td>
+                <td>{{ sheet.date_file_inserted }}</td>
+              </tr>
+              <tr>
+                <td><b>Filepath</b></td>
+                <td>{{ sheet.filepath }}</td>
+              </tr>
+              <!--<tr>
+                <td><b>Column mapping</b></td>
+                <td>{{ sheet.column_mapping }}</td>
+              </tr>-->
+            </tbody>
+         </table>
+         {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+         {{ wtf.form_field(form.load, id="load", button_map={'load':'primary'}) }}
+      </form>
+   </div>
+   <div>
+        <h3>Instructions</h3>
+        <p>Click "Attempt Matching" first. This will find/create the Department, Job, 
+        and Unit IDs for each row, and <i>try</i> to look up a matching officer.</p>
+        <p>Once it does, you can click on the officer ID to verify it. When 
+        everything looks good, click "Load Records".</p>
+        <p>If a record was inserted/updated ok, the status column should start with "OK -".
+        Otherwise, it should have an error message. I haven't added a way to edit these 
+        records yet, so I might have to manually fix them. -K</p>
+        <p>If they all say OK, go browse the department and take a look!</p>
+   </div>
+   <div id="table-container">
+      <table id="csv-table" class="display" width="100%">
+         <thead>
+               <tr><th>Row</th>
+                <th>Agency</th>
+                <th class="import-generated">Department ID</th>
+                <th class="import-generated">Officer ID</th>
+                  <th>Last</th>
+                  <th>First</th>
+                  <th>MI</th>
+                  <th>Suffix</th>
+                  <th>Badge</th>
+                  <th>Rank</th>
+                  <th class="import-generated">Job ID</th>
+                  <th>Unit</th>
+                  <th class="import-generated">Unit ID</th>
+                  <th>Gender</th>
+                  <th>Race</th>
+                  <th>First Employment Date</th>
+                  <th>Salary</th>
+                  <th>Overtime</th>
+                  <th>Salary Year</th>
+                  <th>Is Fiscal Year (Y/N)</th>
+                  <th>Status</th>
+
+              </tr>
+              {% for r in details %} <!-- sheet_id|row_id|officer_id|department_id|unit_id|job_id|last_name|first_name|middle_initial|suffix|badge_number|rank_title              |unit_name           |gender  |race    |employment_date|salary    |salary_overtime|salary_year|salary_is_fy|agency_name -->
+                <tr>
+                    <td>{{r.row_id}}</td>
+                    <td>{{r.agency_name}}</td>
+                    <td class="import-generated">{% if r.department_id %}<a href="/department/{{r.department_id}}">{{r.department_id}}</a>{% endif %}</td>
+                    <td class="import-generated">{% if r.officer_id %}<a href="/officer/{{r.officer_id}}">{{r.officer_id}}</a>{% endif %}</td>
+                    <td>{{r.last_name}}</td>
+                    <td>{{r.first_name}}</td>
+                    <td>{{r.middle_initial}}</td>
+                    <td>{{r.suffix}}</td>
+                    <td>{{r.badge_number}}</td>
+                    <td>{{r.rank_title}}</td>
+                    <td class="import-generated">{{r.job_id}}</td>
+                    <td>{{r.unit_name}}</td>
+                    <td class="import-generated">{{r.unit_id}}</td>
+                    <td>{{r.gender}}</td>
+                    <td>{{r.race}}</td>
+                    <td>{{r.employment_date}}</td>
+                    <td>{{r.salary}}</td>
+                    <td>{{r.salary_overtime}}</td>
+                    <td>{{r.salary_year}}</td>
+                    <td>{{r.salary_is_fy}}</td>
+                    <td>{{r.status}}</td>
+                </tr>
+              {% endfor %}
+         </thead>
+      </table>
+   </div>
+ 
+</div>
+
+{% endblock %}

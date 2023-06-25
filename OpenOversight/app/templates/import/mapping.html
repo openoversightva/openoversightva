@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}¬
+{% block title %}Import Roster - Stage 2{% endblock %}
+{% block meta %}
+<meta name="description" content="Import a roster, part 2">
+{% endblock %}
+{% block head %}
+<script src="/static/js/jquery.csv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/PapaParse/4.6.3/papaparse.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.css" crossorigin="anonymous" />
+<script src="//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.6.2/css/colReorder.dataTables.min.css" crossorigin="anonymous" />
+<script src="//cdn.datatables.net/colreorder/1.6.2/js/dataTables.colReorder.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container theme-showcase" role="main">
+
+   <div class="page-header">
+      <h1>Import a Roster, part 2</h1>
+   </div>
+   <div class="form-group">
+      <form class="form"  name = "sheetmapform" id = "sheetmapform" enctype="multipart/form-data" method="post" role="form">
+         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+         <table class="table table-hover">
+            <tbody>
+              <tr>
+                <td><b>Sheet created by</b></td>
+                <td>{{ sheet.user.username }}</td>
+              </tr>
+              <tr>
+                <td><b>Sheet created on</b></td>
+                <td>{{ sheet.date_file_inserted }}</td>
+              </tr>
+              <tr>
+                <td><b>Filepath</b></td>
+                <td>{{ sheet.filepath }}</td>
+              </tr>
+              <!--<tr>
+                <td><b>Column mapping</b></td>
+                <td>{{ sheet.column_mapping }}</td>
+              </tr>-->
+            </tbody>
+         </table>
+         {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+      </form>
+   </div>
+   <div>
+      <b>Note</b> - if you click the button and get a long error (or if you know you've already done this step for this sheet), please proceed to <a href="/sheets/match/{{ sheet.id }}">Step 3</a>
+   </div>
+   <div id="table-container">
+      <table id="csv-table" class="display" width="100%">
+         <thead>
+               <tr>
+                  <th>Last</th>
+                  <th>First</th>
+                  <th>MI</th>
+                  <th>Suffix</th>
+                  <th>Badge</th>
+                  <th>Rank</th>
+                  <th>Unit</th>
+                  <th>Gender</th>
+                  <th>Race</th>
+                  <th>First Employment Date</th>
+                  <th>Salary</th>
+                  <th>Overtime</th>
+                  <th>Salary Year</th>
+                  <th>Is Fiscal Year (Y/N)</th>
+                  <th>Agency</th>
+              </tr>
+         </thead>
+      </table>
+   </div>
+ 
+
+   <script>
+   var csrf_token = "{{ csrf_token() }}";
+
+   $(document).ready(function() {
+      Papa.parse("{{ sheet.filepath }}", {
+         download: true,
+         header: true, 
+         skipEmptyLines: true,
+         complete: function(result) {
+            if (result.data && result.data.length > 0) {
+               data = result.data;
+               header = Object.keys(result.data[0]);
+               //header = ["Last","First","MI","Suffix","Badge","Rank","Unit","Gender","Race","First Employment Date","Salary","Overtime","TotalPay","salary_year","Agency"]
+               colarr = header.map(c => ({ 'data' : String(c)}));
+               console.log(JSON.stringify(colarr));
+               //console.log(JSON.stringify(Object.keys(result.data[0])));
+               $('#csv-table').DataTable({
+                  data: result.data,
+                  columns: colarr,
+                  paging: false
+               });
+            } else {
+               console.log('error parsing csv');
+               console.log(result.errors);
+            }
+         }
+      });
+   });
+
+
+   </script>
+</div>
+
+{% endblock %}

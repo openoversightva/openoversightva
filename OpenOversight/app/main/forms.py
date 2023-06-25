@@ -367,6 +367,20 @@ class DateFieldForm(Form):
         if field.data.year < 1900:
             raise ValidationError('Incidents prior to 1900 not allowed.')
 
+class AddSheetForm(Form):
+    #file = HiddenField(validators=[DataRequired(message='Please upload a file first.')])
+    file = FileField(validators=[FileRequired()])
+    submit = SubmitField(label='Upload Sheet')
+
+class SheetMapForm(Form):
+    id = HiddenField(validators=[])
+    column_mapping = HiddenField(validators=[])
+    submit = SubmitField(label='Load Records to Table')
+
+class SheetMatchForm(Form):
+    id = HiddenField(validators=[])
+    submit = SubmitField(label='Attempt Matching')
+    load = SubmitField(label='Load Records')
 
 class LocationForm(Form):
     street_name = StringField(validators=[Optional()], description='Street on which incident occurred. For privacy reasons, please DO NOT INCLUDE street number.')
