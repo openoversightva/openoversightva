@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}¬
+{% block title %}Import Roster File{% endblock %}
+{% block meta %}
+<meta name="description" content="Import a roster">
+{% endblock %}
+{% block head %}
+<link href="{{ url_for('static', filename='css/dropzone.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/dropzone-override.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container theme-showcase" role="main">
+
+   <div class="page-header">
+      <h1>Import a Roster</h1>
+   </div>
+   <div class="form-group">
+      <form class="form"  name = "sheetform" id = "sheetform" enctype="multipart/form-data" method="post" role="form" label="deptselect">
+         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+         {{ wtf.form_field(form.file) }}
+         <!--<div id="my-cop-dropzone"  class='dropzone'>
+         </div>
+         <p>Drag documents from your computer directly into the box above or click the box to launch a finder window. If you are on mobile, you can click the box above to select a document.</p>-->
+         {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+      </form>
+      <br>
+      <b>Note</b> - the roster should be a CSV file with the following columns in this order:<br>
+      <span style="color:green">Last,First,MI,Suffix,Badge,Rank,Unit,Gender,Race,First Employment Date,Salary,Overtime,Salary Year,Is Fiscal Year,Agency</span><br>
+      (It doesn't matter what the column names are exactly, but the order is important)<br>
+      <a href="https://docs.google.com/spreadsheets/d/1p-wGufdSWdT4kk8P2cL0yIy4Y54sGhnAO5_uRc039uI/edit#gid=228017840" target="_blank">Example sheet, for reference</a>
+   </div>
+
+ 
+
+   
+   <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+   <script src="{{ url_for('static', filename='js/dropzone.js') }}"></script>
+
+   <script>
+    /*
+   var csrf_token = "{{ csrf_token() }}";
+
+   Dropzone.autoDiscover = false;
+   const getURL = (file) => {
+      return "/upload/sheets/";
+   }
+
+   let myDropzone = new Dropzone("#my-cop-dropzone", {
+      method: "post",
+      url: getURL,
+      uploadMultiple: false,
+      parallelUploads: 50,
+      autoProcessQueue: false,
+      maxFiles: 50,
+      headers: {
+        'X-CSRF-TOKEN': csrf_token
+      },
+      init: function() {
+         this.on("error", function(file, responseText) {
+            file.previewTemplate.appendChild(document.createTextNode(responseText));
+         });
+      },
+      accept: function(file) {
+        let fileReader = new FileReader();
+        fileReader.readAsDataURL(file);
+        fileReader.onloadend = function() {
+            let content = fileReader.result;
+            $('#file').val(content);
+            file.previewElement.classList.add("dz-success");
+        }
+        file.previewElement.classList.add("dz-complete");
+    }
+   });
+   */
+   </script>
+</div>
+
+{% endblock %}

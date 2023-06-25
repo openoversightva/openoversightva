@@ -339,6 +339,53 @@ class Post(BaseModel):
     title = db.Column(db.String(255), unique=False)
     body = db.Column(db.Text, unique=False)
 
+class Sheet(BaseModel):
+    __tablename__ = 'import_sheets'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filepath = db.Column(db.String(255), unique=False)
+    hash_sheet = db.Column(db.String(120), unique=False, nullable=True)
+    # Track when the CSV was put into our database
+    date_inserted = db.Column(db.DateTime, unique=False, nullable=True)
+    date_loaded = db.Column(db.DateTime, unique=False, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    user = db.relationship('User', backref='sheets')
+    # json dict mapping CSV cols to column names
+    column_mapping = db.Column(db.String, unique=False)
+
+    def __repr__(self):
+        return '<Sheet ID {}: {}>'.format(self.id, self.filepath)
+
+class SheetDetail(BaseModel):
+    __tablename__ = 'import_sheet_details'
+    # composite primary key (sheet_id, row_id)
+    sheet_id = db.Column(db.Integer, db.ForeignKey('import_sheets.id'), primary_key=True)
+    sheet = db.relationship('Sheet', backref='import_sheet_details')
+    row_id = db.Column(db.Integer, primary_key=True)
+    ## Calculated fields
+    # avoid Relationships here bc it will try to auto-update them
+    # candidate officer id
+    officer_id = db.Column(db.Integer, nullable=True)
+    department_id = db.Column(db.Integer, nullable=True)
+    unit_id = db.Column(db.Integer, nullable=True)
+    job_id = db.Column(db.Integer, nullable=True)
+    status = db.Column(db.String, unique=False, nullable=True)
+    ## Raw fields
+    last_name = db.Column(db.String, unique=False, nullable=True)
+    first_name = db.Column(db.String, unique=False, nullable=True)
+    middle_initial = db.Column(db.String, unique=False, nullable=True)
+    suffix = db.Column(db.String, unique=False, nullable=True)
+    badge_number = db.Column(db.String, unique=False, nullable=True)
+    rank_title = db.Column(db.String, unique=False, nullable=True)
+    unit_name = db.Column(db.String, unique=False, nullable=True)
+    gender = db.Column(db.String, unique=False, nullable=True)
+    race = db.Column(db.String, unique=False, nullable=True)
+    employment_date = db.Column(db.String, unique=False, nullable=True)
+    salary = db.Column(db.String, unique=False, nullable=True)
+    salary_overtime = db.Column(db.String, unique=False, nullable=True)
+    salary_year = db.Column(db.String, unique=False, nullable=True)
+    salary_is_fy = db.Column(db.String, unique=False, nullable=True)
+    agency_name = db.Column(db.String, unique=False, nullable=True)
 
 incident_links = db.Table(
     'incident_links',

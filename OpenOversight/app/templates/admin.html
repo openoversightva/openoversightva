@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block title %}Admin Volunteer work{% endblock %}
+{% block meta %}
+<meta name="description" content="Admin main page">
+{% endblock %}
+{% block content %}
+
+{% if current_user and current_user.is_authenticated and current_user.is_administrator%}
+<div class="container theme-showcase" role="main">
+    <div class="text-center frontpage-leads">
+      <h2>Admin</h2>
+
+      <p>
+        Welcome to the admin section! Don't mind the mess.
+      </p>
+
+    </div>
+
+    <div class="text-center frontpage-leads">
+
+        <a href="{{ url_for('main.add_department') }}"
+              class="btn btn-primary" role="button">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            Add New Department
+        </a>
+        <a href="{{ url_for('main.manage_tags') }}"
+              class="btn btn-primary" role="button">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            Manage Tags
+        </a>
+
+        <a href="{{ url_for('main.add_officer') }}"
+              class="btn btn-primary" role="button">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            Add New Officer
+        </a>
+
+        <a href="{{ url_for('main.add_unit') }}"
+              class="btn btn-primary" role="button">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            Add New Unit
+        </a>
+
+        <a href="{{ url_for('main.incident_api')+ 'new' }}"
+              class="btn btn-primary" role="button">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            Add New Incident
+        </a>
+
+    </div>
+
+    <div class="text-center frontpage-leads">
+
+        <a href="{{ url_for('main.submit_sheet') }}"
+              class="btn btn-primary" role="button">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            Upload New Roster
+        </a>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

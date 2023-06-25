@@ -590,3 +590,13 @@ div#index-left a.btn {
     float: left;
     margin-right: 20px;
 }
+
+/* import pages */
+table.display th, table.display td {
+    border: 1px solid;
+    padding: 2px;
+}
+
+.import-generated {
+    background-color: #99cc99;
+}

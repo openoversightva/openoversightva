@@ -29,7 +29,7 @@ from PIL.PngImagePlugin import PngImageFile
 
 from .models import (db, Officer, Assignment, Job, Image, Face, User, Unit, Department,
                      Incident, Location, LicensePlate, Link, Note, Description, Salary,
-                     Document, Tag)
+                     Document, Tag, Sheet)
 from .main.choices import RACE_CHOICES, GENDER_CHOICES
 
 # Ensure the file is read/write by the creator only
@@ -619,6 +619,49 @@ def upload_image_to_s3_and_store_in_db(image_buf, user_id, department_id=None):
                       format_exc()])
         ))
         return None
+
+def upload_sheet(sheet_buf, user_id, file_ext='csv'):
+    file = sheet_buf.read()
+    sheet_data = io.BytesIO(file)
+    hash_sheet = compute_hash(file)
+    existing_doc = Sheet.query.filter_by(hash_sheet=hash_sheet).first()
+    if existing_doc:
+        return existing_doc
+    try:
+        new_filename = '{}.{}'.format(hash_sheet, file_ext)
+        url = upload_doc_to_s3(sheet_data, new_filename, 'text/csv')
+        new_sheet = Sheet(filepath=url, hash_sheet=hash_sheet,
+                          date_inserted=datetime.datetime.now(),
+                          date_loaded=None,
+                          user_id=user_id,
+                          column_mapping='[]'
+                          )
+        db.session.add(new_sheet)
+        db.session.commit()
+        return new_sheet
+    except ClientError:
+        exception_type, value, full_tback = sys.exc_info()
+        current_app.logger.error('Error uploading to S3: {}'.format(
+            ' '.join([str(exception_type), str(value),
+                      format_exc()])
+        ))
+        return None
+
+def insert_sheet_details(sheet):
+    import pandas as pd
+    df = pd.read_csv(sheet.filepath)
+    df = df.reset_index()    # create an index column for row_id
+    df.columns = ['row_id', 'last_name', 'first_name', 'middle_initial',
+                  'suffix', 'badge_number', 'rank_title', 'unit_name',
+                  'gender', 'race', 'employment_date', 'salary',
+                  'salary_overtime', 'salary_year', 'salary_is_fy',
+                  'agency_name']
+    df['sheet_id'] = sheet.id
+    current_app.logger.info("df shape" + str(df.shape))
+    # required fields: sheet_id, row_id
+    df.to_sql(name='import_sheet_details', con=db.engine, index=False,
+              if_exists='append')
+
 
 
 def find_date_taken(pimage):
