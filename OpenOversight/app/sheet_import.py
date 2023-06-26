@@ -6,6 +6,8 @@ from .models import (db, Officer, Assignment, Job, Face, User, Unit, Department,
 from .utils import (compute_hash, upload_doc_to_s3)
 
 from io import BytesIO
+from botocore.exceptions import ClientError
+import datetime
 import uuid
 import traceback
 import numpy as np
