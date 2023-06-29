@@ -1,4 +1,4 @@
-from wtforms.widgets.html5 import TimeInput
+from wtforms.widgets import TimeInput
 from wtforms import StringField
 import datetime
 

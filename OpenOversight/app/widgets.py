@@ -1,6 +1,7 @@
-from wtforms.widgets.core import ListWidget, html_params, HTMLString
+from wtforms.widgets.core import ListWidget, html_params
+from markupsafe import Markup # replaces HTMLString
 from wtforms.fields import FormField
-from wtforms.compat import text_type
+#from wtforms.compat import text_type
 
 
 class BootstrapListWidget(ListWidget):
@@ -21,7 +22,7 @@ class BootstrapListWidget(ListWidget):
             else:
                 html.append('<li><div class="form-group">%s %s</div><</li>' % (subfield(), subfield.label))
         html.append('</%s>' % self.html_tag)
-        return HTMLString(''.join(html))
+        return Markup(''.join(html))
 
 
 class FormFieldWidget(object):
@@ -30,10 +31,10 @@ class FormFieldWidget(object):
         hidden = ''
         for subfield in field:
             if subfield.type == 'HiddenField' or subfield.type == 'CSRFTokenField':
-                hidden += text_type(subfield)
+                hidden += str(subfield)
             else:
-                html.append('<div class="form-group">%s %s %s</div>' % (text_type(subfield.label.text), hidden, text_type(subfield)))
+                html.append('<div class="form-group">%s %s %s</div>' % (str(subfield.label.text), hidden, str(subfield)))
                 hidden = ''
         if hidden:
             html.append(hidden)
-        return HTMLString(''.join(html))
+        return Markup(''.join(html))

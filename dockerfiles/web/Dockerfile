@@ -1,6 +1,7 @@
 ARG TRAVIS_PYTHON_VERSION
 ARG DOCKER_BUILD_ENV
-FROM python:${TRAVIS_PYTHON_VERSION:-3.8}-buster
+FROM python:${TRAVIS_PYTHON_VERSION:-3.9}-bookworm
+# updated image names: https://hub.docker.com/_/python
 
 WORKDIR /usr/src/app
 
@@ -10,21 +11,21 @@ ENV DEBIAN-FRONTEND noninteractive
 ENV DISPLAY=:1
 
 # install apt dependencies
-RUN echo "deb http://deb.debian.org/debian buster-backports main" > /etc/apt/sources.list.d/backports.list
+RUN echo "deb http://deb.debian.org/debian bookworm-backports main" > /etc/apt/sources.list.d/backports.list
 RUN apt-get update && apt-get install -y xvfb firefox-esr libpq-dev python3-dev && \
-    apt-get install -y -t buster-backports libsqlite3-0 && apt-get clean
+    apt-get install -y libsqlite3-0 && apt-get clean
 
 # install node
-ENV NODE_SETUP_SHA=5d07994f59e3edc2904c547e772b818d10abb066f6ff36ab3db5d686b0fe9a73
+ENV NODE_SETUP_SHA=ece657290e0114462e4cb24a29f269e51b2abd7772c9c6d801c66b521e4e53f6
 RUN curl ${CURL_FLAGS} \
-      https://raw.githubusercontent.com/nodesource/distributions/b8510857fb4ce4b023161be8490b00119884974c/deb/setup_12.x
-RUN echo "${NODE_SETUP_SHA}  setup_12.x" | sha256sum --check -
-RUN bash setup_12.x
+      https://deb.nodesource.com/setup_20.x
+RUN echo "${NODE_SETUP_SHA}  setup_20.x" | sha256sum --check -
+RUN bash setup_20.x
 RUN apt-get install -y nodejs
 
 # install geckodriver
-ENV GECKODRIVER_VERSION="v0.26.0"
-ENV GECKODRIVER_SHA=d59ca434d8e41ec1e30dd7707b0c95171dd6d16056fb6db9c978449ad8b93cc0
+ENV GECKODRIVER_VERSION="v0.33.0"
+ENV GECKODRIVER_SHA=5f5e89bb31fe5f55f963f56ef7e55a5c8e9dc415d94b1ddc539171a327b8e6c4
 ENV GECKODRIVER_BASE_URL="https://github.com/mozilla/geckodriver/releases/download"
 RUN curl ${CURL_FLAGS} \
       ${GECKODRIVER_BASE_URL}/${GECKODRIVER_VERSION}/geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz
@@ -33,7 +34,9 @@ RUN mkdir geckodriver
 RUN tar -xzf geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz -C geckodriver
 
 # install yarn
-RUN npm install -g yarn
+RUN curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null
+RUN echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list
+RUN apt-get update && apt-get install yarn
 RUN mkdir /var/www ./node_modules /.cache /.yarn /.mozilla
 RUN touch /usr/src/app/yarn-error.log
 COPY yarn.lock /usr/src/app/

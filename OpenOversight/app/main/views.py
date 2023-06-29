@@ -164,7 +164,7 @@ def search_officer(page=1, race=[], gender=[], min_age='16', max_age='100', name
         )
     officers = officers.options(selectinload(Officer.face))
     officers = officers.order_by(Officer.last_name, Officer.first_name, Officer.id)
-    officers = officers.paginate(page, OFFICERS_PER_PAGE, False)
+    officers = officers.paginate(page=page, per_page=OFFICERS_PER_PAGE, error_out=False)
     for officer in officers.items:
         officer_face = sorted(officer.face, key=lambda x: x.featured, reverse=True)
 
@@ -706,7 +706,7 @@ def list_officer(department_id, page=1, race=[], gender=[], rank=[], min_age='16
     ).filter(Officer.department_id == department_id)
     officers = officers.options(selectinload(Officer.face))
     officers = officers.order_by(Officer.last_name, Officer.first_name, Officer.id)
-    officers = officers.paginate(page, OFFICERS_PER_PAGE, False)
+    officers = officers.paginate(page=page, per_page=OFFICERS_PER_PAGE, error_out=False)
     for officer in officers.items:
         officer_face = sorted(officer.face, key=lambda x: x.featured, reverse=True)
 
@@ -1071,7 +1071,7 @@ def get_tagger_gallery(page=1):
     if form.validate_on_submit():
         OFFICERS_PER_PAGE = int(current_app.config['OFFICERS_PER_PAGE'])
         form_data = form.data
-        officers = roster_lookup(form_data).paginate(page, OFFICERS_PER_PAGE, False)
+        officers = roster_lookup(form_data).paginate(page=page, per_page=OFFICERS_PER_PAGE, error_out=False)
         return render_template('tagger_gallery.html',
                                officers=officers,
                                form=form,
@@ -1117,7 +1117,7 @@ def show_documents(page=1, department=[], title=None):
             Document.department_id == request.args.get('department')
         )
     documents = documents.order_by(Document.date_inserted.desc())
-    documents = documents.paginate(page, DOCUMENTS_PER_PAGE, False)
+    documents = documents.paginate(page=page, per_page=DOCUMENTS_PER_PAGE, error_out=False)
     departments = Department.query.order_by(Department.name.asc())
 
     departmentlist = [(department.id, department.name) for department in departments]
@@ -1717,7 +1717,8 @@ class IncidentApi(ModelView):
         if request.args.get('department_id'):
             department_id = request.args.get('department_id')
             dept = Department.query.get_or_404(department_id)
-            obj = self.model.query.filter_by(department_id=department_id).order_by(getattr(self.model, self.order_by).desc()).paginate(page, self.per_page, False)
+            obj = self.model.query.filter_by(department_id=department_id).order_by(getattr(self.model, self.order_by).desc())\
+                .paginate(page=page, per_page=self.per_page, error_out=False)
             return render_template('{}_list.html'.format(self.model_name), objects=obj, url='main.{}_api'.format(self.model_name), department=dept)
         else:
             return super(IncidentApi, self).get(obj_id)
@@ -2169,7 +2170,7 @@ def show_posts(page=1):
 
     posts =  Post.query
     posts = posts.order_by(Post.created.desc())
-    posts = posts.paginate(page, POSTS_PER_PAGE, False)
+    posts = posts.paginate(page=page, per_page=POSTS_PER_PAGE, error_out=False)
 
     next_url = url_for('main.show_posts',
                        page=posts.next_num)

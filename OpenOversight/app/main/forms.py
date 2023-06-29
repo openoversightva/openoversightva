@@ -1,9 +1,9 @@
 from flask_wtf import FlaskForm as Form
-from wtforms.ext.sqlalchemy.fields import QuerySelectField
+from wtforms_sqlalchemy.fields import QuerySelectField
 from wtforms import (StringField, DecimalField, TextAreaField,
                      SelectField, IntegerField, SubmitField,
                      HiddenField, FormField, FieldList, BooleanField)
-from wtforms.fields.html5 import DateField
+from wtforms.fields import DateField
 
 from wtforms.validators import (DataRequired, InputRequired, AnyOf, NumberRange, Regexp,
                                 Length, Optional, URL, ValidationError)
