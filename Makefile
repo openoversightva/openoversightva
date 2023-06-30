@@ -6,6 +6,14 @@ default: build start create_db populate test stop clean
 build:  ## Build containers
 	docker-compose build
 
+.PHONY: build_with_version
+build_with_version:
+	docker-compose build --build-arg TRAVIS_PYTHON_VERSION=$(PYTHON_VERSION)
+
+.PHONY: test_with_version
+test_with_version: build_with_version assets
+	FLASK_ENV=testing docker-compose run --rm web pytest --cov=OpenOversight --cov-report xml:OpenOversight/tests/coverage.xml --doctest-modules -n 4 --dist=loadfile -v OpenOversight/tests/
+
 .PHONY: start
 start: build  ## Run containers
 	docker-compose up -d
@@ -18,7 +26,7 @@ create_db: start
 	done
 	@echo "Postgres is up"
 	## Creating database
-	docker-compose run --rm web python ../create_db.py
+	docker-compose run --rm web python ./create_db.py
 
 .PHONY: assets
 assets:
@@ -35,23 +43,19 @@ populate: create_db  ## Build and run containers
 	done
 	@echo "Postgres is up"
 	## Populate database with test data
-	docker-compose run --rm web python ../test_data.py -p
+	docker-compose run --rm web python ./test_data.py -p
 
 .PHONY: test
 test: start  ## Run tests
 	if [ -z "$(name)" ]; then \
-	    if [ "$$(uname)" == "Darwin" ]; then \
-			FLASK_ENV=testing docker-compose run --rm web pytest --doctest-modules -n $$(sysctl -n hw.logicalcpu) --dist=loadfile -v tests/ app; \
-		else \
-			FLASK_ENV=testing docker-compose run --rm web pytest --doctest-modules -n $$(nproc --all) --dist=loadfile -v tests/ app; \
-		fi; \
+		FLASK_ENV=testing docker-compose run --rm web pytest --cov --doctest-modules -n auto --dist=loadfile -v OpenOversight/tests/; \
 	else \
-	    FLASK_ENV=testing docker-compose run --rm web pytest --doctest-modules -v tests/ app -k $(name); \
+	    FLASK_ENV=testing docker-compose run --rm web pytest --cov --doctest-modules -v OpenOversight/tests/ -k $(name); \
 	fi
 
 .PHONY: lint
-lint: 
-	docker-compose run --no-deps --rm web /bin/bash -c 'flake8; mypy app --config="../mypy.ini"'
+lint:
+	pre-commit run --all-files
 
 .PHONY: cleanassets
 cleanassets:
@@ -81,5 +85,6 @@ help: ## Print this message and exit
 		| sort \
 		| column -s ':' -t
 
+.PHONY: attach
 attach:
 	docker-compose exec postgres psql -h localhost -U openoversight openoversight-dev
