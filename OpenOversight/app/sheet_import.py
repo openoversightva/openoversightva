@@ -1,9 +1,10 @@
 from flask import current_app, url_for, flash
 from flask_login import current_user
-from .models import (db, Officer, Assignment, Job, Face, User, Unit, Department,
+
+from OpenOversight.app.models import (db, Officer, Assignment, Job, Face, User, Unit, Department,
                      Incident, Link, Note, Description, Salary,
                      Document, Tag, Sheet, SheetDetail)
-from .utils import (compute_hash, upload_doc_to_s3)
+from OpenOversight.app.utils.cloud import (compute_hash, upload_doc_to_s3)
 
 from io import BytesIO
 from botocore.exceptions import ClientError
