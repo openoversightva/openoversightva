@@ -159,7 +159,7 @@ class Officer(BaseModel):
     )
 
     __table_args__ = (
-        CheckConstraint("gender in ("M", "F", "Other")", name="gender_options"),
+        CheckConstraint("gender in ('M', 'F'', 'Other')", name="gender_options"),
     )
 
     def full_name(self):

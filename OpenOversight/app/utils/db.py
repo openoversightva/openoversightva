@@ -47,6 +47,8 @@ def compute_leaderboard_stats(select_top=25):
 def dept_choices():
     return db.session.query(Department).all()
 
+def tag_choices():
+    return db.session.query(Tag).order_by(Tag.tag.asc()).all()
 
 def get_officer(department_id, star_no, first_name, last_name):
     """

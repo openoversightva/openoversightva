@@ -13,7 +13,6 @@ from OpenOversight.app.utils.forms import set_dynamic_default
 
 from ..auth.utils import ac_or_admin_required
 from ..models import db, Tag
-from ..utils import add_department_query, set_dynamic_default
 
 
 class ModelView(MethodView):

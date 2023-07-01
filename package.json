@@ -9,5 +9,6 @@
     "build": "sass OpenOversight/app/static/scss/index.scss OpenOversight/app/static/dist/index.css",
     "watch": "sass --watch OpenOversight/app/static/scss/index.scss OpenOversight/app/static/dist/index.css"
   },
+  "license" : "(ISC OR GPL-3.0)",
   "version": "1.0.0"
 }

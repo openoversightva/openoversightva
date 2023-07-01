@@ -364,3 +364,13 @@ def set_dynamic_default(form_field, value):
             form_field.data = value
         except AttributeError:
             pass
+
+## OOVA added
+
+
+def roster_lookup(form):
+    return filter_roster(form, Officer.query)
+
+
+def grab_officers(form):
+    return filter_by_form(form, Officer.query)

@@ -27,6 +27,11 @@ def allowed_file(filename):
     )
 
 
+def allowed_doc_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_DOC_EXTENSIONS']
+
+
 # This function is also used in the `utils/forms.py` file, so there's potential
 # for a circular import scenario. Should a circular import scenario pop up,
 # this function can be moved to its own file.

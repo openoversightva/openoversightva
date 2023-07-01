@@ -26,12 +26,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import contains_eager, joinedload, selectinload
 from sqlalchemy.orm.exc import NoResultFound
 
-# utils legacy
-from ..utils import (roster_lookup,
-                     upload_document_to_s3_and_store_in_db,
-                     allowed_doc_file)
 # utils new
-from OpenOversight.app.utils.cloud import crop_image, upload_image_to_s3_and_store_in_db
+from OpenOversight.app.utils.cloud import (
+    crop_image,
+    upload_document_to_s3_and_store_in_db,
+    upload_image_to_s3_and_store_in_db,
+)
 from OpenOversight.app.utils.constants import HTTP_METHOD_GET, HTTP_METHOD_POST
 from OpenOversight.app.utils.db import (
     add_department_query,
@@ -49,11 +49,13 @@ from OpenOversight.app.utils.forms import (
     edit_existing_assignment,
     edit_officer_profile,
     filter_by_form,
+    roster_lookup,
     set_dynamic_default,
 )
 from OpenOversight.app.utils.general import (
     ac_can_edit_officer,
     allowed_file,
+    allowed_doc_file,
     get_or_create,
     get_random_image,
     replace_list,
@@ -90,7 +92,12 @@ from ..models import (
 )
 
 from . import downloads, main
-from .choices import AGE_CHOICES, GENDER_CHOICES, RACE_CHOICES
+from .choices import (
+    AGE_CHOICES, 
+    GENDER_CHOICES, 
+    RACE_CHOICES, 
+    RACE_CHOICES_SEARCH,
+)
 from .forms import (
     AddImageForm,
     AddOfficerForm,
@@ -1224,7 +1231,7 @@ def get_tagger_gallery(page=1):
     if form.validate_on_submit():
         OFFICERS_PER_PAGE = int(current_app.config["OFFICERS_PER_PAGE"])
         form_data = form.data
-        officers = roster_lookup(form_data).paginate(page, OFFICERS_PER_PAGE, False)
+        officers = roster_lookup(form_data).paginate(page=page, per_page=OFFICERS_PER_PAGE, error_out=False)
         return render_template("tagger_gallery.html",
                                officers=officers,
                                form=form,
@@ -2019,7 +2026,7 @@ def search_officer(page=1, race=[], gender=[], min_age="16", max_age="100", name
         )
     officers = officers.options(selectinload(Officer.face))
     officers = officers.order_by(Officer.last_name, Officer.first_name, Officer.id)
-    officers = officers.paginate(page, OFFICERS_PER_PAGE, False)
+    officers = officers.paginate(page=page, per_page=OFFICERS_PER_PAGE, error_out=False)
     for officer in officers.items:
         officer_face = sorted(officer.face, key=lambda x: x.featured, reverse=True)
 
@@ -2140,7 +2147,7 @@ def show_documents(page=1, department=[], title=None):
             Document.department_id == request.args.get("department")
         )
     documents = documents.order_by(Document.date_inserted.desc())
-    documents = documents.paginate(page, DOCUMENTS_PER_PAGE, False)
+    documents = documents.paginate(page=page, per_page=DOCUMENTS_PER_PAGE, error_out=False)
     departments = Department.query.order_by(Department.name.asc())
 
     departmentlist = [(department.id, department.name) for department in departments]
@@ -2266,6 +2273,11 @@ def submit_document():
             flash("Document was successfully uploaded")
         except Exception:
             flash("An error occurred while uploading")
+            exception_type, value, full_tback = sys.exc_info()
+            current_app.logger.error("Error deleting tag: {}".format(
+                " ".join([str(exception_type), str(value),
+                          format_exc()])
+            ))
         return redirect("/documents/new")
     else:
         preferred_dept_id = Department.query.first().id
@@ -2603,7 +2615,7 @@ def show_posts(page=1):
 
     posts =  Post.query
     posts = posts.order_by(Post.created.desc())
-    posts = posts.paginate(page, POSTS_PER_PAGE, False)
+    posts = posts.paginate(page=page, per_page=POSTS_PER_PAGE, error_out=False)
 
     next_url = url_for("main.show_posts",
                        page=posts.next_num)
