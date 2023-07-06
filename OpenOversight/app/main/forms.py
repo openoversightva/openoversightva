@@ -630,7 +630,7 @@ class BrowseForm(Form):
         get_label="job_title",
         get_pk=lambda job: job.job_title,
     )  # query set in view function
-    name = StringField("Last name")
+    last_name = StringField("Last name")
     first_name = StringField("First name")
     badge = StringField("Badge number")
     unique_internal_identifier = StringField("Unique ID")
