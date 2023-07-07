@@ -1978,7 +1978,7 @@ main.add_url_rule(
 
 ## OOVA additions
 @main.route("/search")
-def search_officer(page=1, race=[], gender=[], min_age="16", max_age="100", name=None,
+def search_officer(page=1, race=[], gender=[], min_age="16", max_age="100", last_name=None,
                    badge=None, unique_internal_identifier=None, department=[],
                    first_name=None):
     form = BrowseForm()
@@ -1987,7 +1987,7 @@ def search_officer(page=1, race=[], gender=[], min_age="16", max_age="100", name
     form_data["gender"] = gender
     form_data["min_age"] = min_age
     form_data["max_age"] = max_age
-    form_data["name"] = name
+    form_data["last_name"] = last_name
     form_data["first_name"] = first_name
     form_data["badge"] = badge
     form_data["department"] = department
@@ -2002,8 +2002,8 @@ def search_officer(page=1, race=[], gender=[], min_age="16", max_age="100", name
         form_data["max_age"] = request.args.get("max_age")
     if request.args.get("page"):
         page = int(request.args.get("page"))
-    if request.args.get("name"):
-        form_data["name"] = request.args.get("name")
+    if request.args.get("last_name"):
+        form_data["last_name"] = request.args.get("last_name")
     if request.args.get("first_name"):
         form_data["first_name"] = request.args.get("first_name")
     if request.args.get("badge"):
@@ -2046,12 +2046,12 @@ def search_officer(page=1, race=[], gender=[], min_age="16", max_age="100", name
 
     next_url = url_for("main.search_officer",
                        page=officers.next_num, race=form_data["race"], gender=form_data["gender"],
-                       min_age=form_data["min_age"], max_age=form_data["max_age"], name=form_data["name"], badge=form_data["badge"],
+                       min_age=form_data["min_age"], max_age=form_data["max_age"], last_name=form_data["last_name"], badge=form_data["badge"],
                        unique_internal_identifier=form_data["unique_internal_identifier"], department=form_data["department"],
                        first_name=form_data["first_name"])
     prev_url = url_for("main.search_officer",
                        page=officers.prev_num, race=form_data["race"], gender=form_data["gender"],
-                       min_age=form_data["min_age"], max_age=form_data["max_age"], name=form_data["name"], badge=form_data["badge"],
+                       min_age=form_data["min_age"], max_age=form_data["max_age"], last_name=form_data["last_name"], badge=form_data["badge"],
                        unique_internal_identifier=form_data["unique_internal_identifier"], department=form_data["department"],
                        first_name=form_data["first_name"])
 
