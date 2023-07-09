@@ -172,6 +172,8 @@ class AssignmentForm(Form):
         "Assignment end date", validators=[Optional(), validate_end_date]
     )
     # OOVA
+    # job_title_id = HiddenField(validators=[Optional()])
+    # unit_id = HiddenField(validators=[Optional()])
     dept = QuerySelectField("dept", validators=[DataRequired()],
                             query_factory=dept_choices, get_label="name")
     is_edit = False

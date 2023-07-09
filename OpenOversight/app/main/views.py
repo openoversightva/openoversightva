@@ -362,6 +362,7 @@ def officer_profile(officer_id):
         faces=faces,
         assignments=assignments,
         form=form,
+        jsloads=jsloads
     )
 
 

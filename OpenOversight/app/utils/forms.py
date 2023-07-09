@@ -29,6 +29,11 @@ def add_new_assignment(officer_id, form):
     else:
         unit_id = None
 
+    if form.dept.data:
+        department_id = form.dept.data.id
+    else:
+        department_id = None
+
     job = Job.query.filter_by(
         department_id=form.job_title.data.department_id,
         job_title=form.job_title.data.job_title,
@@ -41,6 +46,7 @@ def add_new_assignment(officer_id, form):
         unit_id=unit_id,
         star_date=form.star_date.data,
         resign_date=form.resign_date.data,
+        department_id = department_id
     )
     db.session.add(new_assignment)
     db.session.commit()

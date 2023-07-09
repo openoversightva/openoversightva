@@ -101,14 +101,13 @@
 
 {% if is_admin_or_coordinator %}
 <h3>Add Assignment<small> Admin only</small></h3>
-<table class="table">
-    <tbody>
-        <form
-            action="{{ url_for('main.add_assignment', officer_id=officer.id) }}"
-            method="post" data-jobs-url="{{ url_for('main.get_dept_ranks') }}" data-units-url="{{ url_for('main.get_dept_units') }}"
-        >
+<form
+    action="{{ url_for('main.add_assignment', officer_id=officer.id) }}"
+    method="post" id="add-assignment-form" data-jobs-url="{{ url_for('main.get_dept_ranks') }}" data-units-url="{{ url_for('main.get_dept_units') }}"
+>
+    <table class="table">
+        <tbody>
             {{ form.hidden_tag() }}
-
             <tr>
                 <td><b>New badge number:</b></td>
                 <td>
@@ -178,7 +177,7 @@
                     />
                 </td>
             </tr>
-        </form>
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</form>
 {% endif %}
