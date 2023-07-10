@@ -331,6 +331,7 @@ def officer_profile(officer_id):
             .all()
         )
         assignments = Assignment.query.filter_by(officer_id=officer_id).all()
+
         face_paths = []
         for face in faces:
             face_paths.append(serve_image(face.image.filepath))
@@ -361,6 +362,7 @@ def officer_profile(officer_id):
         faces=faces,
         assignments=assignments,
         form=form,
+        jsloads=jsloads
     )
 
 

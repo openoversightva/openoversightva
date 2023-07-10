@@ -14,7 +14,13 @@
     <tbody>
         {% for assignment in assignments|rejectattr('star_date','ne',None) %}
             <tr>
-                <td>{{ assignment.department.name }}</td>
+                <td>
+                    {% if assignment.department_id %}
+                        <a href="{{ url_for('main.list_officer', department_id=assignment.department_id) }}">
+                            {{ assignment.department.name }}
+                        </a>
+                    {% endif %}
+                </td>
                 <td>{{ assignment.job.job_title }}</td>
                 <td>{{ assignment.star_no }}</td>
                 <td>
@@ -50,7 +56,13 @@
         {% endfor %}
         {% for assignment in assignments | rejectattr('star_date', 'none') | sort(attribute='star_date', reverse=True) %}
             <tr>
-                <td>{{ assignment.department.name }}</td>
+                <td>
+                    {% if assignment.department_id %}
+                        <a href="{{ url_for('main.list_officer', department_id=assignment.department_id) }}">
+                            {{ assignment.department.name }}
+                        </a>
+                    {% endif %}
+                </td>
                 <td>{{ assignment.job.job_title }}</td>
                 <td>{{ assignment.star_no }}</td>
                 <td>
@@ -89,14 +101,13 @@
 
 {% if is_admin_or_coordinator %}
 <h3>Add Assignment<small> Admin only</small></h3>
-<table class="table">
-    <tbody>
-        <form
-            action="{{ url_for('main.add_assignment', officer_id=officer.id) }}"
-            method="post" data-jobs-url="{{ url_for('main.get_dept_ranks') }}" data-units-url="{{ url_for('main.get_dept_units') }}"
-        >
+<form
+    action="{{ url_for('main.add_assignment', officer_id=officer.id) }}"
+    method="post" id="add-assignment-form" data-jobs-url="{{ url_for('main.get_dept_ranks') }}" data-units-url="{{ url_for('main.get_dept_units') }}"
+>
+    <table class="table">
+        <tbody>
             {{ form.hidden_tag() }}
-
             <tr>
                 <td><b>New badge number:</b></td>
                 <td>
@@ -166,7 +177,7 @@
                     />
                 </td>
             </tr>
-        </form>
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</form>
 {% endif %}

@@ -31,3 +31,13 @@ $(document).ready(function() {
   set_jobs();
   $('select#dept').change(set_jobs);
 });
+
+/*
+$('#job_title').on('input propertychange paste change', function(e) {
+  $('#job_title_id').val(this.value);
+});
+
+$('#unit').on('input propertychange paste change', function(e) {
+  $('#unit_id').val(this.value);
+});
+*/
