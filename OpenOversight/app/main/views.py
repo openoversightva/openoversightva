@@ -1550,6 +1550,12 @@ def privacy_oo():
     return render_template("privacy.html")
 
 
+@sitemap_include
+@main.route("/donate")
+def donate_oo():
+    return render_template("donate.html")
+
+
 @main.route("/shutdown")  # pragma: no cover
 def server_shutdown():  # pragma: no cover
     if not current_app.testing:
