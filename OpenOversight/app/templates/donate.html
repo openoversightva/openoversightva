@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Donate - OpenOversightVA{% endblock %}
+{% block meta %}<meta name="description" content="Lucy Parsons Labs takes your privacy and security very seriously.">{% endblock %}
+{% block content %}
+
+<div role="main">
+    <div class="hero-section no-sub">
+        <div class="hero">Make a Donation</div>
+        <div class="subhero">Help improve Virginia's only police transparency database.</div>
+    </div>
+    <div class="vertical-padding ">
+        <p class="lead">
+            <small>OpenOversightVA collects no personally identifiable information and stores no financial/credit card
+                data. This is an embedded form to DonorBox, you can access the donation form directly  
+                <a href="https://donorbox.org/openoversightva-donate">from this link</a>.
+            </small>
+        </p>
+    </div>
+    <div class="vertical-padding ">
+        <p class="lead" style="text-align:center">
+            <script src="https://donorbox.org/widget.js" paypalExpress="true"></script><iframe src="https://donorbox.org/embed/openoversightva-donate" name="donorbox" allowpaymentrequest="allowpaymentrequest" seamless="seamless" frameborder="0" scrolling="no" height="900px" width="100%" style="max-width: 500px; min-width: 250px; max-height:none!important"></iframe>
+        </p>
+    </div>
+</div>
+{% endblock %}
