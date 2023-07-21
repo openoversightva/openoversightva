@@ -14,6 +14,7 @@ import traceback
 import numpy as np
 import pandas as pd
 from sqlalchemy.sql import text
+from sqlalchemy import exc
 
 def upload_sheet(sheet_buf, user_id, file_ext='csv'):
     file = sheet_buf.read()
@@ -52,6 +53,7 @@ def insert_sheet_details(sheet):
                   'agency_name']
     df['sheet_id'] = sheet.id
     df['badge_number'] = df['badge_number'].astype(str)   # no floats plz
+    df['salary_year'] = df['salary_year'].astype(int)
     # required fields: sheet_id, row_id
     df.to_sql(name='import_sheet_details', con=db.engine, index=False,
               if_exists='append')
@@ -71,13 +73,14 @@ rank_title = trim(rank_title),
 unit_name = trim(unit_name),
 gender = case substr(upper(gender),1,1) when 'M' then 'M' when 'F' then 'F' else null end,
 race = trim(race),
-salary = replace(trim(salary),',',''),
+salary = replace(replace(replace(trim(salary),',',''),'$',''),' ',''),
 salary_overtime = replace(trim(salary_overtime),',',''),
 salary_year = trim(salary_year),
 salary_is_fy = case substr(upper(salary_is_fy),1,1) when 'Y' then 'Y' when 'T' then 'Y' else 'N' end,
 agency_name = trim(agency_name)
 where sheet_id = :sid""")
-        result = connection.execute(s, sid=sheet_id)
+        result = connection.execute(statement=s, parameters={"sid":sheet_id})
+        connection.commit()
         # insert any missing departments
         s = text("""insert into departments (name, short_name)
 select agency_name, agency_name
@@ -85,12 +88,13 @@ from import_sheet_details
 where sheet_id = :sid
 and agency_name not in (select name from departments union all select short_name from departments)
 group by agency_name""")
-        result = connection.execute(s, sid=sheet_id)
+        result = connection.execute(statement=s, parameters={"sid":sheet_id})
         # update the sheet
         s = text("""update import_sheet_details d
 set department_id = (select id from departments s where s.name = d.agency_name)
 where sheet_id = :sid""")
-        result = connection.execute(s, sid=sheet_id)
+        result = connection.execute(statement=s, parameters={"sid":sheet_id})
+        connection.commit()
         # insert any missing units 
         s = text("""insert into unit_types (descrip, department_id)
 select distinct d.unit_name, d.department_id
@@ -101,7 +105,8 @@ left join unit_types ut
 where sheet_id = :sid
 and ut.id is null
 """)
-        result = connection.execute(s, sid=sheet_id)
+        result = connection.execute(s, parameters={"sid":sheet_id})
+        connection.commit()
         # once more with job_title
         s = text("""insert into jobs (job_title, \"order\", department_id)
 select coalesce(rank_title,'Not Sure'), row_number() over (order by count(1) asc), d.department_id
@@ -112,7 +117,11 @@ left join jobs j
 where sheet_id = :sid
 and j.id is null
 group by d.rank_title, d.department_id""")
-        result = connection.execute(s, sid=sheet_id)
+        try:
+            result = connection.execute(s, parameters={"sid":sheet_id})
+            connection.commit()
+        except exc.IntegrityError:
+            connection.rollback()
         # also add a 'Not Sure' entry for each dept if it doesn't already exist
         s = text("""insert into jobs (job_title, \"order\", department_id)
 select 'Not Sure', coalesce(max(j.\"order\")+1,0), d.department_id 
@@ -122,13 +131,18 @@ left join jobs j
 where d.sheet_id = :sid
   and not exists (select 1 from jobs where department_id = d.department_id and job_title = 'Not Sure')
 group by d.department_id""")
-        result = connection.execute(s, sid=sheet_id)
+        try:
+            result = connection.execute(s, parameters={"sid":sheet_id})
+            connection.commit()
+        except exc.IntegrityError:
+            connection.rollback()
         # update the import sheet with those details
         s = text("""update import_sheet_details d
     set unit_id = (select max(id) from unit_types u where u.department_id = d.department_id and descrip = d.unit_name),
         job_id = (select max(id) from jobs j where j.department_id = d.department_id and j.job_title = d.rank_title)
 where sheet_id = :sid""")
-        result = connection.execute(s, sid=sheet_id)
+        result = connection.execute(s, parameters={"sid":sheet_id})
+        connection.commit()
     return None
 
 """match_officers tries to look up the best match of an existing officer ID 
@@ -164,7 +178,7 @@ update import_sheet_details sd
         )
 where sd.sheet_id = :sid
 and sd.officer_id is null;""")
-        result = connection.execute(s, sid=sheet_id)
+        result = connection.execute(statement=s, parameters={"sid":sheet_id})
         trans.commit()
         # step 3 - try again but fuzzier - only match on last, first, mi (1 c)
         trans = connection.begin()
@@ -190,7 +204,7 @@ update import_sheet_details sd
         )
 where sd.sheet_id = :sid
 and sd.officer_id is null;""")
-        result = connection.execute(s, sid=sheet_id)
+        result = connection.execute(statement=s, parameters={"sid":sheet_id})
         trans.commit()       # this shouldn't be needed, but apparently it is?
         # step 4 - getting desperate - last name, first initial
         trans = connection.begin()
@@ -216,7 +230,7 @@ update import_sheet_details sd
         )
 where sd.sheet_id = :sid
 and sd.officer_id is null;""")
-        result = connection.execute(s, sid=sheet_id)
+        result = connection.execute(statement=s, parameters={"sid":sheet_id})
         trans.commit()
     return 'ok'
 
@@ -255,6 +269,7 @@ def create_officer(row):
                           department_id=row.department_id,
                           unique_internal_identifier=uid)
         db.session.add(officer)
+        db.session.commit()
         row.officer_id = officer.id
         #db.session.commit()
 
@@ -284,7 +299,7 @@ def add_aux_data(officer, row):
                     overtime_pay=row.salary_overtime,
                     year=row.salary_year,
                     is_fiscal_year=(True if row.salary_is_fy == 'Y' else False))
-    db.session.add(new_salary)
+        db.session.add(new_salary)
 
 
 """
