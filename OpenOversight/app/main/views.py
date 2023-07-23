@@ -831,6 +831,9 @@ def list_officer(
     if current_job_arg := request.args.get("current_job"):
         form_data["current_job"] = current_job_arg
 
+    if len(form_data["unit"]) == 1 and "Not Sure" in form_data["unit"]:
+        form_data["unit"].remove("Not Sure")
+
     officers = filter_by_form(form_data, Officer.query, department_id).filter(
         Officer.department_id == department_id
     )
