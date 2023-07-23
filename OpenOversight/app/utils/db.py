@@ -2,7 +2,7 @@ from typing import Optional
 
 from sqlalchemy import func
 
-from ..models import Assignment, Department, Face, Image, Officer, Unit, User, db
+from ..models import Assignment, Department, Face, Image, Officer, Unit, User, db, Tag
 
 
 def add_department_query(form, current_user):
@@ -10,7 +10,7 @@ def add_department_query(form, current_user):
     if not current_user.is_administrator:
         form.department.query = Department.query.filter_by(
             id=current_user.ac_department_id
-        )
+        ).order_by(Department.name.asc())
 
 
 def add_unit_query(form, current_user):
@@ -45,7 +45,7 @@ def compute_leaderboard_stats(select_top=25):
 
 
 def dept_choices():
-    return db.session.query(Department).all()
+    return db.session.query(Department).order_by(Department.name.asc()).all()
 
 def tag_choices():
     return db.session.query(Tag).order_by(Tag.tag.asc()).all()
