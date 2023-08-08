@@ -223,7 +223,10 @@ class Officer(BaseModel):
             most_recent = max(
                 self.assignments_lazy, key=lambda x: x.star_date or date.min
             )
-            return "Yes" if most_recent.resign_date is None else "No"
+            if "ACAB" in self.department.short_name:
+                return "No"
+            else:
+                return "Yes" if most_recent.resign_date is None else "No"
         return "Uncertain"
 
     def __repr__(self):

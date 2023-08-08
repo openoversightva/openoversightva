@@ -4,13 +4,6 @@
 {% block meta %}
   {% if incidents.items|length > 0 %}
     <meta name="description" content="View all incidents for {{ department.name if department else 'OpenOversight' }}.">
-  {% else %}
-  
-    <meta name="description" content="No incidents found.">
-	<a href="{{ url_for('main.incident_api')+ 'new' }}" class="btn btn-primary" role="button">
-		<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-		Add New Incident
-	</a>
   {% endif %}
 {% endblock %}
 {% block content %}
@@ -41,6 +34,14 @@
         {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
         </div>
       </form>
+	  {% if current_user.is_administrator or current_user.is_area_coordinator %}
+		<hr>
+		<meta name="description" content="No incidents found.">
+		<a href="{{ url_for('main.incident_api')+ 'new' }}" class="btn btn-primary" role="button">
+			<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+			Add New Incident
+		</a>
+	  {% endif %}
     </div>
     <div class="search-results col-sm-9">
       {% with paginate=incidents, location='top' %}
@@ -88,9 +89,6 @@
 			<p>There are no incidents.</p>
 		{% endif %}
 	</ul>
-	{% if current_user.is_administrator or current_user.is_area_coordinator %}
-
-	{% endif %}
   {% with paginate=incidents, location='bottom' %}
   {% include "partials/paginate_nav.html" %}
 {% endwith %}
