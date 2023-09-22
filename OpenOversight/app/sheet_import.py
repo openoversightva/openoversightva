@@ -44,7 +44,7 @@ def upload_sheet(sheet_buf, user_id, file_ext='csv'):
         return None
 
 def insert_sheet_details(sheet):
-    df = pd.read_csv(sheet.filepath)
+    df = pd.read_csv(sheet.filepath, dtype='str')
     df = df.reset_index()    # create an index column for row_id
     df.columns = ['row_id', 'last_name', 'first_name', 'middle_initial',
                   'suffix', 'badge_number', 'rank_title', 'unit_name',
@@ -52,8 +52,8 @@ def insert_sheet_details(sheet):
                   'salary_overtime', 'salary_year', 'salary_is_fy',
                   'agency_name']
     df['sheet_id'] = sheet.id
-    df['badge_number'] = df['badge_number'].astype(str)   # no floats plz
-    df['salary_year'] = df['salary_year'].astype(int)
+    df['badge_number'] = df['badge_number'] # if all numbers, print as string
+    df['salary_year'] = df['salary_year'].astype('Int64').astype('str') # no floats
     # required fields: sheet_id, row_id
     df.to_sql(name='import_sheet_details', con=db.engine, index=False,
               if_exists='append')
