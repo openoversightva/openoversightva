@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, TypeVar
 from flask import Response, abort
 from sqlalchemy.orm import Query
 
-from ..models import (
+from OpenOversight.app.models.database import (
     Assignment,
     Department,
     Description,
@@ -82,9 +82,9 @@ def salary_record_maker(salary: Salary) -> _Record:
 
 
 def officer_record_maker(officer: Officer) -> _Record:
-    if officer.assignments_lazy:
+    if officer.assignments:
         most_recent_assignment = max(
-            officer.assignments_lazy, key=lambda a: a.star_date or date.min
+            officer.assignments, key=lambda a: a.start_date or date.min
         )
         most_recent_title = most_recent_assignment.job and check_output(
             most_recent_assignment.job.job_title
@@ -114,17 +114,17 @@ def officer_record_maker(officer: Officer) -> _Record:
 
 
 def assignment_record_maker(assignment: Assignment) -> _Record:
-    officer = assignment.baseofficer
+    officer = assignment.base_officer
     return {
         "id": assignment.id,
         "officer id": assignment.officer_id,
         "officer unique identifier": officer and officer.unique_internal_identifier,
         "badge number": assignment.star_no,
         "job title": assignment.job and check_output(assignment.job.job_title),
-        "start date": assignment.star_date,
+        "start date": assignment.start_date,
         "end date": assignment.resign_date,
         "unit id": assignment.unit and assignment.unit.id,
-        "unit description": assignment.unit and assignment.unit.descrip,
+        "unit description": assignment.unit and assignment.unit.description,
     }
 
 
@@ -159,8 +159,8 @@ def descriptions_record_maker(description: Description) -> _Record:
     return {
         "id": description.id,
         "text_contents": description.text_contents,
-        "creator_id": description.creator_id,
+        "created_by": description.created_by,
         "officer_id": description.officer_id,
-        "date_created": description.date_created,
-        "date_updated": description.date_updated,
+        "created_at": description.created_at,
+        "last_updated_at": description.last_updated_at,
     }

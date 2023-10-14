@@ -2,6 +2,7 @@ import os
 from contextlib import contextmanager
 
 import pytest
+from flask import current_app
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
@@ -9,8 +10,10 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from sqlalchemy.sql.expression import func
 
-from OpenOversight.app.config import BaseConfig
-from OpenOversight.app.models import Department, Incident, Officer, Unit, db
+from OpenOversight.app.models.database import Department, Incident, Officer, Unit, db
+from OpenOversight.app.utils.constants import FILE_TYPE_HTML, KEY_OFFICERS_PER_PAGE
+from OpenOversight.tests.conftest import AC_DEPT
+from OpenOversight.tests.constants import ADMIN_USER_EMAIL
 
 
 DESCRIPTION_CUTOFF = 700
@@ -18,7 +21,7 @@ DESCRIPTION_CUTOFF = 700
 
 @contextmanager
 def wait_for_page_load(browser, timeout=10):
-    old_page = browser.find_element_by_tag_name("html")
+    old_page = browser.find_element_by_tag_name(FILE_TYPE_HTML)
     yield
     WebDriverWait(browser, timeout).until(expected_conditions.staleness_of(old_page))
 
@@ -28,7 +31,7 @@ def login_admin(browser, server_port):
     with wait_for_page_load(browser):
         elem = browser.find_element_by_id("email")
         elem.clear()
-        elem.send_keys("test@example.org")
+        elem.send_keys(ADMIN_USER_EMAIL)
         elem = browser.find_element_by_id("password")
         elem.clear()
         elem.send_keys("testtest")
@@ -94,7 +97,7 @@ def test_user_can_use_form_to_get_to_browse(mockdata, browser, server_port):
 
 def test_user_can_get_to_complaint(mockdata, browser, server_port):
     browser.get(
-        f"http://localhost:{server_port}/complaint?officer_star=6265&"
+        f"http://localhost:{server_port}/complaints?officer_star=6265&"
         "officer_first_name=IVANA&officer_last_name=SNOTBALL&officer_middle_initial="
         "&officer_image=static%2Fimages%2Ftest_cop2.png"
     )
@@ -108,27 +111,28 @@ def test_user_can_get_to_complaint(mockdata, browser, server_port):
 
 
 def test_officer_browse_pagination(mockdata, browser, server_port):
-    dept_id = 1
-    total = Officer.query.filter_by(department_id=dept_id).count()
-    perpage = BaseConfig.OFFICERS_PER_PAGE
+    total = Officer.query.filter_by(department_id=AC_DEPT).count()
 
     # first page of results
-    browser.get(f"http://localhost:{server_port}/department/{dept_id}?page=1")
+    browser.get(f"http://localhost:{server_port}/departments/{AC_DEPT}?page=1")
     wait_for_element(browser, By.TAG_NAME, "body")
     page_text = browser.find_element_by_tag_name("body").text
-    expected = "Showing 1-{} of {}".format(perpage, total)
+    expected = f"Showing 1-{current_app.config[KEY_OFFICERS_PER_PAGE]} of {total}"
     assert expected in page_text
 
     # last page of results
-    last_page_index = (total // perpage) + 1
+    last_page_index = (total // current_app.config[KEY_OFFICERS_PER_PAGE]) + 1
     browser.get(
-        f"http://localhost:{server_port}/department/{dept_id}?page={last_page_index}"
+        f"http://localhost:{server_port}/departments/{AC_DEPT}?page={last_page_index}"
     )
     wait_for_element(browser, By.TAG_NAME, "body")
     page_text = browser.find_element_by_tag_name("body").text
-    expected = "Showing {}-{} of {}".format(
-        perpage * (total // perpage) + 1, total, total
+    start_of_page = (
+        current_app.config[KEY_OFFICERS_PER_PAGE]
+        * (total // current_app.config[KEY_OFFICERS_PER_PAGE])
+        + 1
     )
+    expected = f"Showing {start_of_page}-{total} of {total}"
     assert expected in page_text
 
 
@@ -164,20 +168,20 @@ def test_find_officer_cannot_see_uii_question_for_depts_without_uiis(
     dept_selector.select_by_value(dept_id)
     browser.find_element_by_id("activate-step-2").click()
 
-    results = browser.find_elements_by_id("#uii-question")
-    assert len(results) == 0
+    uii_elements = browser.find_elements_by_id("#uii-question")
+    assert len(uii_elements) == 0
 
 
 def test_incident_detail_display_read_more_button_for_descriptions_over_cutoff(
     mockdata, browser, server_port
 ):
     # Navigate to profile page for officer with short and long incident descriptions
-    browser.get(f"http://localhost:{server_port}/officer/1")
+    browser.get(f"http://localhost:{server_port}/officers/1")
 
-    incident_long_descrip = Incident.query.filter(
+    incident_long_description = Incident.query.filter(
         func.length(Incident.description) > DESCRIPTION_CUTOFF
     ).one_or_none()
-    incident_id = str(incident_long_descrip.id)
+    incident_id = str(incident_long_description.id)
 
     result = browser.find_element_by_id("description-overflow-row_" + incident_id)
     assert result.is_displayed()
@@ -187,12 +191,12 @@ def test_incident_detail_truncate_description_for_descriptions_over_cutoff(
     mockdata, browser, server_port
 ):
     # Navigate to profile page for officer with short and long incident descriptions
-    browser.get(f"http://localhost:{server_port}/officer/1")
+    browser.get(f"http://localhost:{server_port}/officers/1")
 
-    incident_long_descrip = Incident.query.filter(
+    incident_long_description = Incident.query.filter(
         func.length(Incident.description) > DESCRIPTION_CUTOFF
     ).one_or_none()
-    incident_id = str(incident_long_descrip.id)
+    incident_id = str(incident_long_description.id)
 
     # Check that the text is truncated and contains more than just the ellipsis
     truncated_text = browser.find_element(
@@ -207,22 +211,22 @@ def test_incident_detail_do_not_display_read_more_button_for_descriptions_under_
     mockdata, browser, server_port
 ):
     # Navigate to profile page for officer with short and long incident descriptions
-    browser.get(f"http://localhost:{server_port}/officer/1")
+    browser.get(f"http://localhost:{server_port}/officers/1")
 
-    # Select incident for officer that has description under cuttoff chars
+    # Select incident for officer that has description under cutoff chars
     result = browser.find_element_by_id("description-overflow-row_1")
     assert not result.is_displayed()
 
 
 def test_click_to_read_more_displays_full_description(mockdata, browser, server_port):
     # Navigate to profile page for officer with short and long incident descriptions
-    browser.get(f"http://localhost:{server_port}/officer/1")
+    browser.get(f"http://localhost:{server_port}/officers/1")
 
-    incident_long_descrip = Incident.query.filter(
+    incident_long_description = Incident.query.filter(
         func.length(Incident.description) > DESCRIPTION_CUTOFF
     ).one_or_none()
-    orig_descrip = incident_long_descrip.description.strip()
-    incident_id = str(incident_long_descrip.id)
+    original_description = incident_long_description.description.strip()
+    incident_id = str(incident_long_description.id)
 
     button = browser.find_element_by_id("description-overflow-button_" + incident_id)
     button.click()
@@ -230,18 +234,18 @@ def test_click_to_read_more_displays_full_description(mockdata, browser, server_
     description_text = browser.find_element_by_id(
         "incident-description_" + incident_id
     ).text.strip()
-    assert len(description_text) == len(orig_descrip)
-    assert description_text == orig_descrip
+    assert len(description_text) == len(original_description)
+    assert description_text == original_description
 
 
 def test_click_to_read_more_hides_the_read_more_button(mockdata, browser, server_port):
     # Navigate to profile page for officer with short and long incident descriptions
-    browser.get(f"http://localhost:{server_port}/officer/1")
+    browser.get(f"http://localhost:{server_port}/officers/1")
 
-    incident_long_descrip = Incident.query.filter(
+    incident_long_description = Incident.query.filter(
         func.length(Incident.description) > DESCRIPTION_CUTOFF
     ).one_or_none()
-    incident_id = str(incident_long_descrip.id)
+    incident_id = str(incident_long_description.id)
 
     button = browser.find_element_by_id("description-overflow-button_" + incident_id)
     button.click()
@@ -256,21 +260,21 @@ def test_officer_form_has_units_alpha_sorted(mockdata, browser, server_port):
     # get the units from the DB in the sort we expect
     db_units_sorted = list(
         map(
-            lambda x: x.descrip,
-            db.session.query(Unit).order_by(Unit.descrip.asc()).all(),
+            lambda x: x.description,
+            db.session.query(Unit).order_by(Unit.description.asc()).all(),
         )
     )
     # the Select tag in the interface has a 'None' value at the start
     db_units_sorted.insert(0, "None")
 
     # Check for the Unit sort on the 'add officer' form
-    browser.get(f"http://localhost:{server_port}/officer/new")
+    browser.get(f"http://localhost:{server_port}/officers/new")
     unit_select = Select(browser.find_element_by_id("unit"))
     select_units_sorted = list(map(lambda x: x.text, unit_select.options))
     assert db_units_sorted == select_units_sorted
 
     # Check for the Unit sort on the 'add assignment' form
-    browser.get(f"http://localhost:{server_port}/officer/1")
+    browser.get(f"http://localhost:{server_port}/officers/1")
     unit_select = Select(browser.find_element_by_id("unit"))
     select_units_sorted = list(map(lambda x: x.text, unit_select.options))
     assert db_units_sorted == select_units_sorted
@@ -287,8 +291,8 @@ def test_edit_officer_form_coerces_none_race_or_gender_to_not_sure(
 
     login_admin(browser, server_port)
 
-    # Nagivate to edit officer page for officer having NULL race and gender
-    browser.get(f"http://localhost:{server_port}/officer/1/edit")
+    # Navigate to edit officer page for officer having NULL race and gender
+    browser.get(f"http://localhost:{server_port}/officers/1/edit")
 
     wait_for_element(browser, By.ID, "gender")
     select = Select(browser.find_element_by_id("gender"))
@@ -311,7 +315,7 @@ def test_image_classification_and_tagging(mockdata, browser, server_port):
     login_admin(browser, server_port)
 
     # 1. Create new department (to avoid mockdata)
-    browser.get(f"http://localhost:{server_port}/department/new")
+    browser.get(f"http://localhost:{server_port}/departments/new")
     wait_for_page_load(browser)
     browser.find_element(By.ID, "name").send_keys("Auburn Police Department")
     browser.find_element(By.ID, "short_name").send_keys("APD")
@@ -319,7 +323,7 @@ def test_image_classification_and_tagging(mockdata, browser, server_port):
     wait_for_page_load(browser)
 
     # 2. Add a new officer
-    browser.get(f"http://localhost:{server_port}/officer/new")
+    browser.get(f"http://localhost:{server_port}/officers/new")
     wait_for_page_load(browser)
 
     dept_select = Select(browser.find_element("id", "department"))
@@ -347,7 +351,7 @@ def test_image_classification_and_tagging(mockdata, browser, server_port):
     wait_for_element(browser, By.CLASS_NAME, "dz-success")
 
     # 4. Classify the uploaded image
-    browser.get(f"http://localhost:{server_port}/sort/department/{dept_id}")
+    browser.get(f"http://localhost:{server_port}/sort/departments/{dept_id}")
 
     # Check that image loaded correctly: https://stackoverflow.com/a/36296478
     wait_for_element(browser, By.TAG_NAME, "img")
@@ -359,10 +363,10 @@ def test_image_classification_and_tagging(mockdata, browser, server_port):
 
     wait_for_page_load(browser)
     page_text = browser.find_element(By.TAG_NAME, "body").text
-    assert "All images have been classfied!" in page_text
+    assert "All images have been classified!" in page_text
 
     # 5. Identify the new officer in the uploaded image
-    browser.get(f"http://localhost:{server_port}/cop_face/department/{dept_id}")
+    browser.get(f"http://localhost:{server_port}/cop_faces/departments/{dept_id}")
     wait_for_page_load(browser)
     browser.find_element(By.ID, "officer_id").send_keys(officer_id)
     browser.find_element(By.CSS_SELECTOR, "input[value='Add identified face']").click()
@@ -376,7 +380,7 @@ def test_image_classification_and_tagging(mockdata, browser, server_port):
     wait_for_page_load(browser)
 
     # 7. Check that the tag appears on the officer page
-    browser.get(f"http://localhost:{server_port}/officer/{officer_id}")
+    browser.get(f"http://localhost:{server_port}/officers/{officer_id}")
     wait_for_page_load(browser)
     browser.find_element(By.CSS_SELECTOR, "a > img.officer-face").click()
 

@@ -1,59 +1,69 @@
-import datetime
+from http import HTTPMethod
 from typing import Callable, Union
 
 from flask import abort, current_app, flash, redirect, render_template, request, url_for
 from flask.views import MethodView
 from flask_login import current_user, login_required
 from flask_sqlalchemy.model import DefaultMeta
-from flask_wtf import FlaskForm as Form
+from flask_wtf import Form
 
-from OpenOversight.app.utils.constants import HTTP_METHOD_GET, HTTP_METHOD_POST
+from OpenOversight.app.models.database import (
+    Department,
+    Incident,
+    Link,
+    Note,
+    Officer,
+    db,
+    Tag
+)
+from OpenOversight.app.utils.auth import ac_or_admin_required
+from OpenOversight.app.utils.constants import (
+    KEY_DEPT_ALL_INCIDENTS,
+    KEY_DEPT_ALL_LINKS,
+    KEY_DEPT_ALL_NOTES,
+    KEY_DEPT_TOTAL_INCIDENTS,
+)
 from OpenOversight.app.utils.db import add_department_query
 from OpenOversight.app.utils.forms import set_dynamic_default
 
-from ..auth.utils import ac_or_admin_required
-from ..models import db, Tag
-
 
 class ModelView(MethodView):
-    model = None  # type: DefaultMeta
-    model_name = ""
+    model: DefaultMeta = None
+    model_name: str = ""
     per_page = 20
-    order_by = ""  # this should be a field on the model
+    order_by: str = ""  # this should be a field on the model
     descending = False  # used for order_by
-    form = ""  # type: Form
-    create_function = ""  # type: Union[str, Callable]
+    form: Form = None
+    create_function: Union[str, Callable] = ""
     department_check = False
 
     def get(self, obj_id):
         if obj_id is None:
-            if request.args.get("page"):
-                page = int(request.args.get("page"))
-            else:
-                page = 1
+            page = int(request.args.get("page", 1))
 
             if self.order_by:
                 if not self.descending:
                     objects = self.model.query.order_by(
                         getattr(self.model, self.order_by)
                     ).paginate(page=page, per_page=self.per_page, error_out=False)
-                objects = self.model.query.order_by(
-                    getattr(self.model, self.order_by).desc()
-                ).paginate(page=page, per_page=self.per_page, error_out=False)
+                else:
+                    objects = self.model.query.order_by(
+                        getattr(self.model, self.order_by).desc()
+                    ).paginate(page=page, per_page=self.per_page, error_out=False)
             else:
                 objects = self.model.query.paginate(
                     page=page, per_page=self.per_page, error_out=False
                 )
 
             return render_template(
-                "{}_list.html".format(self.model_name),
+                f"{self.model_name}_list.html",
                 objects=objects,
-                url="main.{}_api".format(self.model_name),
+                url=f"main.{self.model_name}_api",
             )
         else:
             obj = self.model.query.get_or_404(obj_id)
             return render_template(
-                "{}_detail.html".format(self.model_name),
+                f"{self.model_name}_detail.html",
                 obj=obj,
                 current_user=current_user,
             )
@@ -67,15 +77,32 @@ class ModelView(MethodView):
                 add_department_query(form, current_user)
                 if getattr(current_user, "dept_pref_rel", None):
                     set_dynamic_default(form.department, current_user.dept_pref_rel)
-            if hasattr(form, "creator_id") and not form.creator_id.data:
-                form.creator_id.data = current_user.get_id()
-            if hasattr(form, "last_updated_id"):
-                form.last_updated_id.data = current_user.get_id()
 
         if form.validate_on_submit():
-            new_obj = self.create_function(form)
+            new_obj = self.create_function(form, current_user)
+            if hasattr(new_obj, "created_by"):
+                new_obj.created_by = current_user.id
+            if hasattr(new_obj, "last_updated_by"):
+                new_obj.last_updated_by = current_user.id
             db.session.add(new_obj)
             db.session.commit()
+
+            match self.model.__name__:
+                case Incident.__name__:
+                    Department(id=new_obj.department_id).remove_database_cache_entries(
+                        [KEY_DEPT_TOTAL_INCIDENTS, KEY_DEPT_ALL_INCIDENTS],
+                    )
+                case Note.__name__:
+                    officer = Officer.query.filter_by(
+                        department_id=new_obj.officer_id
+                    ).first()
+                    if officer:
+                        Department(
+                            id=officer.department_id
+                        ).remove_database_cache_entries(
+                            [KEY_DEPT_ALL_NOTES],
+                        )
+
             # OOVA-tags
             if (type(new_obj).__name__ == "Incident"):
                 new_tags = request.form.getlist("tags[]")
@@ -95,12 +122,12 @@ class ModelView(MethodView):
 
                 new_obj.tags = tags
                 db.session.commit()
-            flash("{} created!".format(self.model_name))
+            flash(f"{self.model_name} created!")
             return self.get_redirect_url(obj_id=new_obj.id)
         else:
             current_app.logger.info(form.errors)
 
-        return render_template("{}_new.html".format(self.model_name), form=form)
+        return render_template(f"{self.model_name}_new.html", form=form)
 
     @login_required
     @ac_or_admin_required
@@ -115,31 +142,39 @@ class ModelView(MethodView):
 
         if not form:
             form = self.get_edit_form(obj)
-            # if the object doesn't have a creator id set, st it to current user
-            if (
-                hasattr(obj, "creator_id")
-                and hasattr(form, "creator_id")
-                and getattr(obj, "creator_id")
-            ):
-                form.creator_id.data = obj.creator_id
-            elif hasattr(form, "creator_id"):
-                form.creator_id.data = current_user.get_id()
-
-            # if the object keeps track of who updated it last, set to current user
-            if hasattr(form, "last_updated_id"):
-                form.last_updated_id.data = current_user.get_id()
 
         if hasattr(form, "department"):
             add_department_query(form, current_user)
 
         if form.validate_on_submit():
             self.populate_obj(form, obj)
-            flash("{} successfully updated!".format(self.model_name))
+            match self.model.__name__:
+                case Incident.__name__:
+                    Department(id=obj.department_id).remove_database_cache_entries(
+                        [KEY_DEPT_ALL_INCIDENTS],
+                    )
+                case Note.__name__:
+                    officer = Officer.query.filter_by(
+                        department_id=obj.officer_id
+                    ).first()
+                    if officer:
+                        Department(
+                            id=officer.department_id
+                        ).remove_database_cache_entries(
+                            [KEY_DEPT_ALL_NOTES],
+                        )
+                case Link.__name__:
+                    officer = Officer.query.filter_by(id=obj.officer_id).first()
+                    if officer:
+                        Department(
+                            id=officer.department_id
+                        ).remove_database_cache_entries(
+                            [KEY_DEPT_ALL_LINKS],
+                        )
+            flash(f"{self.model_name} successfully updated!")
             return self.get_redirect_url(obj_id=obj_id)
 
-        return render_template(
-            "{}_edit.html".format(self.model_name), obj=obj, form=form
-        )
+        return render_template(f"{self.model_name}_edit.html", obj=obj, form=form)
 
     @login_required
     @ac_or_admin_required
@@ -152,13 +187,28 @@ class ModelView(MethodView):
             ):
                 abort(403)
 
-        if request.method == HTTP_METHOD_POST:
+        if request.method == HTTPMethod.POST:
             db.session.delete(obj)
             db.session.commit()
-            flash("{} successfully deleted!".format(self.model_name))
+            match self.model.__name__:
+                case Incident.__name__:
+                    Department(id=obj.department_id).remove_database_cache_entries(
+                        [KEY_DEPT_TOTAL_INCIDENTS, KEY_DEPT_ALL_INCIDENTS],
+                    )
+                case Note.__name__:
+                    officer = Officer.query.filter_by(
+                        department_id=obj.officer_id
+                    ).first()
+                    if officer:
+                        Department(
+                            id=officer.department_id
+                        ).remove_database_cache_entries(
+                            [KEY_DEPT_ALL_NOTES],
+                        )
+            flash(f"{self.model_name} successfully deleted!")
             return self.get_post_delete_url()
 
-        return render_template("{}_delete.html".format(self.model_name), obj=obj)
+        return render_template(f"{self.model_name}_delete.html", obj=obj)
 
     def get_edit_form(self, obj):
         form = self.form(obj=obj)
@@ -171,23 +221,29 @@ class ModelView(MethodView):
         # returns user to the show view
         return redirect(
             url_for(
-                "main.{}_api".format(self.model_name),
+                f"main.{self.model_name}_api",
                 obj_id=kwargs["obj_id"],
-                _method=HTTP_METHOD_GET,
+                _method=HTTPMethod.GET,
             )
         )
 
     def get_post_delete_url(self, *args, **kwargs):
         # returns user to the list view
-        return redirect(url_for("main.{}_api".format(self.model_name)))
+        return redirect(url_for(f"main.{self.model_name}_api"))
 
     def get_department_id(self, obj):
         return obj.department_id
 
     def populate_obj(self, form, obj):
         form.populate_obj(obj)
-        if hasattr(obj, "date_updated"):
-            obj.date_updated = datetime.datetime.now()
+
+        # if the object doesn't have a creator id set it to current user
+        if hasattr(obj, "created_by") and not getattr(obj, "created_by"):
+            obj.created_by = current_user.id
+        # if the object keeps track of who updated it last, set to current user
+        if hasattr(obj, "last_updated_by"):
+            obj.last_updated_by = current_user.id
+
         db.session.add(obj)
         db.session.commit()
 
@@ -203,8 +259,8 @@ class ModelView(MethodView):
             if end_of_url == ending:
                 meth = getattr(self, ending, None)
         if not meth:
-            if request.method == HTTP_METHOD_GET:
+            if request.method == HTTPMethod.GET:
                 meth = getattr(self, "get", None)
             else:
-                assert meth is not None, "Unimplemented method %r" % request.method
+                assert meth is not None, f"Unimplemented method {request.method!r}"
         return meth(*args, **kwargs)

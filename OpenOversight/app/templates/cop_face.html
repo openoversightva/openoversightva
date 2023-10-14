@@ -10,15 +10,18 @@
 <div class="container theme-showcase" role="main">
 
     {% if current_user and current_user.is_authenticated %}
-      {% if image and current_user.is_disabled == False %}
-      <div class="row">
-        <div class="text-center">
-          <h1><small>Select the face of each officer in the photo and identify them.</small></h1>
-          <h2><small class="muted">{{ department.name }}</small></h2>
+      {% if image and not current_user.is_disabled %}
+        <div class="row">
+          <div class="text-center">
+            <h1>
+              <small>Select the face of each officer in the photo and identify them.</small>
+            </h1>
+            <h2>
+              <small class="muted">{{ department.name }}</small>
+            </h2>
+          </div>
         </div>
-      </div>
-
-      <div class="row">
+        <div class="row">
           <div class="subtle-pad">
             <img class="center-block img-responsive" id="image" src="{{ path }}" alt="Picture">
           </div>

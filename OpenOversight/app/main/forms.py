@@ -1,5 +1,5 @@
-import datetime
 import re
+from datetime import datetime, time
 
 from flask_wtf import FlaskForm as Form
 from flask_wtf.file import FileAllowed, FileField, FileRequired
@@ -29,19 +29,19 @@ from wtforms.validators import (
 )
 from wtforms_sqlalchemy.fields import QuerySelectField
 
-from OpenOversight.app.utils.db import dept_choices, unit_choices, tag_choices
-
-from ..formfields import TimeField
-from ..models import Officer
-from ..widgets import BootstrapListWidget, FormFieldWidget
-from .choices import (
+from OpenOversight.app.formfields import TimeField
+from OpenOversight.app.models.database import Officer
+from OpenOversight.app.utils.choices import (
     AGE_CHOICES,
+    DEPARTMENT_STATE_CHOICES,
     GENDER_CHOICES,
     LINK_CHOICES,
     RACE_CHOICES,
     STATE_CHOICES,
     SUFFIX_CHOICES,
 )
+from OpenOversight.app.utils.db import dept_choices, unit_choices, tag_choices, unsorted_dept_choices
+from OpenOversight.app.widgets import BootstrapListWidget, FormFieldWidget
 
 
 # Normalizes the "not sure" option to what it needs to be when writing to the database.
@@ -63,8 +63,8 @@ def validate_money(form, field):
 
 
 def validate_end_date(form, field):
-    if form.data["star_date"] and field.data:
-        if form.data["star_date"] > field.data:
+    if form.data["start_date"] and field.data:
+        if form.data["start_date"] > field.data:
             raise ValidationError("End date must come after start date.")
 
 
@@ -97,18 +97,19 @@ class FindOfficerForm(Form):
         default="",
         validators=[Regexp(r"\w*"), Length(max=55)],
     )
+    # TODO: Figure out why this test is failing when the departments are sorted using
+    #  the dept_choices function.
     dept = QuerySelectField(
         "dept",
         validators=[DataRequired()],
         query_factory=dept_choices,
-        get_label="name",
+        get_label="display_name",
     )
     unit = StringField("unit", default="Not Sure", validators=[Optional()])
     current_job = BooleanField("current_job", default=None, validators=[Optional()])
     rank = StringField(
         "rank", default="Not Sure", validators=[Optional()]
-    )
-    # Gets rewritten by Javascript
+    )  # Gets rewritten by Javascript
     race = SelectField(
         "race",
         default="Not Sure",
@@ -127,7 +128,9 @@ class FindOfficerForm(Form):
     max_age = IntegerField(
         "max_age", default=85, validators=[NumberRange(min=16, max=100)]
     )
-
+    require_photo = BooleanField(
+        "require_photo", default=False, validators=[Optional()]
+    )
 
 class FindOfficerIDForm(Form):
     name = StringField(
@@ -156,25 +159,27 @@ class AssignmentForm(Form):
         "Badge Number", default="", validators=[Regexp(r"\w*"), Length(max=50)]
     )
     job_title = QuerySelectField(
-        "Job Title", 
-        validators=[Optional()],
-        get_label="job_title")  # query set in view function
+        "Job Title",
+        validators=[DataRequired()],
+        get_label="job_title",
+        get_pk=lambda x: x.id,
+    )  # query set in view function
     unit = QuerySelectField(
         "Unit",
         validators=[Optional()],
         query_factory=unit_choices,
-        get_label="descrip",
+        get_label="description",
         allow_blank=True,
         blank_text="None",
     )
-    star_date = DateField("Assignment start date", validators=[Optional()])
+    start_date = DateField("Assignment start date", validators=[Optional()])
     resign_date = DateField(
         "Assignment end date", validators=[Optional(), validate_end_date]
     )
     # OOVA
     # job_title_id = HiddenField(validators=[Optional()])
     # unit_id = HiddenField(validators=[Optional()])
-    dept = QuerySelectField("dept", validators=[DataRequired()],
+    dept = QuerySelectField("dept", validators=[Optional()],
                             query_factory=dept_choices, get_label="name")
     is_edit = False
 
@@ -188,7 +193,7 @@ class SalaryForm(Form):
     )
     year = IntegerField(
         "Year",
-        default=datetime.datetime.now().year,
+        default=datetime.now().year,
         validators=[NumberRange(min=1900, max=2100)],
     )
     is_fiscal_year = BooleanField("Is fiscal year?", default=False)
@@ -212,6 +217,12 @@ class DepartmentForm(Form):
         "Shortened acronym for law enforcement agency, e.g. CPD",
         default="",
         validators=[Regexp(r"\w*"), Length(max=100), DataRequired()],
+    )
+    state = SelectField(
+        "The law enforcement agency's home state",
+        choices=[("", "Please Select a State")] + DEPARTMENT_STATE_CHOICES,
+        default="",
+        validators=[AnyOf(allowed_values(DEPARTMENT_STATE_CHOICES))],
     )
     jobs = FieldList(
         StringField("Job", default="", validators=[Regexp(r"\w*")]), label="Ranks"
@@ -245,7 +256,8 @@ class LinkForm(Form):
         default="",
         validators=[AnyOf(allowed_values(LINK_CHOICES))],
     )
-    creator_id = HiddenField(validators=[DataRequired(message="Not a valid user ID")])
+    # removed by LPL
+    #creator_id = HiddenField(validators=[DataRequired(message="Not a valid user ID")])
 
     def validate(self, extra_validators=None):
         success = super(LinkForm, self).validate(extra_validators=extra_validators)
@@ -279,7 +291,8 @@ class TextForm(EditTextForm):
     officer_id = HiddenField(
         validators=[DataRequired(message="Not a valid officer ID")]
     )
-    creator_id = HiddenField(validators=[DataRequired(message="Not a valid user ID")])
+    # removed by LPL
+    #creator_id = HiddenField(validators=[DataRequired(message="Not a valid user ID")])
 
 
 class AddOfficerForm(Form):
@@ -287,7 +300,7 @@ class AddOfficerForm(Form):
         "Department",
         validators=[DataRequired()],
         query_factory=dept_choices,
-        get_label="name",
+        get_label="display_name",
     )
     first_name = StringField(
         "First name",
@@ -320,7 +333,7 @@ class AddOfficerForm(Form):
         "Gender",
         choices=GENDER_CHOICES,
         coerce=lambda x: None if x == "Not Sure" else x,
-        validators=[AnyOf(allowed_values(db_genders))]
+        validators=[AnyOf(allowed_values(db_genders))],
     )
     star_no = StringField(
         "Badge Number", default="", validators=[Regexp(r"\w*"), Length(max=50)]
@@ -335,7 +348,7 @@ class AddOfficerForm(Form):
         "Unit",
         validators=[Optional()],
         query_factory=unit_choices,
-        get_label="descrip",
+        get_label="description",
         allow_blank=True,
         blank_text="None",
     )
@@ -409,13 +422,13 @@ class EditOfficerForm(Form):
         "Department",
         validators=[Optional()],
         query_factory=dept_choices,
-        get_label="name",
+        get_label="display_name",
     )
     submit = SubmitField(label="Update")
 
 
 class AddUnitForm(Form):
-    descrip = StringField(
+    description = StringField(
         "Unit name or description",
         default="",
         validators=[Regexp(r"\w*"), Length(max=120), DataRequired()],
@@ -424,7 +437,7 @@ class AddUnitForm(Form):
         "Department",
         validators=[DataRequired()],
         query_factory=dept_choices,
-        get_label="name",
+        get_label="display_name",
     )
     submit = SubmitField(label="Add")
 
@@ -434,7 +447,7 @@ class AddImageForm(Form):
         "Department",
         validators=[DataRequired()],
         query_factory=dept_choices,
-        get_label="name",
+        get_label="display_name",
     )
 
 class AddDocumentForm(Form):
@@ -482,7 +495,7 @@ class DateFieldForm(Form):
     time_field = TimeField("Time", validators=[Optional()])
 
     def validate_time_field(self, field):
-        if not type(field.data) == datetime.time:
+        if not type(field.data) == time:
             raise ValidationError("Not a valid time.")
 
     def validate_date_field(self, field):
@@ -552,16 +565,18 @@ class OfficerIdField(StringField):
             self.data = value
 
 
-def validate_oo_id(self, field):
-    if field.data:
-        try:
-            officer_id = int(field.data)
-            officer = Officer.query.get(officer_id)
+def validate_oo_id(self, oo_id):
+    if oo_id.data and isinstance(oo_id.data, str):
+        if oo_id.data.isnumeric():
+            officer = Officer.query.get(oo_id.data)
+        else:
+            try:
+                officer_id = oo_id.data.split('value="')[1][:-2]
+                officer = Officer.query.get(officer_id)
 
-        # Sometimes we get a string in field.data with py.test, this parses it
-        except ValueError:
-            officer_id = field.data.split('value="')[1][:-2]
-            officer = Officer.query.get(officer_id)
+            # Sometimes we get a string in field.data with py.test, this parses it
+            except IndexError:
+                officer = None
 
         if not officer:
             raise ValidationError("Not a valid officer id")
@@ -586,7 +601,7 @@ class IncidentForm(DateFieldForm):
         "Department*",
         validators=[DataRequired()],
         query_factory=dept_choices,
-        get_label="name",
+        get_label="display_name",
     )
     address = FormField(LocationForm)
     officers = FieldList(
@@ -607,12 +622,6 @@ class IncidentForm(DateFieldForm):
         min_entries=1,
         widget=BootstrapListWidget(),
     )
-    creator_id = HiddenField(
-        validators=[DataRequired(message="Incidents must have a creator id.")]
-    )
-    last_updated_id = HiddenField(
-        validators=[DataRequired(message="Incidents must have a user id for editing.")]
-    )
 
     submit = SubmitField(label="Submit")
 
@@ -626,13 +635,22 @@ class DocumentsForm(Form):
 
 class BrowseForm(Form):
     # Any fields added to this form should generally also be added to FindOfficerForm
+    # query set in view function
     rank = QuerySelectField(
         "rank",
         validators=[Optional()],
         get_label="job_title",
         get_pk=lambda job: job.job_title,
-    )  # query set in view function
-    last_name = StringField("Last name")
+    )
+    # query set in view function
+    unit = QuerySelectField(
+        "unit",
+        validators=[Optional()],
+        get_label="description",
+        get_pk=lambda unit: unit.description,
+    )
+    current_job = BooleanField("current_job", default=None, validators=[Optional()])
+    name = StringField("Last name")
     first_name = StringField("First name")
     badge = StringField("Badge number")
     unique_internal_identifier = StringField("Unique ID")
@@ -662,6 +680,10 @@ class BrowseForm(Form):
     )
     department = QuerySelectField("department", validators=[Optional()], get_label="name",
                             get_pk=lambda department: department.name)  # query set in view function
+
+    require_photo = BooleanField(
+        "require_photo", default=False, validators=[Optional()]
+    )
     submit = SubmitField(label="Submit")
 
 class SearchTagForm(Form):

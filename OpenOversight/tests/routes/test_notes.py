@@ -5,16 +5,19 @@ import pytest
 from flask import current_app, url_for
 
 from OpenOversight.app.main.forms import EditTextForm, TextForm
-from OpenOversight.app.models import Note, Officer, User, db
-from OpenOversight.app.utils.constants import ENCODING_UTF_8
+from OpenOversight.app.models.database import Department, Note, Officer, db
+from OpenOversight.app.models.database_cache import (
+    has_database_cache_entry,
+    put_database_cache_entry,
+)
+from OpenOversight.app.utils.constants import ENCODING_UTF_8, KEY_DEPT_ALL_NOTES
 from OpenOversight.tests.conftest import AC_DEPT
-
-from .route_helpers import login_ac, login_admin, login_user
+from OpenOversight.tests.routes.route_helpers import login_ac, login_admin, login_user
 
 
 @pytest.mark.parametrize(
     "route",
-    ["officer/1/note/1/edit", "officer/1/note/new", "officer/1/note/1/delete"],
+    ["officers/1/notes/1/edit", "officers/1/notes/new", "officers/1/notes/1/delete"],
 )
 def test_route_login_required(route, client, mockdata):
     rv = client.get(route)
@@ -23,7 +26,7 @@ def test_route_login_required(route, client, mockdata):
 
 @pytest.mark.parametrize(
     "route",
-    ["officer/1/note/1/edit", "officer/1/note/new", "officer/1/note/1/delete"],
+    ["officers/1/notes/1/edit", "officers/1/notes/new", "officers/1/notes/1/delete"],
 )
 def test_route_admin_or_required(route, client, mockdata):
     with current_app.test_request_context():
@@ -47,10 +50,7 @@ def test_admins_cannot_inject_unsafe_html(mockdata, client, session):
         login_admin(client)
         officer = Officer.query.first()
         text_contents = "New note\n<script>alert();</script>"
-        admin = User.query.filter_by(email="jen@example.org").first()
-        form = TextForm(
-            text_contents=text_contents, officer_id=officer.id, creator_id=admin.id
-        )
+        form = TextForm(text_contents=text_contents, officer_id=officer.id)
 
         rv = client.post(
             url_for("main.note_api", officer_id=officer.id),
@@ -64,15 +64,16 @@ def test_admins_cannot_inject_unsafe_html(mockdata, client, session):
         assert "&lt;script&gt;" in rv.data.decode()
 
 
-def test_admins_can_create_notes(mockdata, client, session):
+def test_admins_can_create_notes(mockdata, client, session, faker):
     with current_app.test_request_context():
         login_admin(client)
         officer = Officer.query.first()
-        text_contents = "I can haz notez"
-        admin = User.query.filter_by(email="jen@example.org").first()
-        form = TextForm(
-            text_contents=text_contents, officer_id=officer.id, creator_id=admin.id
-        )
+        text_contents = faker.sentence(nb_words=20)
+        form = TextForm(text_contents=text_contents, officer_id=officer.id)
+        cache_params = (Department(id=officer.department_id), KEY_DEPT_ALL_NOTES)
+        put_database_cache_entry(*cache_params, 1)
+
+        assert has_database_cache_entry(*cache_params) is True
 
         rv = client.post(
             url_for("main.note_api", officer_id=officer.id),
@@ -85,16 +86,16 @@ def test_admins_can_create_notes(mockdata, client, session):
 
         created_note = Note.query.filter_by(text_contents=text_contents).first()
         assert created_note is not None
-        assert created_note.date_created is not None
+        assert created_note.created_at is not None
+        assert has_database_cache_entry(*cache_params) is False
 
 
-def test_acs_can_create_notes(mockdata, client, session):
+def test_acs_can_create_notes(mockdata, client, session, faker):
     with current_app.test_request_context():
         login_ac(client)
         officer = Officer.query.first()
-        note = "I can haz notez"
-        ac = User.query.filter_by(email="raq929@example.org").first()
-        form = TextForm(text_contents=note, officer_id=officer.id, creator_id=ac.id)
+        note = faker.sentence(nb_words=20)
+        form = TextForm(text_contents=note, officer_id=officer.id)
 
         rv = client.post(
             url_for("main.note_api", officer_id=officer.id),
@@ -107,22 +108,20 @@ def test_acs_can_create_notes(mockdata, client, session):
 
         created_note = Note.query.filter_by(text_contents=note).first()
         assert created_note is not None
-        assert created_note.date_created is not None
+        assert created_note.created_at is not None
 
 
-def test_admins_can_edit_notes(mockdata, client, session):
+def test_admins_can_edit_notes(mockdata, client, session, faker):
     with current_app.test_request_context():
         login_admin(client)
         officer = Officer.query.first()
-        old_note = "meow"
-        new_note = "I can haz editing notez"
+        new_note = faker.sentence(nb_words=20)
         original_date = datetime.now()
         note = Note(
-            text_contents=old_note,
+            text_contents=faker.sentence(nb_words=15),
             officer_id=officer.id,
-            creator_id=1,
-            date_created=original_date,
-            date_updated=original_date,
+            created_at=original_date,
+            last_updated_at=original_date,
         )
         db.session.add(note)
         db.session.commit()
@@ -130,9 +129,13 @@ def test_admins_can_edit_notes(mockdata, client, session):
         form = EditTextForm(
             text_contents=new_note,
         )
+        cache_params = (Department(id=officer.department_id), KEY_DEPT_ALL_NOTES)
+        put_database_cache_entry(*cache_params, 1)
+
+        assert has_database_cache_entry(*cache_params) is True
 
         rv = client.post(
-            url_for("main.note_api", officer_id=officer.id, obj_id=note.id) + "/edit",
+            url_for("main.note_api_edit", officer_id=officer.id, obj_id=note.id),
             data=form.data,
             follow_redirects=True,
         )
@@ -140,23 +143,21 @@ def test_admins_can_edit_notes(mockdata, client, session):
         assert "updated" in rv.data.decode(ENCODING_UTF_8)
 
         assert note.text_contents == new_note
-        assert note.date_updated > original_date
+        assert note.last_updated_at > original_date
+        assert has_database_cache_entry(*cache_params) is False
 
 
-def test_ac_can_edit_their_notes_in_their_department(mockdata, client, session):
+def test_ac_can_edit_their_notes_in_their_department(mockdata, client, session, faker):
     with current_app.test_request_context():
         login_ac(client)
-        ac = User.query.filter_by(email="raq929@example.org").first()
         officer = Officer.query.filter_by(department_id=AC_DEPT).first()
-        old_note = "meow"
-        new_note = "I can haz editing notez"
+        new_note = faker.sentence(nb_words=20)
         original_date = datetime.now()
         note = Note(
-            text_contents=old_note,
+            text_contents=faker.sentence(nb_words=15),
             officer_id=officer.id,
-            creator_id=ac.id,
-            date_created=original_date,
-            date_updated=original_date,
+            created_at=original_date,
+            last_updated_at=original_date,
         )
         db.session.add(note)
         db.session.commit()
@@ -166,7 +167,7 @@ def test_ac_can_edit_their_notes_in_their_department(mockdata, client, session):
         )
 
         rv = client.post(
-            url_for("main.note_api", officer_id=officer.id, obj_id=note.id) + "/edit",
+            url_for("main.note_api_edit", officer_id=officer.id, obj_id=note.id),
             data=form.data,
             follow_redirects=True,
         )
@@ -174,13 +175,12 @@ def test_ac_can_edit_their_notes_in_their_department(mockdata, client, session):
         assert "updated" in rv.data.decode(ENCODING_UTF_8)
 
         assert note.text_contents == new_note
-        assert note.date_updated > original_date
+        assert note.last_updated_at > original_date
 
 
 def test_ac_can_edit_others_notes(mockdata, client, session):
     with current_app.test_request_context():
-        login_ac(client)
-        ac = User.query.filter_by(email="raq929@example.org").first()
+        _, user = login_ac(client)
         officer = Officer.query.filter_by(department_id=AC_DEPT).first()
         old_note = "meow"
         new_note = "I can haz editing notez"
@@ -188,9 +188,10 @@ def test_ac_can_edit_others_notes(mockdata, client, session):
         note = Note(
             text_contents=old_note,
             officer_id=officer.id,
-            creator_id=ac.id - 1,
-            date_created=original_date,
-            date_updated=original_date,
+            created_by=user.id - 1,
+            created_at=original_date,
+            last_updated_at=original_date,
+            last_updated_by=user.id - 1,
         )
         db.session.add(note)
         db.session.commit()
@@ -200,7 +201,7 @@ def test_ac_can_edit_others_notes(mockdata, client, session):
         )
 
         rv = client.post(
-            url_for("main.note_api", officer_id=officer.id, obj_id=note.id) + "/edit",
+            url_for("main.note_api_edit", officer_id=officer.id, obj_id=note.id),
             data=form.data,
             follow_redirects=True,
         )
@@ -208,26 +209,26 @@ def test_ac_can_edit_others_notes(mockdata, client, session):
         assert "updated" in rv.data.decode(ENCODING_UTF_8)
 
         assert note.text_contents == new_note
-        assert note.date_updated > original_date
+        assert note.last_updated_at > original_date
 
 
 def test_ac_cannot_edit_notes_not_in_their_department(mockdata, client, session):
     with current_app.test_request_context():
-        login_ac(client)
+        _, user = login_ac(client)
 
         officer = Officer.query.except_(
             Officer.query.filter_by(department_id=AC_DEPT)
         ).first()
-        ac = User.query.filter_by(email="raq929@example.org").first()
         old_note = "meow"
         new_note = "I can haz editing notez"
         original_date = datetime.now()
         note = Note(
             text_contents=old_note,
             officer_id=officer.id,
-            creator_id=ac.id,
-            date_created=original_date,
-            date_updated=original_date,
+            created_by=user.id,
+            created_at=original_date,
+            last_updated_at=original_date,
+            last_updated_by=user.id,
         )
         db.session.add(note)
         db.session.commit()
@@ -237,7 +238,7 @@ def test_ac_cannot_edit_notes_not_in_their_department(mockdata, client, session)
         )
 
         rv = client.post(
-            url_for("main.note_api", officer_id=officer.id, obj_id=note.id) + "/edit",
+            url_for("main.note_api_edit", officer_id=officer.id, obj_id=note.id),
             data=form.data,
             follow_redirects=True,
         )
@@ -248,83 +249,92 @@ def test_admins_can_delete_notes(mockdata, client, session):
     with current_app.test_request_context():
         login_admin(client)
         note = Note.query.first()
-        note_id = note.id
+        officer = Officer.query.filter_by(id=note.officer_id).first()
+        cache_params = (Department(id=officer.department_id), KEY_DEPT_ALL_NOTES)
+        put_database_cache_entry(*cache_params, 1)
+
+        assert has_database_cache_entry(*cache_params) is True
+
         rv = client.post(
-            url_for("main.note_api", officer_id=note.officer_id, obj_id=note_id)
-            + "/delete",
+            url_for("main.note_api_delete", officer_id=note.officer_id, obj_id=note.id),
             follow_redirects=True,
         )
         assert rv.status_code == HTTPStatus.OK
-        deleted = Note.query.get(note_id)
+        deleted = Note.query.get(note.id)
         assert deleted is None
+        assert has_database_cache_entry(*cache_params) is False
 
 
 def test_acs_can_delete_their_notes_in_their_department(mockdata, client, session):
     with current_app.test_request_context():
-        login_ac(client)
-        ac = User.query.filter_by(email="raq929@example.org").first()
+        _, user = login_ac(client)
         officer = Officer.query.filter_by(department_id=AC_DEPT).first()
+        now = datetime.now()
         note = Note(
             text_contents="Hello",
             officer_id=officer.id,
-            creator_id=ac.id,
-            date_created=datetime.now(),
-            date_updated=datetime.now(),
+            created_by=user.id,
+            created_at=now,
+            last_updated_at=now,
+            last_updated_by=user.id,
         )
         db.session.add(note)
         db.session.commit()
-        note_id = note.id
         rv = client.post(
-            url_for("main.note_api", officer_id=officer.id, obj_id=note.id) + "/delete",
+            url_for("main.note_api_delete", officer_id=officer.id, obj_id=note.id),
             follow_redirects=True,
         )
         assert rv.status_code == HTTPStatus.OK
-        deleted = Note.query.get(note_id)
+        deleted = Note.query.get(note.id)
         assert deleted is None
 
 
-def test_acs_cannot_delete_notes_not_in_their_department(mockdata, client, session):
+def test_acs_cannot_delete_notes_not_in_their_department(
+    mockdata, client, session, faker
+):
     with current_app.test_request_context():
         login_ac(client)
         officer = Officer.query.except_(
             Officer.query.filter_by(department_id=AC_DEPT)
         ).first()
+        now = datetime.now()
         note = Note(
-            text_contents="Hello",
+            text_contents=faker.sentence(nb_words=20),
             officer_id=officer.id,
-            creator_id=2,
-            date_created=datetime.now(),
-            date_updated=datetime.now(),
+            created_by=2,
+            created_at=now,
+            last_updated_at=now,
+            last_updated_by=2,
         )
         db.session.add(note)
         db.session.commit()
-        note_id = note.id
         rv = client.post(
-            url_for("main.note_api", officer_id=officer.id, obj_id=note.id) + "/delete",
+            url_for("main.note_api_delete", officer_id=officer.id, obj_id=note.id),
             follow_redirects=True,
         )
 
         assert rv.status_code == HTTPStatus.FORBIDDEN
-        not_deleted = Note.query.get(note_id)
+        not_deleted = Note.query.get(note.id)
         assert not_deleted is not None
 
 
 def test_acs_can_get_edit_form_for_their_dept(mockdata, client, session):
     with current_app.test_request_context():
-        login_ac(client)
+        _, user = login_ac(client)
         officer = Officer.query.filter_by(department_id=AC_DEPT).first()
-        ac = User.query.filter_by(email="raq929@example.org").first()
+        now = datetime.now()
         note = Note(
             text_contents="Hello",
             officer_id=officer.id,
-            creator_id=ac.id,
-            date_created=datetime.now(),
-            date_updated=datetime.now(),
+            created_by=user.id,
+            created_at=now,
+            last_updated_at=now,
+            last_updated_by=user.id,
         )
         db.session.add(note)
         db.session.commit()
         rv = client.get(
-            url_for("main.note_api", obj_id=note.id, officer_id=officer.id) + "/edit",
+            url_for("main.note_api_edit", obj_id=note.id, officer_id=officer.id),
             follow_redirects=True,
         )
         assert rv.status_code == HTTPStatus.OK
@@ -333,20 +343,21 @@ def test_acs_can_get_edit_form_for_their_dept(mockdata, client, session):
 
 def test_acs_can_get_others_edit_form(mockdata, client, session):
     with current_app.test_request_context():
-        login_ac(client)
+        _, user = login_ac(client)
         officer = Officer.query.filter_by(department_id=AC_DEPT).first()
-        ac = User.query.filter_by(email="raq929@example.org").first()
+        now = datetime.now()
         note = Note(
             text_contents="Hello",
             officer_id=officer.id,
-            creator_id=ac.id - 1,
-            date_created=datetime.now(),
-            date_updated=datetime.now(),
+            created_by=user.id - 1,
+            created_at=now,
+            last_updated_at=now,
+            last_updated_by=user.id - 1,
         )
         db.session.add(note)
         db.session.commit()
         rv = client.get(
-            url_for("main.note_api", obj_id=note.id, officer_id=officer.id) + "/edit",
+            url_for("main.note_api_edit", obj_id=note.id, officer_id=officer.id),
             follow_redirects=True,
         )
         assert rv.status_code == HTTPStatus.OK
@@ -359,32 +370,36 @@ def test_acs_cannot_get_edit_form_for_their_non_dept(mockdata, client, session):
         officer = Officer.query.except_(
             Officer.query.filter_by(department_id=AC_DEPT)
         ).first()
+        now = datetime.now()
         note = Note(
             text_contents="Hello",
             officer_id=officer.id,
-            creator_id=2,
-            date_created=datetime.now(),
-            date_updated=datetime.now(),
+            created_by=2,
+            created_at=now,
+            last_updated_at=now,
+            last_updated_by=2,
         )
         db.session.add(note)
         db.session.commit()
         rv = client.get(
-            url_for("main.note_api", obj_id=note.id, officer_id=officer.id) + "/edit",
+            url_for("main.note_api_edit", obj_id=note.id, officer_id=officer.id),
             follow_redirects=True,
         )
         assert rv.status_code == HTTPStatus.FORBIDDEN
 
 
-def test_users_cannot_see_notes(mockdata, client, session):
+def test_users_cannot_see_notes(mockdata, client, session, faker):
     with current_app.test_request_context():
         officer = Officer.query.first()
-        text_contents = "U can't see meeee"
+        text_contents = faker.sentence(nb_words=20)
+        now = datetime.now()
         note = Note(
             text_contents=text_contents,
             officer_id=officer.id,
-            creator_id=1,
-            date_created=datetime.now(),
-            date_updated=datetime.now(),
+            created_by=1,
+            created_at=now,
+            last_updated_at=now,
+            last_updated_by=1,
         )
         db.session.add(note)
         db.session.commit()
@@ -400,15 +415,17 @@ def test_users_cannot_see_notes(mockdata, client, session):
 
 def test_admins_can_see_notes(mockdata, client, session):
     with current_app.test_request_context():
-        login_admin(client)
+        _, user = login_admin(client)
         officer = Officer.query.first()
         text_contents = "Kittens see everything"
+        now = datetime.now()
         note = Note(
             text_contents=text_contents,
             officer_id=officer.id,
-            creator_id=1,
-            date_created=datetime.now(),
-            date_updated=datetime.now(),
+            created_by=user.id,
+            created_at=now,
+            last_updated_at=now,
+            last_updated_by=user.id,
         )
         db.session.add(note)
         db.session.commit()
@@ -423,15 +440,17 @@ def test_admins_can_see_notes(mockdata, client, session):
 
 def test_acs_can_see_notes_in_their_department(mockdata, client, session):
     with current_app.test_request_context():
-        login_ac(client)
+        _, user = login_ac(client)
         officer = Officer.query.filter_by(department_id=AC_DEPT).first()
         text_contents = "I can haz notez"
+        now = datetime.now()
         note = Note(
             text_contents=text_contents,
             officer_id=officer.id,
-            creator_id=1,
-            date_created=datetime.now(),
-            date_updated=datetime.now(),
+            created_by=user.id,
+            created_at=now,
+            last_updated_at=now,
+            last_updated_by=user.id,
         )
         db.session.add(note)
         db.session.commit()
@@ -451,12 +470,14 @@ def test_acs_cannot_see_notes_not_in_their_department(mockdata, client, session)
             Officer.query.filter_by(department_id=AC_DEPT)
         ).first()
         text_contents = "Hello it me"
+        now = datetime.now()
         note = Note(
             text_contents=text_contents,
             officer_id=officer.id,
-            creator_id=1,
-            date_created=datetime.now(),
-            date_updated=datetime.now(),
+            created_by=1,
+            created_at=now,
+            last_updated_at=now,
+            last_updated_by=1,
         )
         db.session.add(note)
         db.session.commit()

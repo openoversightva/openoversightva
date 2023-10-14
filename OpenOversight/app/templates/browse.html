@@ -24,22 +24,32 @@
             <a class="btn btn-lg btn-primary" href="/incidents/?department_id=2321">
               Incidents
             </a>
-            <a class="btn btn-lg btn-primary" href="https://openoversightva.com/documents?title=&department=2321">
+            <a class="btn btn-lg btn-primary" href="/documents?title=&department=2321">
               Library
        	    </a>
         </p>
       </div>
     </p>
-  {% for department in departments %}
-    <p>
-      <div class="btn-group">
-        <h2>{{ department.name }}
-        {% if current_user.is_administrator %}
-            <a href="{{ url_for('main.edit_department', department_id=department.id) }}">
-              <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-            </a>
-        {% endif %}
-       </h2>
+      {% for department in departments %}
+        <p>
+          <div class="btn-group">
+            <h2>
+              {{ department.display_name }}
+              {% if current_user.is_administrator %}
+                <a href="{{ url_for('main.edit_department', department_id=department.id) }}">
+                  <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                </a>
+              {% endif %}
+            </h2>
+            <!-- from upstream; slows the page way down
+            <div>
+              <b class="dept-{{ department.id }}">Officers Documented:</b> { department.total_documented_officers() | thousands_separator }
+              <br>
+              <b class="dept-{{ department.id }}">Assignments Documented:</b> { department.total_documented_assignments() | thousands_separator }
+              <br>
+              <b class="dept-{{ department.id }}">Incidents Documented:</b> { department.total_documented_incidents() | thousands_separator }
+            </div>
+            -->
           <p>
           <a class="btn btn-lg btn-primary" href="{{ url_for('main.list_officer', department_id=department.id) }}">
              Officers
@@ -50,16 +60,16 @@
             </a>
           {% endif %}
           {% if department.documents %}
-            <a class="btn btn-lg btn-primary" href="https://openoversightva.com/documents?title=&department={{ department.id }}">
+            <a class="btn btn-lg btn-primary" href="/documents?title=&department={{ department.id }}">
                Library
             </a>
           {% endif %}
-          </p>
-      </div>
-    </p>
-  {% endfor %}
+              </p>
+          </div>
+        </p>
+      {% endfor %}
+    </div>
   </div>
-</div>
 
 <script type="text/javascript">
 
@@ -78,4 +88,4 @@ $( document ).ready(function() {
 
 </script>
 
-{% endblock %}
+{% endblock content %}
