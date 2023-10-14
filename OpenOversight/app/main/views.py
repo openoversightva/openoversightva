@@ -395,12 +395,7 @@ def officer_profile(officer_id: int):
                               .filter_by(department_id=officer.department_id)\
                               .all()
 
-    #depts_dict = [dept_choice.to_custom_dict() for dept_choice in dept_choices()]
-#    form.dept.query = Department.query.order_by(Department.name.asc()).all()
-    form.dept.choices = [('18','test1'),('19','test2')]
     set_dynamic_default(form.dept, officer.department)
-
-    current_app.logger.info(str(form.dept.data))
     
     try:
         faces = (

@@ -56,7 +56,7 @@ def compute_leaderboard_stats(select_top=25):
 
 def dept_choices():
     return (
-        Department.query
+        Department.query.order_by(Department.name.asc()).all()
     )
 
 def unsorted_dept_choices():

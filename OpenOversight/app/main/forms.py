@@ -180,7 +180,7 @@ class AssignmentForm(Form):
     # job_title_id = HiddenField(validators=[Optional()])
     # unit_id = HiddenField(validators=[Optional()])
     dept = QuerySelectField("dept", validators=[Optional()],
-                            query_factory=dept_choices, get_label="name")
+              query_factory=dept_choices, get_label="name")
     is_edit = False
 
 
