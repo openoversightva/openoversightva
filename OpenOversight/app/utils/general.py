@@ -1,32 +1,35 @@
 import random
 import sys
 from distutils.util import strtobool
-from typing import Optional
+from typing import Optional, Union
 from urllib.parse import urlparse
+from zoneinfo import available_timezones
 
 from flask import current_app, url_for
 
-from ...app.custom import add_jpeg_patch
+from OpenOversight.app.models.database import Officer, User
+from OpenOversight.app.utils.constants import KEY_ALLOWED_EXTENSIONS
 
 
-# Call JPEG patch function
-add_jpeg_patch()
+# Cache timezones since this function "may open a large number of files"
+# https://docs.python.org/3/library/zoneinfo.html#zoneinfo.available_timezones
+AVAILABLE_TIMEZONES = available_timezones()
 
 
-def ac_can_edit_officer(officer, ac):
+def ac_can_edit_officer(officer: Officer, ac: User) -> bool:
     if officer.department_id == ac.ac_department_id:
         return True
     return False
 
 
-def allowed_file(filename):
+def allowed_file(filename: str) -> bool:
     return (
         "." in filename
         and filename.rsplit(".", 1)[1].lower()
-        in current_app.config["ALLOWED_EXTENSIONS"]
+        in current_app.config[KEY_ALLOWED_EXTENSIONS]
     )
 
-
+# OOVA
 def allowed_doc_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_DOC_EXTENSIONS']
@@ -86,7 +89,7 @@ def merge_dicts(*dict_args):
     return result
 
 
-def normalize_gender(input_gender):
+def normalize_gender(input_gender: str) -> Union[str, None]:
     if input_gender is None:
         return None
     normalized_genders = {
@@ -111,7 +114,7 @@ def prompt_yes_no(prompt, default="no"):
     elif default == "no":
         yn = " [y/N] "
     else:
-        raise ValueError("invalid default answer: {}".format(default))
+        raise ValueError(f"invalid default answer: {default}")
 
     while True:
         sys.stdout.write(prompt + yn)
@@ -136,7 +139,7 @@ def replace_list(items, obj, attr, model, db):
     """
     new_list = []
     if not hasattr(obj, attr):
-        raise LookupError("The object does not have the {} attribute".format(attr))
+        raise LookupError(f"The object does not have the {attr} attribute")
 
     for item in items:
         new_item, _ = get_or_create(db.session, model, **item)
@@ -144,15 +147,17 @@ def replace_list(items, obj, attr, model, db):
     setattr(obj, attr, new_list)
 
 
-def serve_image(filepath):
+def serve_image(filepath: str):
     if "http" in filepath:
         return filepath
     if "static" in filepath:
         return url_for("static", filename=filepath.replace("static/", "").lstrip("/"))
 
 
-def str_is_true(str_):
-    return strtobool(str_.lower())
+def str_is_true(str_) -> bool:
+    if str_ is None:
+        return False
+    return bool(strtobool(str_.lower()))
 
 
 def validate_redirect_url(url: Optional[str]) -> Optional[str]:

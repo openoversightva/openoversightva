@@ -1,11 +1,18 @@
-import datetime
+from datetime import datetime
+from typing import Union
 
 from sqlalchemy import or_
 from sqlalchemy.orm import selectinload
-from sqlalchemy.sql.expression import cast
 
-from ...app.main.choices import GENDER_CHOICES, RACE_CHOICES
-from ..models import (
+from OpenOversight.app.main.forms import (
+    AddOfficerForm,
+    AssignmentForm,
+    BrowseForm,
+    EditOfficerForm,
+    IncidentForm,
+    TextForm,
+)
+from OpenOversight.app.models.database import (
     Assignment,
     Description,
     Face,
@@ -18,21 +25,25 @@ from ..models import (
     Officer,
     Salary,
     Unit,
+    User,
     db,
 )
-from .general import get_or_create
+from OpenOversight.app.utils.choices import GENDER_CHOICES, RACE_CHOICES
 
 
-def add_new_assignment(officer_id, form):
-    if form.unit.data:
-        unit_id = form.unit.data.id
-    else:
-        unit_id = None
+def if_exists_or_none(val: Union[str, None]) -> Union[str, None]:
+    return val if val else None
 
-    if form.dept.data:
+
+def add_new_assignment(officer_id: int, form: AssignmentForm, user: User) -> None:
+    unit_id = form.unit.data.id if form.unit.data else None
+
+    if form.dept.data: # for Officer page, AddAssignment form
         department_id = form.dept.data.id
-    else:
-        department_id = None
+    elif form.department.data: # for new officer page, AddOfficerForm
+        department_id = form.department.data.id
+    else: 
+        None
 
     job = Job.query.filter_by(
         department_id=form.job_title.data.department_id,
@@ -44,15 +55,17 @@ def add_new_assignment(officer_id, form):
         star_no=form.star_no.data,
         job_id=job.id,
         unit_id=unit_id,
-        star_date=form.star_date.data,
+        start_date=form.start_date.data,
         resign_date=form.resign_date.data,
-        department_id = department_id
+        created_by=user.id,
+        last_updated_by=user.id,
+        department_id = department_id,
     )
     db.session.add(new_assignment)
     db.session.commit()
 
 
-def add_officer_profile(form, current_user):
+def add_officer_profile(form: AddOfficerForm, user: User) -> Officer:
     officer = Officer(
         first_name=form.first_name.data,
         last_name=form.last_name.data,
@@ -63,40 +76,39 @@ def add_officer_profile(form, current_user):
         birth_year=form.birth_year.data,
         employment_date=form.employment_date.data,
         department_id=form.department.data.id,
+        created_by=user.id,
+        last_updated_by=user.id,
     )
     db.session.add(officer)
     db.session.commit()
 
-    if form.unit.data:
-        officer_unit = form.unit.data
-    else:
-        officer_unit = None
+    officer_unit = form.unit.data if form.unit.data else None
 
     assignment = Assignment(
-        baseofficer=officer,
+        base_officer=officer,
         star_no=form.star_no.data,
         job_id=form.job_id.data,
         unit=officer_unit,
-        star_date=form.employment_date.data,
+        start_date=form.employment_date.data,
+        created_by=user.id,
+        last_updated_by=user.id,
+        department_id = form.department.data.id,
     )
     db.session.add(assignment)
     if form.links.data:
         for link in form.data["links"]:
-            # don't try to create with a blank string
             if link["url"]:
-                li, _ = get_or_create(db.session, Link, **link)
-                if li:
-                    officer.links.append(li)
+                li = get_or_create_link_from_form(link, user)
+                officer.links.append(li)
     if form.notes.data:
         for note in form.data["notes"]:
             # don't try to create with a blank string
             if note["text_contents"]:
                 new_note = Note(
-                    note=note["text_contents"],
-                    user_id=current_user.get_id(),
+                    text_contents=note["text_contents"],
                     officer=officer,
-                    date_created=datetime.datetime.now(),
-                    date_updated=datetime.datetime.now(),
+                    created_by=user.id,
+                    last_updated_by=user.id,
                 )
                 db.session.add(new_note)
     if form.descriptions.data:
@@ -104,11 +116,10 @@ def add_officer_profile(form, current_user):
             # don't try to create with a blank string
             if description["text_contents"]:
                 new_description = Description(
-                    description=description["text_contents"],
-                    user_id=current_user.get_id(),
+                    text_contents=description["text_contents"],
                     officer=officer,
-                    date_created=datetime.datetime.now(),
-                    date_updated=datetime.datetime.now(),
+                    created_by=user.id,
+                    last_updated_by=user.id,
                 )
                 db.session.add(new_description)
     if form.salaries.data:
@@ -121,6 +132,8 @@ def add_officer_profile(form, current_user):
                     overtime_pay=salary["overtime_pay"],
                     year=salary["year"],
                     is_fiscal_year=salary["is_fiscal_year"],
+                    created_by=user.id,
+                    last_updated_by=user.id,
                 )
                 db.session.add(new_salary)
 
@@ -128,80 +141,98 @@ def add_officer_profile(form, current_user):
     return officer
 
 
-def create_description(self, form):
+def create_description(self, form: TextForm, user: User) -> Description:
     return Description(
         text_contents=form.text_contents.data,
-        creator_id=form.creator_id.data,
         officer_id=form.officer_id.data,
-        date_created=datetime.datetime.now(),
-        date_updated=datetime.datetime.now(),
+        created_by=user.id,
+        last_updated_by=user.id,
     )
 
 
-def create_incident(self, form):
-    fields = {
-        "date": form.date_field.data,
-        "time": form.time_field.data,
-        "officers": [],
-        "license_plates": [],
-        "links": [],
-        "address": "",
-        "creator_id": form.creator_id.data,
-        "last_updated_id": form.last_updated_id.data,
-    }
+def create_incident(self, form: IncidentForm, user: User) -> Incident:
+    address_model = None
+    officers = []
+    license_plates = []
+    links = []
 
     if "address" in form.data:
-        address, _ = get_or_create(db.session, Location, **form.data["address"])
-        fields["address"] = address
+        address = form.data["address"]
+        location = Location.query.filter_by(
+            cross_street1=if_exists_or_none(address["cross_street1"]),
+            cross_street2=if_exists_or_none(address["cross_street2"]),
+            city=if_exists_or_none(address["city"]),
+            state=if_exists_or_none(address["state"]),
+            street_name=if_exists_or_none(address["street_name"]),
+            zip_code=if_exists_or_none(address["zip_code"]),
+        ).first()
+        if not location:
+            location = Location(
+                cross_street1=if_exists_or_none(address["cross_street1"]),
+                cross_street2=if_exists_or_none(address["cross_street2"]),
+                city=if_exists_or_none(address["city"]),
+                state=if_exists_or_none(address["state"]),
+                street_name=if_exists_or_none(address["street_name"]),
+                zip_code=if_exists_or_none(address["zip_code"]),
+                created_by=user.id,
+                last_updated_by=user.id,
+            )
+            db.session.add(location)
+        address_model = location
 
     if "officers" in form.data:
         for officer in form.data["officers"]:
             if officer["oo_id"]:
-                of, _ = get_or_create(db.session, Officer, **officer)
+                of = Officer.query.filter_by(id=int(officer["oo_id"])).one()
                 if of:
-                    fields["officers"].append(of)
+                    officers.append(of)
 
     if "license_plates" in form.data:
         for plate in form.data["license_plates"]:
             if plate["number"]:
-                pl, _ = get_or_create(db.session, LicensePlate, **plate)
-                if pl:
-                    fields["license_plates"].append(pl)
+                lp = LicensePlate.query.filter_by(
+                    number=if_exists_or_none(plate["number"]),
+                    state=if_exists_or_none(plate["state"]),
+                ).first()
+                if not lp:
+                    lp = LicensePlate(
+                        number=if_exists_or_none(plate["number"]),
+                        state=if_exists_or_none(plate["state"]),
+                        created_by=user.id,
+                        last_updated_by=user.id,
+                    )
+                    db.session.add(lp)
+                license_plates.append(lp)
 
     if "links" in form.data:
         for link in form.data["links"]:
-            # don't try to create with a blank string
             if link["url"]:
-                li, _ = get_or_create(db.session, Link, **link)
-                if li:
-                    fields["links"].append(li)
+                li = get_or_create_link_from_form(link, user)
+                links.append(li)
 
     return Incident(
-        date=fields["date"],
-        time=fields["time"],
-        description=form.data["description"],
+        address=address_model,
+        date=form.date_field.data,
         department=form.data["department"],
-        address=fields["address"],
-        officers=fields["officers"],
+        description=form.data["description"],
+        license_plates=license_plates,
+        links=links,
+        officers=officers,
         report_number=form.data["report_number"],
-        license_plates=fields["license_plates"],
-        links=fields["links"],
-        creator_id=fields["creator_id"],
-        last_updated_id=fields["last_updated_id"],
+        time=form.time_field.data,
     )
 
 
-def create_note(self, form):
+def create_note(self, form: TextForm, user: User) -> Note:
     return Note(
         text_contents=form.text_contents.data,
-        creator_id=form.creator_id.data,
         officer_id=form.officer_id.data,
-        date_created=datetime.datetime.now(),
-        date_updated=datetime.datetime.now(),
+        created_by=user.id,
+        last_updated_by=user.id,
     )
 
 
-def edit_existing_assignment(assignment, form):
+def edit_existing_assignment(assignment, form: AssignmentForm) -> Assignment:
     assignment.star_no = form.star_no.data
 
     job = form.job_title.data
@@ -213,14 +244,37 @@ def edit_existing_assignment(assignment, form):
         officer_unit = None
 
     assignment.unit_id = officer_unit
-    assignment.star_date = form.star_date.data
+    assignment.start_date = form.start_date.data
     assignment.resign_date = form.resign_date.data
     db.session.add(assignment)
     db.session.commit()
     return assignment
 
 
-def edit_officer_profile(officer, form):
+def get_or_create_link_from_form(link_form, user: User) -> Union[Link, None]:
+    link = None
+    if link_form["url"]:
+        link = Link.query.filter_by(
+            author=if_exists_or_none(link_form["author"]),
+            link_type=if_exists_or_none(link_form["link_type"]),
+            title=if_exists_or_none(link_form["title"]),
+            url=if_exists_or_none(link_form["url"]),
+        ).first()
+        if not link:
+            link = Link(
+                author=if_exists_or_none(link_form["author"]),
+                description=if_exists_or_none(link_form["description"]),
+                link_type=if_exists_or_none(link_form["link_type"]),
+                title=if_exists_or_none(link_form["title"]),
+                url=if_exists_or_none(link_form["url"]),
+                created_by=user.id,
+                last_updated_by=user.id,
+            )
+            db.session.add(link)
+    return link
+
+
+def edit_officer_profile(officer, form: EditOfficerForm) -> Officer:
     for field, data in form.data.items():
         setattr(officer, field, data)
 
@@ -229,14 +283,14 @@ def edit_officer_profile(officer, form):
     return officer
 
 
-def filter_by_form(form_data, officer_query, department_id=None):
+def filter_by_form(form_data: BrowseForm, officer_query, department_id=None):
     if form_data.get("last_name"):
         officer_query = officer_query.filter(
-            Officer.last_name.ilike("%%{}%%".format(form_data["last_name"]))
+            Officer.last_name.ilike(f"%%{form_data['last_name']}%%")
         )
     if form_data.get("first_name"):
         officer_query = officer_query.filter(
-            Officer.first_name.ilike("%%{}%%".format(form_data["first_name"]))
+            Officer.first_name.ilike(f"%%{form_data['first_name']}%%")
         )
     if not department_id and form_data.get("dept"):
         department_id = form_data["dept"].id
@@ -245,7 +299,7 @@ def filter_by_form(form_data, officer_query, department_id=None):
     if form_data.get("unique_internal_identifier"):
         officer_query = officer_query.filter(
             Officer.unique_internal_identifier.ilike(
-                "%%{}%%".format(form_data["unique_internal_identifier"])
+                f"%%{form_data['unique_internal_identifier']}%%"
             )
         )
 
@@ -265,7 +319,7 @@ def filter_by_form(form_data, officer_query, department_id=None):
             )
 
     if form_data.get("min_age") and form_data.get("max_age"):
-        current_year = datetime.datetime.now().year
+        current_year = datetime.now().year
         min_birth_year = current_year - int(form_data["min_age"])
         max_birth_year = current_year - int(form_data["max_age"])
         officer_query = officer_query.filter(
@@ -296,7 +350,7 @@ def filter_by_form(form_data, officer_query, department_id=None):
         unit_ids = [
             unit.id
             for unit in Unit.query.filter_by(department_id=department_id)
-            .filter(Unit.descrip.in_(form_data.get("unit")))
+            .filter(Unit.description.in_(form_data.get("unit")))
             .all()
         ]
 
@@ -313,7 +367,7 @@ def filter_by_form(form_data, officer_query, department_id=None):
         officer_query = officer_query.join(Officer.assignments)
         if form_data.get("badge"):
             officer_query = officer_query.filter(
-                Assignment.star_no.like("%%{}%%".format(form_data["badge"]))
+                Assignment.star_no.like(f"%%{form_data['badge']}%%")
             )
 
         if unit_ids or include_null_unit:
@@ -330,13 +384,11 @@ def filter_by_form(form_data, officer_query, department_id=None):
 
         if form_data.get("current_job"):
             officer_query = officer_query.filter(Assignment.resign_date.is_(None))
-    officer_query = officer_query.options(
-        selectinload(Officer.assignments_lazy)
-    ).distinct()
+    officer_query = officer_query.options(selectinload(Officer.assignments)).distinct()
 
     return officer_query
 
-
+# deprecated/removed upstream? 20231009
 def filter_roster(form, officer_query):
     if "name" in form and form["name"]:
         officer_query = officer_query.filter(

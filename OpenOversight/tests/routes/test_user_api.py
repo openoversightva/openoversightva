@@ -1,35 +1,34 @@
-# Routing and view tests
-from http import HTTPStatus
+from http import HTTPMethod, HTTPStatus
 
 import pytest
 from flask import current_app, url_for
 
 from OpenOversight.app.auth.forms import EditUserForm, LoginForm, RegistrationForm
-from OpenOversight.app.models import User, db
-from OpenOversight.app.utils.constants import (
-    ENCODING_UTF_8,
-    HTTP_METHOD_GET,
-    HTTP_METHOD_POST,
+from OpenOversight.app.models.database import User, db
+from OpenOversight.app.utils.constants import ENCODING_UTF_8
+from OpenOversight.tests.conftest import AC_DEPT
+from OpenOversight.tests.constants import (
+    ADMIN_USER_EMAIL,
+    GENERAL_USER_EMAIL,
+    UNCONFIRMED_USER_EMAIL,
 )
-
-from ..conftest import AC_DEPT
-from .route_helpers import ADMIN_EMAIL, login_ac, login_admin, login_user
+from OpenOversight.tests.routes.route_helpers import login_ac, login_admin, login_user
 
 
 routes_methods = [
-    ("/auth/users/", [HTTP_METHOD_GET]),
-    ("/auth/users/1", [HTTP_METHOD_GET, HTTP_METHOD_POST]),
-    ("/auth/users/1/delete", [HTTP_METHOD_GET, HTTP_METHOD_POST]),
+    ("/auth/users/", [HTTPMethod.GET]),
+    ("/auth/users/1", [HTTPMethod.GET, HTTPMethod.POST]),
+    ("/auth/users/1/delete", [HTTPMethod.GET, HTTPMethod.POST]),
 ]
 
 
 # All login_required views should redirect if there is no user logged in
 @pytest.mark.parametrize("route,methods", routes_methods)
 def test_user_api_login_required(route, methods, client, mockdata):
-    if HTTP_METHOD_GET in methods:
+    if HTTPMethod.GET in methods:
         rv = client.get(route)
         assert rv.status_code == HTTPStatus.FORBIDDEN
-    if HTTP_METHOD_POST in methods:
+    if HTTPMethod.POST in methods:
         rv = client.post(route)
         assert rv.status_code == HTTPStatus.FORBIDDEN
 
@@ -38,10 +37,10 @@ def test_user_api_login_required(route, methods, client, mockdata):
 def test_user_cannot_access_user_api(route, methods, mockdata, client, session):
     with current_app.test_request_context():
         login_user(client)
-        if HTTP_METHOD_GET in methods:
+        if HTTPMethod.GET in methods:
             rv = client.get(route)
             assert rv.status_code == HTTPStatus.FORBIDDEN
-        if HTTP_METHOD_POST in methods:
+        if HTTPMethod.POST in methods:
             rv = client.post(route)
             assert rv.status_code == HTTPStatus.FORBIDDEN
 
@@ -50,10 +49,10 @@ def test_user_cannot_access_user_api(route, methods, mockdata, client, session):
 def test_ac_cannot_access_user_api(route, methods, mockdata, client, session):
     with current_app.test_request_context():
         login_ac(client)
-        if HTTP_METHOD_GET in methods:
+        if HTTPMethod.GET in methods:
             rv = client.get(route)
             assert rv.status_code == HTTPStatus.FORBIDDEN
-        if HTTP_METHOD_POST in methods:
+        if HTTPMethod.POST in methods:
             rv = client.post(route)
             assert rv.status_code == HTTPStatus.FORBIDDEN
 
@@ -63,14 +62,13 @@ def test_admin_can_update_users_to_ac(mockdata, client, session):
         login_admin(client)
 
         user = User.query.except_(User.query.filter_by(is_administrator=True)).first()
-        user_id = user.id
 
         form = EditUserForm(
             is_area_coordinator=True, ac_department=AC_DEPT, submit=True
         )
 
         rv = client.post(
-            url_for("auth.edit_user", user_id=user_id),
+            url_for("auth.edit_user", user_id=user.id),
             data=form.data,
             follow_redirects=True,
         )
@@ -83,13 +81,12 @@ def test_admin_cannot_update_to_ac_without_department(mockdata, client, session)
     with current_app.test_request_context():
         login_admin(client)
 
-        user = User.query.except_(User.query.filter_by(is_administrator=True)).first()
-        user_id = user.id
+        user = User.query.except_(User.query.filter_by(email=ADMIN_USER_EMAIL)).first()
 
         form = EditUserForm(is_area_coordinator=True, submit=True)
 
         rv = client.post(
-            url_for("auth.edit_user", user_id=user_id),
+            url_for("auth.edit_user", user_id=user.id),
             data=form.data,
             follow_redirects=True,
         )
@@ -102,15 +99,14 @@ def test_admin_can_update_users_to_admin(mockdata, client, session):
     with current_app.test_request_context():
         login_admin(client)
 
-        user = User.query.except_(User.query.filter_by(is_administrator=True)).first()
-        user_id = user.id
+        user = User.query.except_(User.query.filter_by(email=ADMIN_USER_EMAIL)).first()
 
         form = EditUserForm(
             is_area_coordinator=False, is_administrator=True, submit=True
         )
 
         rv = client.post(
-            url_for("auth.edit_user", user_id=user_id),
+            url_for("auth.edit_user", user_id=user.id),
             data=form.data,
             follow_redirects=True,
         )
@@ -123,24 +119,22 @@ def test_admin_can_delete_user(mockdata, client, session):
     with current_app.test_request_context():
         login_admin(client)
 
-        user = User.query.first()
-        user_id = user.id
-        username = user.username
+        user = User.query.filter_by(email=GENERAL_USER_EMAIL).one()
 
         rv = client.get(
-            url_for("auth.delete_user", user_id=user_id),
+            url_for("auth.delete_user", user_id=user.id),
         )
 
         assert b"Are you sure you want to delete this user?" in rv.data
 
         rv = client.post(
-            url_for("auth.delete_user", user_id=user_id), follow_redirects=True
+            url_for("auth.delete_user", user_id=user.id), follow_redirects=True
         )
 
-        assert "User {} has been deleted!".format(username) in rv.data.decode(
+        assert f"User {user.username} has been deleted!" in rv.data.decode(
             ENCODING_UTF_8
         )
-        assert not User.query.get(user_id)
+        assert not User.query.get(user.id)
 
 
 def test_admin_cannot_delete_other_admin(mockdata, client, session):
@@ -150,14 +144,13 @@ def test_admin_cannot_delete_other_admin(mockdata, client, session):
         user = User(is_administrator=True, email="another_user@example.org")
         session.add(user)
         session.commit()
-        user_id = user.id
 
         rv = client.post(
-            url_for("auth.delete_user", user_id=user_id), follow_redirects=True
+            url_for("auth.delete_user", user_id=user.id), follow_redirects=True
         )
 
         assert rv.status_code == HTTPStatus.FORBIDDEN
-        assert User.query.get(user_id) is not None
+        assert User.query.get(user.id) is not None
 
 
 def test_admin_can_disable_user(mockdata, client, session):
@@ -166,7 +159,6 @@ def test_admin_can_disable_user(mockdata, client, session):
 
         # just need to make sure to not select the admin user
         user = User.query.filter_by(is_administrator=False).first()
-        user_id = user.id
 
         assert not user.is_disabled
 
@@ -176,23 +168,20 @@ def test_admin_can_disable_user(mockdata, client, session):
         )
 
         rv = client.post(
-            url_for("auth.edit_user", user_id=user_id),
+            url_for("auth.edit_user", user_id=user.id),
             data=form.data,
             follow_redirects=True,
         )
 
         assert "updated!" in rv.data.decode(ENCODING_UTF_8)
 
-        user = User.query.get(user_id)
+        user = User.query.get(user.id)
         assert user.is_disabled
 
 
 def test_admin_cannot_disable_self(mockdata, client, session):
     with current_app.test_request_context():
-        login_admin(client)
-
-        user = User.query.filter_by(email=ADMIN_EMAIL).first()
-        user_id = user.id
+        _, user = login_admin(client)
 
         assert not user.is_disabled
 
@@ -202,14 +191,14 @@ def test_admin_cannot_disable_self(mockdata, client, session):
         )
 
         rv = client.post(
-            url_for("auth.edit_user", user_id=user_id),
+            url_for("auth.edit_user", user_id=user.id),
             data=form.data,
             follow_redirects=True,
         )
 
         assert "You cannot edit your own account!" in rv.data.decode(ENCODING_UTF_8)
 
-        user = User.query.get(user_id)
+        user = User.query.get(user.id)
         assert not user.is_disabled
 
 
@@ -217,12 +206,11 @@ def test_admin_can_enable_user(mockdata, client, session):
     with current_app.test_request_context():
         login_admin(client)
 
-        user = User.query.filter_by(is_administrator=False).first()
-        user_id = user.id
+        user = User.query.filter_by(email=GENERAL_USER_EMAIL).one()
         user.is_disabled = True
         db.session.commit()
 
-        user = User.query.get(user_id)
+        user = User.query.get(user.id)
         assert user.is_disabled
 
         form = EditUserForm(
@@ -231,14 +219,14 @@ def test_admin_can_enable_user(mockdata, client, session):
         )
 
         rv = client.post(
-            url_for("auth.edit_user", user_id=user_id),
+            url_for("auth.edit_user", user_id=user.id),
             data=form.data,
             follow_redirects=True,
         )
 
         assert "updated!" in rv.data.decode(ENCODING_UTF_8)
 
-        user = User.query.get(user_id)
+        user = User.query.get(user.id)
         assert not user.is_disabled
 
 
@@ -246,31 +234,31 @@ def test_admin_can_resend_user_confirmation_email(mockdata, client, session):
     with current_app.test_request_context():
         login_admin(client)
 
-        user = User.query.filter_by(confirmed=False).first()
-        user_id = user.id
-        email = user.email
+        user = User.query.filter_by(email=UNCONFIRMED_USER_EMAIL).first()
 
         form = EditUserForm(
             resend=True,
         )
 
         rv = client.post(
-            url_for("auth.edit_user", user_id=user_id),
+            url_for("auth.edit_user", user_id=user.id),
             data=form.data,
             follow_redirects=True,
         )
 
-        assert "A new confirmation email has been sent to {}.".format(
-            email
-        ) in rv.data.decode(ENCODING_UTF_8)
+        assert (
+            f"A new confirmation email has been sent to {user.email}."
+            in rv.data.decode(ENCODING_UTF_8)
+        )
 
 
 def test_register_user_approval_required(mockdata, client, session):
     current_app.config["APPROVE_REGISTRATIONS"] = True
     with current_app.test_request_context():
-        diceware_password = "operative hamster perservere verbalize curling"
+        diceware_password = "operative hamster persevere verbalize curling"
+        new_user_email = "jen@example.com"
         form = RegistrationForm(
-            email="jen@example.com",
+            email=new_user_email,
             username="redshiftzero",
             password=diceware_password,
             password2=diceware_password,
@@ -286,7 +274,7 @@ def test_register_user_approval_required(mockdata, client, session):
         )
 
         form = LoginForm(
-            email="jen@example.com", password=diceware_password, remember_me=True
+            email=new_user_email, password=diceware_password, remember_me=True
         )
         rv = client.post(url_for("auth.login"), data=form.data, follow_redirects=False)
 
@@ -301,12 +289,11 @@ def test_admin_can_approve_user(mockdata, client, session):
     with current_app.test_request_context():
         login_admin(client)
 
-        user = User.query.filter_by(is_administrator=False).first()
-        user_id = user.id
+        user = User.query.filter_by(email=GENERAL_USER_EMAIL).first()
         user.approved = False
         db.session.commit()
 
-        user = User.query.get(user_id)
+        user = User.query.get(user.id)
         assert not user.approved
 
         form = EditUserForm(
@@ -315,23 +302,25 @@ def test_admin_can_approve_user(mockdata, client, session):
         )
 
         rv = client.post(
-            url_for("auth.edit_user", user_id=user_id),
+            url_for("auth.edit_user", user_id=user.id),
             data=form.data,
             follow_redirects=True,
         )
 
         assert "updated!" in rv.data.decode(ENCODING_UTF_8)
 
-        user = User.query.get(user_id)
+        user = User.query.get(user.id)
         assert user.approved
 
 
 @pytest.mark.parametrize(
-    "currently_approved, currently_confirmed, approve_registration_config, should_send_email",
+    "currently_approved, currently_confirmed, approve_registration_config, "
+    "should_send_email",
     [
         # Approving unconfirmed user sends email
         (False, False, True, True),
-        # Approving unconfirmed user does not send email if approve_registration config is not set
+        # Approving unconfirmed user does not send email if approve_registration
+        # config is not set
         (False, False, False, False),
         # Updating approved user does not send email
         (True, False, True, False),
@@ -353,19 +342,18 @@ def test_admin_approval_sends_confirmation_email(
         login_admin(client)
 
         user = User.query.filter_by(is_administrator=False).first()
-        user_id = user.id
         user.approved = currently_approved
         user.confirmed = currently_confirmed
         db.session.commit()
 
-        user = User.query.get(user_id)
+        user = User.query.get(user.id)
         assert user.approved == currently_approved
         assert user.confirmed == currently_confirmed
 
         form = EditUserForm(approved=True, submit=True, confirmed=currently_confirmed)
 
         rv = client.post(
-            url_for("auth.edit_user", user_id=user_id),
+            url_for("auth.edit_user", user_id=user.id),
             data=form.data,
             follow_redirects=True,
         )
@@ -375,5 +363,5 @@ def test_admin_approval_sends_confirmation_email(
         ) == should_send_email
         assert "updated!" in rv.data.decode(ENCODING_UTF_8)
 
-        user = User.query.get(user_id)
+        user = User.query.get(user.id)
         assert user.approved

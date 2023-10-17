@@ -2,7 +2,17 @@ from typing import Optional
 
 from sqlalchemy import func
 
-from ..models import Assignment, Department, Face, Image, Officer, Unit, User, db, Tag
+from OpenOversight.app.models.database import (
+    Assignment,
+    Department,
+    Face,
+    Image,
+    Officer,
+    Unit,
+    User,
+    db,
+    Tag
+)
 
 
 def add_department_query(form, current_user):
@@ -17,27 +27,27 @@ def add_unit_query(form, current_user):
     if not current_user.is_administrator:
         form.unit.query = Unit.query.filter_by(
             department_id=current_user.ac_department_id
-        ).order_by(Unit.descrip.asc())
+        ).order_by(Unit.description.asc())
     else:
-        form.unit.query = Unit.query.order_by(Unit.descrip.asc()).all()
+        form.unit.query = Unit.query.order_by(Unit.description.asc()).all()
 
 
 def compute_leaderboard_stats(select_top=25):
     top_sorters = (
-        db.session.query(User, func.count(Image.user_id))
+        db.session.query(User, func.count(Image.created_by))
         .select_from(Image)
-        .join(User)
+        .join(User, Image.created_by == User.id)
         .group_by(User)
-        .order_by(func.count(Image.user_id).desc())
+        .order_by(func.count(Image.created_by).desc())
         .limit(select_top)
         .all()
     )
     top_taggers = (
-        db.session.query(User, func.count(Face.user_id))
+        db.session.query(User, func.count(Face.created_by))
         .select_from(Face)
-        .join(User)
+        .join(User, Face.created_by == User.id)
         .group_by(User)
-        .order_by(func.count(Face.user_id).desc())
+        .order_by(func.count(Face.created_by).desc())
         .limit(select_top)
         .all()
     )
@@ -45,7 +55,12 @@ def compute_leaderboard_stats(select_top=25):
 
 
 def dept_choices():
-    return db.session.query(Department).order_by(Department.name.asc()).all()
+    return (
+        Department.query.order_by(Department.name.asc()).all()
+    )
+
+def unsorted_dept_choices():
+    return db.session.query(Department).all()
 
 def tag_choices():
     return db.session.query(Tag).order_by(Tag.tag.asc()).all()
@@ -65,8 +80,8 @@ def get_officer(department_id, star_no, first_name, last_name):
     else:
         star_no = str(star_no)
         for assignment in Assignment.query.filter_by(star_no=star_no).all():
-            if assignment.baseofficer in officers:
-                return assignment.baseofficer
+            if assignment.base_officer in officers:
+                return assignment.base_officer
     return None
 
 
@@ -75,7 +90,7 @@ def unit_choices(department_id: Optional[int] = None):
         return (
             db.session.query(Unit)
             .filter_by(department_id=department_id)
-            .order_by(Unit.descrip.asc())
+            .order_by(Unit.description.asc())
             .all()
         )
-    return db.session.query(Unit).order_by(Unit.descrip.asc()).all()
+    return db.session.query(Unit).order_by(Unit.description.asc()).all()

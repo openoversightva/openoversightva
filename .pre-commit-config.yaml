@@ -64,24 +64,56 @@ repos:
         description: Only executable files should have shebangs (e.g. '#!/usr/bin/env python')
         entry: "#!/"
         pass_filenames: true
-        exclude: bin|cli|manage.py|app.py|setup.py|docs|create_db.py|test_data.py
+        exclude: bin|cli|manage.py|app.py|setup.py|docs|test_data.py
         files: \.py$
 
+  - repo: https://github.com/ikamensh/flynt/
+    rev: '1.0.0'
+    hooks:
+        - id: flynt
+          exclude: ^build/.*$|^.tox/.*$|^venv/.*$
+          files: \.py$
+          args:
+            - --quiet
+
   - repo: https://github.com/PyCQA/flake8
-    rev: 5.0.4
+    rev: 6.0.0
     hooks:
         - id: flake8
           args:
-            - --ignore=E203,E402,E501,E800,W503,W391,E261
+            - --ignore=E203,E402,E501,E800,W503,W391,E261,W504
             - --select=B,C,E,F,W,T4,B9
+            - --exclude=./OpenOversight/app/db_repository/versions/
 
   - repo: https://github.com/psf/black
-    rev: 22.12.0
+    rev: 23.7.0
     hooks:
         - id: black
           args:
             - --safe
-            - "--target-version=py35"
-            - "--target-version=py36"
-            - "--target-version=py37"
-            - "--target-version=py38"
+            - "--target-version=py311"
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 'v1.4.1'
+    hooks:
+      - id: mypy
+
+  - repo: https://github.com/Riverside-Healthcare/djLint
+    rev: v1.32.1
+    hooks:
+      - id: djlint-reformat
+        pass_filenames: false
+        args:
+          - OpenOversight/app/templates
+          - --format-css
+          - --profile=jinja
+          - --indent=2
+          - --quiet
+      - id: djlint
+        require_serial: true
+        pass_filenames: false
+        args:
+          - OpenOversight/app/templates
+          - --profile=jinja
+          - --use-gitignore
+          - --ignore=H006,T028,H031,H021,H013,H011

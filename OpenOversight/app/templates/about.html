@@ -1,23 +1,25 @@
 {% extends "base.html" %}
-{% block title %}About OpenOversight{% endblock %}
+{% block title %}
+  About OpenOversight
+{% endblock title %}
 {% block meta %}
-<meta name="description" content="OpenOversightVA is a fork of the Lucy Parsons Labs project that aims to improve law enforcement
-visibility and transparency using public and crowdsourced data. We maintain databases, digital galleries, and profiles of individual law enforcement officers from departments
-across the United States that consolidate information including names, birthdates, mentions in news articles, salaries, and photographs.">
-{% endblock %}
+  <meta name="description"
+        content="OpenOversight is a Lucy Parsons Labs project that aims to improve law enforcement visibility and transparency using public and crowdsourced data. We maintain databases, digital galleries, and profiles of individual law enforcement officers from departments across the United States that consolidate information including names, birthdates, mentions in news articles, salaries, and photographs.">
+{% endblock meta %}
 {% block content %}
-
-<div role="main">
-<div class="hero-section no-sub">
-  <div class="hero">About OpenOversight</div>
-</div>
-<div class="vertical-padding">
-  <p class="lead"><small>
-    OpenOversightVA is a fork of the <a href="https://lucyparsonslabs.com">Lucy Parsons Labs</a> project that aims to improve law enforcement
-    visibility and transparency using public and crowdsourced data. We maintain databases, digital galleries, and profiles of individual law enforcement officers from departments
-    across the United States that consolidate information including names, birthdates, mentions in news articles, salaries, and photographs.
-  </small></p>
-
+  <div role="main">
+    <div class="hero-section no-sub">
+      <div class="hero">About OpenOversight</div>
+    </div>
+    <div class="vertical-padding">
+      <p class="lead">
+        <small>
+          OpenOversight is a <a href="https://lucyparsonslabs.com">Lucy Parsons Labs</a> project that aims to improve law enforcement
+          visibility and transparency using public and crowdsourced data. We maintain databases, digital galleries, and profiles of individual law enforcement officers from departments
+          across the United States that consolidate information including names, birthdates, mentions in news articles, salaries, and photographs.
+        </small>
+      </p>
+  <!-- OOVA -->
   <p class="lead"><small>
 	This site (OpenOversightVA) is an independent instance of OpenOversight for the Commonwealth of Virginia. To report issues, you can email <a href="mailto:openoversightva@riseup.net">openoversightva@riseup.net</a>.
 
@@ -108,43 +110,45 @@ across the United States that consolidate information including names, birthdate
       </p>
     </div>
   </div>
-  <div class="row display-flex font-weight-300">
-    <div class="col-lg-4 col-half-border bg-white">
-        All complaints against officers must be supported by a sworn affidavit. False complaints can result in
-        perjury charges, a Class 3 felony.
-      <p class="text-right i">
-        <a href="https://web.archive.org/web/20160829203856/http://home.chicagopolice.org/inside-the-cpd/internal-affairs-division/the-complaint/">
-          Source: Chicago Police
-        </a>
-      </p></div>
-    <div class="col-lg-4 col-half-border bg-white">
-      Chicago spent over $500 million from 2004 to 2014 on settlements,
-      legal fees and other costs related to complaints against police officers.
-      <p class="text-right i"><a href="http://www.bettergov.org/news/beyond-burge">
-          Source: Better Government Association
-        </a></p></div>
-    <div class="col-lg-4 col-half-border bg-white">
-      In 2015, there was no discipline in more than 99 percent of the
-      thousands of misconduct complaints against Chicago police officers.
-      <p class="text-right i"><a href="https://www.nytimes.com/2015/11/19/us/few-complaints-against-chicago-police-result-in-discipline-data-shows.html?mcubz=0">
-        Source: New York Times
-        </a></p></div>
-  </div>
-</div>
-
-</div>
-
-<div class="horizontal-padding vertical-padding">
-  <div class="text-center">
-    <h2>Sponsors</h2>
-  </div>
-  <div class="row display-flex font-weight-300">
-    <div class="col-lg-4 bg-white">
-    </div>
-    <div class="col-lg-4 bg-white">
-      <img src="{{ url_for('static', filename='images/shuttleworth.jpg') }}">
+      <div class="row display-flex font-weight-300">
+        <div class="col-lg-4 col-half-border bg-white">
+          All complaints against officers must be supported by a sworn affidavit. False complaints can result in
+          perjury charges, a Class 3 felony.
+          <p class="text-right i">
+            <a href="https://web.archive.org/web/20160829203856/https://home.chicagopolice.org/inside-the-cpd/internal-affairs-division/the-complaint/">
+              Source: Chicago Police
+            </a>
+          </p>
+        </div>
+        <div class="col-lg-4 col-half-border bg-white">
+          Chicago spent over $500 million from 2004 to 2014 on settlements,
+          legal fees and other costs related to complaints against police officers.
+          <p class="text-right i">
+            <a href="https://www.bettergov.org/news/beyond-burge">Source: Better Government Association</a>
+          </p>
+        </div>
+        <div class="col-lg-4 col-half-border bg-white">
+          In 2015, there was no discipline in more than 99 percent of the
+          thousands of misconduct complaints against Chicago police officers.
+          <p class="text-right i">
+            <a href="https://www.nytimes.com/2015/11/19/us/few-complaints-against-chicago-police-result-in-discipline-data-shows.html?mcubz=0">
+              Source: New York Times
+            </a>
+          </p>
+        </div>
+      </div>
     </div>
   </div>
-</div>
-
-{% endblock %}
+  <div class="horizontal-padding vertical-padding">
+    <div class="text-center">
+      <h2>Sponsors</h2>
+    </div>
+    <div class="row display-flex font-weight-300">
+      <div class="col-lg-4 bg-white"></div>
+      <div class="col-lg-4 bg-white">
+        <img src="{{ url_for('static', filename='images/shuttleworth.jpg') }}"
+             alt="Shuttleworth Foundation logo">
+      </div>
+    </div>
+  </div>
+{% endblock content %}

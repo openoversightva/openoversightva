@@ -1,14 +1,18 @@
 import datetime
+import random
 import time
 
 from pytest import raises
+from sqlalchemy import and_
+from sqlalchemy.exc import IntegrityError
 
-from OpenOversight.app.models import (
+from OpenOversight.app.models.database import (
     Assignment,
     Department,
     Face,
     Image,
     Incident,
+    Job,
     LicensePlate,
     Link,
     Location,
@@ -18,70 +22,153 @@ from OpenOversight.app.models import (
     User,
     db,
 )
+from OpenOversight.app.utils.choices import STATE_CHOICES
+from OpenOversight.tests.conftest import SPRINGFIELD_PD
 
 
 def test_department_repr(mockdata):
     department = Department.query.first()
-    assert department.__repr__() == "<Department ID {}: {}>".format(
-        department.id, department.name
+    assert (
+        repr(department)
+        == f"<Department ID {department.id}: {department.name} {department.state}>"
     )
 
 
-def test_officer_repr(mockdata):
-    officer = Officer.query.first()
-    if officer.unique_internal_identifier:
-        assert officer.__repr__() == "<Officer ID {}: {} {} {} {} ({})>".format(
-            officer.id,
-            officer.first_name,
-            officer.middle_initial,
-            officer.last_name,
-            officer.suffix,
-            officer.unique_internal_identifier,
+def test_department_total_documented_officers(mockdata):
+    springfield_officers = (
+        Department.query.filter_by(name=SPRINGFIELD_PD.name, state=SPRINGFIELD_PD.state)
+        .join(Officer, Department.id == Officer.department_id)
+        .count()
+    )
+
+    test_count = (
+        Department.query.filter_by(name=SPRINGFIELD_PD.name, state=SPRINGFIELD_PD.state)
+        .first()
+        .total_documented_officers()
+    )
+
+    assert springfield_officers == test_count
+
+
+def test_department_total_documented_assignments(mockdata):
+    springfield_assignments = (
+        Department.query.filter_by(name=SPRINGFIELD_PD.name, state=SPRINGFIELD_PD.state)
+        .join(Officer, Department.id == Officer.department_id)
+        .join(Assignment, Officer.id == Assignment.officer_id)
+        .count()
+    )
+
+    test_count = (
+        Department.query.filter_by(name=SPRINGFIELD_PD.name, state=SPRINGFIELD_PD.state)
+        .first()
+        .total_documented_assignments()
+    )
+
+    assert springfield_assignments == test_count
+
+
+def test_department_total_documented_incidents(mockdata):
+    springfield_incidents = (
+        Department.query.filter_by(name=SPRINGFIELD_PD.name, state=SPRINGFIELD_PD.state)
+        .join(Incident, Department.id == Incident.department_id)
+        .count()
+    )
+
+    test_count = (
+        Department.query.filter_by(name=SPRINGFIELD_PD.name, state=SPRINGFIELD_PD.state)
+        .first()
+        .total_documented_incidents()
+    )
+
+    assert springfield_incidents == test_count
+
+
+def test_officer_repr(session):
+    officer_uii = Officer.query.filter(
+        and_(
+            Officer.middle_initial.isnot(None),
+            Officer.unique_internal_identifier.isnot(None),
+            Officer.suffix.is_(None),
         )
-    else:
-        assert officer.__repr__() == "<Officer ID {}: {} {} {} {}>".format(
-            officer.id,
-            officer.first_name,
-            officer.middle_initial,
-            officer.last_name,
-            officer.suffix,
+    ).first()
+
+    assert (
+        repr(officer_uii) == f"<Officer ID {officer_uii.id}: "
+        f"{officer_uii.first_name} {officer_uii.middle_initial}. {officer_uii.last_name} "
+        f"({officer_uii.unique_internal_identifier})>"
+    )
+
+    officer_no_uii = Officer.query.filter(
+        and_(
+            Officer.middle_initial.isnot(""),
+            Officer.unique_internal_identifier.is_(None),
+            Officer.suffix.isnot(None),
         )
+    ).first()
+
+    assert (
+        repr(officer_no_uii) == f"<Officer ID {officer_no_uii.id}: "
+        f"{officer_no_uii.first_name} {officer_no_uii.middle_initial}. "
+        f"{officer_no_uii.last_name} {officer_no_uii.suffix}>"
+    )
+
+    officer_no_mi = Officer.query.filter(
+        and_(Officer.middle_initial.is_(""), Officer.suffix.isnot(None))
+    ).first()
+
+    assert (
+        repr(officer_no_mi)
+        == f"<Officer ID {officer_no_mi.id}: {officer_no_mi.first_name} "
+        f"{officer_no_mi.last_name} {officer_no_mi.suffix} "
+        f"({officer_no_mi.unique_internal_identifier})>"
+    )
+
+
+def test_officer_race_label(faker):
+    officer = Officer(
+        first_name=faker.first_name(),
+        last_name=faker.last_name(),
+    )
+
+    assert officer.race_label() == "Data Missing"
 
 
 def test_assignment_repr(mockdata):
     assignment = Assignment.query.first()
-    assert assignment.__repr__() == "<Assignment: ID {} : {}>".format(
-        assignment.officer.id, assignment.star_no
+    assert (
+        repr(assignment)
+        == f"<Assignment: ID {assignment.base_officer.id} : {assignment.star_no}>"
     )
+
+
+def test_job_repr(mockdata):
+    job = Job.query.first()
+    assert repr(job) == f"<Job ID {job.id}: {job.job_title}>"
 
 
 def test_image_repr(mockdata):
     image = Image.query.first()
-    assert image.__repr__() == "<Image ID {}: {}>".format(image.id, image.filepath)
+    assert repr(image) == f"<Image ID {image.id}: {image.filepath}>"
 
 
 def test_face_repr(mockdata):
     face = Face.query.first()
-    assert face.__repr__() == "<Tag ID {}: {} - {}>".format(
-        face.id, face.officer_id, face.img_id
-    )
+    assert repr(face) == f"<Tag ID {face.id}: {face.officer_id} - {face.img_id}>"
 
 
 def test_unit_repr(mockdata):
     unit = Unit.query.first()
-    assert unit.__repr__() == "Unit: {}".format(unit.descrip)
+    assert repr(unit) == f"Unit: {unit.description}"
 
 
 def test_user_repr(mockdata):
     user = User(username="bacon")
-    assert user.__repr__() == "<User '{}'>".format(user.username)
+    assert repr(user) == f"<User '{user.username}'>"
 
 
 def test_salary_repr(mockdata):
     salary = Salary.query.first()
-    assert salary.__repr__() == "<Salary: ID {} : {}".format(
-        salary.officer_id, salary.salary
-    )
+    assert repr(salary) == f"<Salary: ID {salary.officer_id} : {salary.salary}"
 
 
 def test_password_not_printed(mockdata):
@@ -93,6 +180,16 @@ def test_password_not_printed(mockdata):
 def test_password_set_success(mockdata):
     user = User(password="bacon")
     assert user.password_hash is not None
+
+
+def test_password_setter_regenerates_uuid(mockdata):
+    user = User(password="bacon")
+    db.session.add(user)
+    db.session.commit()
+    initial_uuid = user.uuid
+    user.password = "pork belly"
+    assert user.uuid is not None
+    assert user.uuid != initial_uuid
 
 
 def test_password_verification_success(mockdata):
@@ -109,6 +206,34 @@ def test_password_salting(mockdata):
     user1 = User(password="bacon")
     user2 = User(password="bacon")
     assert user1.password_hash != user2.password_hash
+
+
+def test__uuid_default(mockdata):
+    user = User(password="bacon")
+    db.session.add(user)
+    db.session.commit()
+    assert user._uuid is not None
+
+
+def test__uuid_uniqueness_constraint(mockdata):
+    user1 = User(password="bacon")
+    user2 = User(password="vegan bacon")
+    user2._uuid = user1._uuid
+    db.session.add(user1)
+    db.session.add(user2)
+    with raises(IntegrityError):
+        db.session.commit()
+
+
+def test_uuid(mockdata):
+    user = User(password="bacon")
+    assert user.uuid is not None
+    assert user.uuid == user._uuid
+
+
+def test_uuid_setter(mockdata):
+    with raises(AttributeError):
+        User(uuid="8e9f1393-99b8-466c-80ce-8a56a7d9849d")
 
 
 def test_valid_confirmation_token(mockdata):
@@ -143,8 +268,10 @@ def test_valid_reset_token(mockdata):
     db.session.add(user)
     db.session.commit()
     token = user.generate_reset_token()
+    pre_reset_uuid = user.uuid
     assert user.reset_password(token, "vegan bacon") is True
     assert user.verify_password("vegan bacon") is True
+    assert user.uuid != pre_reset_uuid
 
 
 def test_invalid_reset_token(mockdata):
@@ -171,9 +298,11 @@ def test_valid_email_change_token(mockdata):
     user = User(email="brian@example.com", password="bacon")
     db.session.add(user)
     db.session.commit()
+    pre_reset_uuid = user.uuid
     token = user.generate_email_change_token("lucy@example.org")
     assert user.change_email(token) is True
     assert user.email == "lucy@example.org"
+    assert user.uuid != pre_reset_uuid
 
 
 def test_email_change_token_no_email(mockdata):
@@ -242,6 +371,64 @@ def test_locations_must_have_valid_zip_codes(mockdata):
         )
 
 
+def test_location_repr(faker):
+    street_name = faker.street_address()
+    cross_street_one = faker.street_name()
+    cross_street_two = faker.street_name()
+    state = random.choice(STATE_CHOICES)[0]
+    city = faker.city()
+    zip_code = faker.postcode()
+
+    no_cross_streets = Location(
+        street_name=street_name,
+        state=state,
+        city=city,
+        zip_code=zip_code,
+    )
+
+    assert repr(no_cross_streets) == f"{city} {state}"
+
+    cross_street1 = Location(
+        street_name=street_name,
+        cross_street1=cross_street_one,
+        state=state,
+        city=city,
+        zip_code=zip_code,
+    )
+
+    assert (
+        repr(cross_street1)
+        == f"Intersection of {street_name} and {cross_street_one}, {city} {state}"
+    )
+
+    cross_street2 = Location(
+        street_name=street_name,
+        cross_street2=cross_street_two,
+        state=state,
+        city=city,
+        zip_code=zip_code,
+    )
+
+    assert (
+        repr(cross_street2)
+        == f"Intersection of {street_name} and {cross_street_two}, {city} {state}"
+    )
+
+    both_cross_streets = Location(
+        street_name=street_name,
+        cross_street1=cross_street_one,
+        cross_street2=cross_street_two,
+        state=state,
+        city=city,
+        zip_code=zip_code,
+    )
+
+    assert repr(both_cross_streets) == (
+        f"Intersection of {street_name} between {cross_street_one} and "
+        f"{cross_street_two}, {city} {state}"
+    )
+
+
 def test_locations_can_be_saved_with_valid_zip_codes(mockdata):
     zip_code = "03456"
     city = "Cambridge"
@@ -308,14 +495,14 @@ def test_license_plates_can_be_saved_with_valid_states(mockdata):
     assert saved is not None
 
 
-def test_links_must_have_valid_urls(mockdata):
-    bad_url = "www.rachel.com"
+def test_links_must_have_valid_urls(mockdata, faker):
+    bad_url = faker.safe_domain_name()
     with raises(ValueError):
         Link(link_type="video", url=bad_url)
 
 
-def test_links_can_be_saved_with_valid_urls(mockdata):
-    good_url = "http://www.rachel.com"
+def test_links_can_be_saved_with_valid_urls(mockdata, faker):
+    good_url = faker.url()
     li = Link(link_type="video", url=good_url)
     db.session.add(li)
     db.session.commit()
@@ -341,9 +528,9 @@ def test_incident_m2m_officers(mockdata):
     assert incident in officer.incidents
 
 
-def test_incident_m2m_links(mockdata):
+def test_incident_m2m_links(mockdata, faker):
     incident = Incident.query.first()
-    link = Link(link_type="video", url="http://www.lulz.com")
+    link = Link(link_type="video", url=faker.url())
     incident.links.append(link)
     db.session.add(incident)
     db.session.add(link)
@@ -366,18 +553,17 @@ def test_incident_m2m_license_plates(mockdata):
     assert incident in license_plate.incidents
 
 
-def test_images_added_with_user_id(mockdata):
+def test_images_added_with_user_id(mockdata, faker):
     user_id = 1
     new_image = Image(
-        filepath="http://www.example.com",
+        filepath=faker.url(),
         hash_img="1234",
         is_tagged=False,
-        date_image_inserted=datetime.datetime.now(),
         department_id=1,
-        date_image_taken=datetime.datetime.now(),
-        user_id=user_id,
+        taken_at=datetime.datetime.now(),
+        created_by=user_id,
     )
     db.session.add(new_image)
     db.session.commit()
-    saved = Image.query.filter_by(user_id=user_id).first()
+    saved = Image.query.filter_by(created_by=user_id).first()
     assert saved is not None

@@ -26,7 +26,7 @@
       <header>
         <div>
           <h1>{{ post.title }}</h1>
-          <div class="about">by {{ post.user.username }} on {{ post.created.strftime('%Y-%m-%d') }}</div>
+          <div class="about">by {{ post.creator.username }} on {{ post.created_at.strftime('%Y-%m-%d') }}</div>
         </div>
       </header>
       <p class="body">{{ post.body|markdown }}</p>

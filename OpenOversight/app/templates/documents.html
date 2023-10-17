@@ -65,11 +65,7 @@
             <div class="col-md-4 col-xs-12">
               <dl>
                 <dt>Department</dt>
-                <dd>
-                  <a href="{{ url_for('main.list_officer', department_id=document.department.id) }}">
-                    {{ document.department.name|default('Unknown') }}
-                  </a>
-                </dd>
+                <dd>{{ document.department.name|default('Unknown') }}</dd>
               </dl>
             </div>
           </div>

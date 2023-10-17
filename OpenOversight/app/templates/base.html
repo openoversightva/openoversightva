@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta http-equiv="content-language" content="en-us">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -55,78 +56,96 @@
 
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
-    {% block head %}{% endblock %}
+    {% block head %}
+    {% endblock head %}
   </head>
 
   <body role="document">
 
     <nav class="navbar navbar-default navbar-fixed-top">
       <div class="container">
-        <div class="navbar-header navbar-default">
-          <button type="button" class="navbar-default navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-
-          <a class="navbar-link navbar-brand" href="/">OpenOversight<span style="color:#f9285c">VA</span></a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-            <li><a class="navbar-link" href="/search">Search All Cops</a></li>
-            <li><a class="navbar-link" href="/browse">Agencies (A-Z)</a></li>
-	    <li><a class="navbar-link" href="/incidents">Incidents</a></li>
-            <li><a class="navbar-link" href="/documents">FOIA Library</a></li>
-            <li><a class="navbar-link" href="/submit">Submit Images</a></li>
-            <li><a class="navbar-link" href="/donate">Donate</a></li>
-            <li><a class="navbar-link" href="/label">Sign Up</a></li>
-            <!--<li><a class="navbar-link" href="/about">About</a></li>-->
-            {% if current_user and current_user.is_administrator %}
-              <li><a class="navbar-link" href="/auth/users/">Users</a></li>
-            {% endif%}
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-            {% if current_user and current_user.is_authenticated %}
-            <li class="dropdown">
-              <a href="#" class="navbar-link dropdown-toggle" data-toggle="dropdown">Account <b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                {% if current_user and current_user.is_administrator %}
-                <li><a class="navbar-link" href="/admin">Admin Page</a></li>
-                {% endif%}
-                <li><a class="navbar-link" href="{{ url_for('main.profile', username=current_user.username) }}">Profile</a></li>
-                <li><a class="navbar-link" href="{{ url_for('auth.change_password') }}">Change Password</a></li>
-                <li><a class="navbar-link" href="{{ url_for('auth.change_email_request') }}">Change Email</a></li>
-		<li><a href="{{ url_for('auth.change_dept') }}">Change Default Department</a></li>
-                <li><a class="navbar-link" href="{{ url_for('auth.logout') }}">Log Out</a></li>
-              </ul>
-            </li>
-            {% else %}
-            <li><a class="navbar-link" href="{{ url_for('auth.register') }}"> Register</a></li>
-            <li><a class="navbar-link" href="{{ url_for('auth.login') }}">Log In</a></li>
-            {% endif %}
-          </ul>
+          <div class="navbar-header navbar-default">
+            <button type="button" class="navbar-default navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-link navbar-brand" href="{{ url_for("main.index") }}">OpenOversight<span style="color:#f9285c">VA</span></a>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              <li>
+                <a class="navbar-link" href="/search">Search All Cops</a>
+              </li>
+              <li>
+                <a class="navbar-link" href="/browse">Agencies (A-Z)</a>
+              </li>
+              <li>
+                <a class="navbar-link" href="/incidents">Incidents</a>
+              </li>
+              <li>
+                <a class="navbar-link" href="/documents">FOIA Library</a>
+              </li>
+              <li>
+                <a class="navbar-link" href="/submit">Submit Images</a>
+              </li>
+              <li>
+                <a class="navbar-link" href="/donate">Donate</a>
+              </li>
+              <li>
+                <a class="navbar-link" href="/labels">Volunteer</a>
+              </li>
+              <!--<li><a class="navbar-link" href="/about">About</a></li>-->
+              {% if current_user and current_user.is_administrator %}
+                <li>
+                  <a class="navbar-link" href="{{ url_for("auth.get_users") }}">Users</a>
+                </li>
+              {% endif %}
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              {% if current_user and current_user.is_authenticated %}
+                <li class="dropdown">
+                  <a href="#" class="navbar-link dropdown-toggle" data-toggle="dropdown">Account <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    {% if current_user and current_user.is_administrator %}
+                    <li><a class="navbar-link" href="/admin">Admin Page</a></li>
+                    {% endif%}
+                    <li><a class="navbar-link" href="{{ url_for('main.profile', username=current_user.username) }}">Profile</a></li>
+                    <li><a class="navbar-link" href="{{ url_for('auth.change_password') }}">Change Password</a></li>
+                    <li><a class="navbar-link" href="{{ url_for('auth.change_email_request') }}">Change Email</a></li>
+                    <li><a href="{{ url_for('auth.change_dept') }}">Change Default Department</a></li>
+                    <li><a class="navbar-link" href="{{ url_for('auth.logout') }}">Log Out</a></li>
+                  </ul>
+                </li>
+              {% else %}
+                <li><a class="navbar-link" href="{{ url_for('auth.register') }}"> Register</a></li>
+                <li><a class="navbar-link" href="{{ url_for('auth.login') }}">Log In</a></li>
+              {% endif %}
+            </ul>
         </div>
       </div>
     </nav>
 
     {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    {% for message in messages %}
-    <div class="container">
-      <div class="row">
-        <div class="alert alert-info alert-dismissible" role="alert">
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
-          {{ message }}
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-    {% endif %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="container">
+            <div class="row">
+              <div class="alert alert-info alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">×</span>
+                </button>
+                {{ message }}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
     {% endwith %}
-    {% block content %}{% endblock %}
-
-    <footer class="footer">
+    {% block content %}
+    {% endblock content %}
+    <footer class="footer container {% block footer_class %}{% endblock footer_class %}">
       <hr>
       <div class="row text-center horizontal-padding">
 
@@ -171,6 +190,6 @@
       {% for item in jsloads %}
       <script src="{{ url_for('static', filename=item) }}"></script>
       {% endfor %}
-    {% endblock %}
+    {% endblock js_footer %}
   </body>
 </html>

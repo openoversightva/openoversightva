@@ -8,11 +8,10 @@ from mock import MagicMock, patch
 
 from OpenOversight.app.main import views
 from OpenOversight.app.main.forms import FaceTag
-from OpenOversight.app.models import Department, Face, Image, Officer
+from OpenOversight.app.models.database import Department, Face, Image, Officer, User
 from OpenOversight.app.utils.constants import ENCODING_UTF_8
-
-from ..conftest import AC_DEPT
-from .route_helpers import login_ac, login_admin, login_user
+from OpenOversight.tests.conftest import AC_DEPT
+from OpenOversight.tests.routes.route_helpers import login_ac, login_admin, login_user
 
 
 PROJECT_ROOT = os.path.abspath(os.curdir)
@@ -21,9 +20,9 @@ PROJECT_ROOT = os.path.abspath(os.curdir)
 @pytest.mark.parametrize(
     "route",
     [
-        "/label",
+        "/labels",
         "/tutorial",
-        "/tag/1",
+        "/tags/1",
     ],
 )
 def test_routes_ok(route, client, mockdata):
@@ -36,10 +35,10 @@ def test_routes_ok(route, client, mockdata):
     "route",
     [
         "/leaderboard",
-        "/sort/department/1",
-        "/cop_face/department/1",
-        "/image/1",
-        "/image/tagged/1",
+        "/sort/departments/1",
+        "/cop_faces/departments/1",
+        "/images/1",
+        "/images/tagged/1",
     ],
 )
 def test_route_login_required(route, client, mockdata):
@@ -51,10 +50,10 @@ def test_route_login_required(route, client, mockdata):
 @pytest.mark.parametrize(
     "route",
     [
-        "/officer/3/assignment/new",
-        "/tag/delete/1",
-        "/tag/set_featured/1",
-        "/image/classify/1/1",
+        "/officers/3/assignments/new",
+        "/tags/delete/1",
+        "/tags/set_featured/1",
+        "/images/classify/1/1",
     ],
 )
 def test_route_post_only(route, client, mockdata):
@@ -152,6 +151,8 @@ def test_user_can_add_tag(mockdata, client, session):
             officer = Officer.query.filter_by(department_id=1).first()
             image = Image.query.filter_by(department_id=1).first()
             login_user(client)
+            user = User.query.filter_by(is_administrator=True).first()
+
             form = FaceTag(
                 officer_id=officer.id,
                 image_id=image.id,
@@ -159,6 +160,7 @@ def test_user_can_add_tag(mockdata, client, session):
                 dataY=32,
                 dataWidth=3,
                 dataHeight=33,
+                created_by=user.id,
             )
             rv = client.post(
                 url_for("main.label_data", image_id=image.id),
@@ -171,7 +173,8 @@ def test_user_can_add_tag(mockdata, client, session):
 
 def test_user_cannot_add_tag_if_it_exists(mockdata, client, session):
     with current_app.test_request_context():
-        login_user(client)
+        _, user = login_user(client)
+
         tag = Face.query.first()
         form = FaceTag(
             officer_id=tag.officer_id,
@@ -180,6 +183,7 @@ def test_user_cannot_add_tag_if_it_exists(mockdata, client, session):
             dataY=32,
             dataWidth=3,
             dataHeight=33,
+            created_by=user.id,
         )
 
         rv = client.post(
@@ -195,7 +199,8 @@ def test_user_cannot_add_tag_if_it_exists(mockdata, client, session):
 
 def test_user_cannot_tag_nonexistent_officer(mockdata, client, session):
     with current_app.test_request_context():
-        login_user(client)
+        _, user = login_user(client)
+
         tag = Face.query.first()
         form = FaceTag(
             officer_id=999999999999999999,
@@ -204,6 +209,7 @@ def test_user_cannot_tag_nonexistent_officer(mockdata, client, session):
             dataY=32,
             dataWidth=3,
             dataHeight=33,
+            created_by=user.id,
         )
 
         rv = client.post(
@@ -216,8 +222,9 @@ def test_user_cannot_tag_nonexistent_officer(mockdata, client, session):
 
 def test_user_cannot_tag_officer_mismatched_with_department(mockdata, client, session):
     with current_app.test_request_context():
-        login_user(client)
+        _, user = login_user(client)
         tag = Face.query.first()
+
         form = FaceTag(
             officer_id=tag.officer_id,
             image_id=tag.original_image_id,
@@ -225,6 +232,7 @@ def test_user_cannot_tag_officer_mismatched_with_department(mockdata, client, se
             dataY=32,
             dataWidth=3,
             dataHeight=33,
+            created_by=user.id,
         )
 
         rv = client.post(
@@ -232,20 +240,25 @@ def test_user_cannot_tag_officer_mismatched_with_department(mockdata, client, se
             data=form.data,
             follow_redirects=True,
         )
-        assert (
-            b"The officer is not in Chicago Police Department. Are you sure that is the correct OpenOversight ID?"
-            in rv.data
-        )
+
+        department = Department.query.filter_by(id=2).one_or_none()
+        assert (f"The officer is not in {department.name}, {department.state}.").encode(
+            ENCODING_UTF_8
+        ) in rv.data
 
 
 def test_user_can_finish_tagging(mockdata, client, session):
     with current_app.test_request_context():
-        login_user(client)
+        _, user = login_user(client)
+        image_id = 4
 
         rv = client.get(
-            url_for("main.complete_tagging", image_id=4), follow_redirects=True
+            url_for("main.complete_tagging", image_id=image_id), follow_redirects=True
         )
+        image = Image.query.filter_by(id=image_id).one()
+
         assert b"Marked image as completed." in rv.data
+        assert image.last_updated_by == user.id
 
 
 def test_user_can_view_leaderboard(mockdata, client, session):
@@ -336,7 +349,7 @@ def test_ac_cannot_set_featured_tag_not_in_their_dept(mockdata, client, session)
 )
 def test_featured_tag_replaces_others(mockdata, client, session):
     with current_app.test_request_context():
-        login_admin(client)
+        _, user = login_admin(client)
 
         tag1 = Face.query.first()
         officer = Officer.query.filter_by(id=tag1.officer_id).one()
@@ -357,6 +370,7 @@ def test_featured_tag_replaces_others(mockdata, client, session):
                 dataY=32,
                 dataWidth=3,
                 dataHeight=33,
+                created_by=user.id,
             )
             rv = client.post(
                 url_for("main.label_data", image_id=second_image.id),

@@ -1,4 +1,4 @@
-from http import HTTPStatus
+from http import HTTPMethod, HTTPStatus
 
 from flask import (
     current_app,
@@ -11,15 +11,9 @@ from flask import (
 )
 from flask_login import current_user, login_required, login_user, logout_user
 
-from OpenOversight.app.utils.constants import HTTP_METHOD_GET, HTTP_METHOD_POST
-from OpenOversight.app.utils.forms import set_dynamic_default
-from OpenOversight.app.utils.general import validate_redirect_url
-
-from .. import sitemap
-from ..email import send_email
-from ..models import User, db
-from . import auth
-from .forms import (
+from OpenOversight.app import sitemap
+from OpenOversight.app.auth import auth
+from OpenOversight.app.auth.forms import (
     ChangeDefaultDepartmentForm,
     ChangeEmailForm,
     ChangePasswordForm,
@@ -29,9 +23,22 @@ from .forms import (
     PasswordResetRequestForm,
     RegistrationForm,
 )
-from .utils import admin_required
+from OpenOversight.app.email_client import EmailClient
+from OpenOversight.app.models.database import User, db
+from OpenOversight.app.models.emails import (
+    AdministratorApprovalEmail,
+    ChangeEmailAddressEmail,
+    ChangePasswordEmail,
+    ConfirmAccountEmail,
+    ConfirmedUserEmail,
+    ResetPasswordEmail,
+)
+from OpenOversight.app.utils.auth import admin_required
+from OpenOversight.app.utils.forms import set_dynamic_default
+from OpenOversight.app.utils.general import validate_redirect_url
 
 
+js_loads = ["js/zxcvbn.js", "js/password.js"]
 sitemap_endpoints = []
 
 
@@ -69,7 +76,7 @@ def unconfirmed():
 
 
 @sitemap_include
-@auth.route("/login", methods=[HTTP_METHOD_GET, HTTP_METHOD_POST])
+@auth.route("/login", methods=[HTTPMethod.GET, HTTPMethod.POST])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -97,9 +104,8 @@ def logout():
 
 
 @sitemap_include
-@auth.route("/register", methods=[HTTP_METHOD_GET, HTTP_METHOD_POST])
+@auth.route("/register", methods=[HTTPMethod.GET, HTTPMethod.POST])
 def register():
-    jsloads = ["js/zxcvbn.js", "js/password.js"]
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(
@@ -113,12 +119,8 @@ def register():
         if current_app.config["APPROVE_REGISTRATIONS"]:
             admins = User.query.filter_by(is_administrator=True).all()
             for admin in admins:
-                send_email(
-                    admin.email,
-                    "New user registered",
-                    "auth/email/new_registration",
-                    user=user,
-                    admin=admin,
+                EmailClient.send_email(
+                    AdministratorApprovalEmail(admin.email, user=user, admin=admin)
                 )
             flash(
                 "Once an administrator approves your registration, you will "
@@ -126,21 +128,17 @@ def register():
             )
         else:
             token = user.generate_confirmation_token()
-            send_email(
-                user.email,
-                "Confirm Your Account",
-                "auth/email/confirm",
-                user=user,
-                token=token,
+            EmailClient.send_email(
+                ConfirmAccountEmail(user.email, user=user, token=token)
             )
             flash("A confirmation email has been sent to you.")
         return redirect(url_for("auth.login"))
     else:
         current_app.logger.info(form.errors)
-    return render_template("auth/register.html", form=form, jsloads=jsloads)
+    return render_template("auth/register.html", form=form, jsloads=js_loads)
 
 
-@auth.route("/confirm/<token>", methods=[HTTP_METHOD_GET])
+@auth.route("/confirm/<token>", methods=[HTTPMethod.GET])
 @login_required
 def confirm(token):
     if current_user.confirmed:
@@ -148,12 +146,8 @@ def confirm(token):
     if current_user.confirm(token):
         admins = User.query.filter_by(is_administrator=True).all()
         for admin in admins:
-            send_email(
-                admin.email,
-                "New user confirmed",
-                "auth/email/new_confirmation",
-                user=current_user,
-                admin=admin,
+            EmailClient.send_email(
+                ConfirmedUserEmail(admin.email, user=current_user, admin=admin)
             )
         flash("You have confirmed your account. Thanks!")
     else:
@@ -165,37 +159,35 @@ def confirm(token):
 @login_required
 def resend_confirmation():
     token = current_user.generate_confirmation_token()
-    send_email(
-        current_user.email,
-        "Confirm Your Account",
-        "auth/email/confirm",
-        user=current_user,
-        token=token,
+    EmailClient.send_email(
+        ConfirmAccountEmail(current_user.email, user=current_user, token=token)
     )
     flash("A new confirmation email has been sent to you.")
     return redirect(url_for("main.index"))
 
 
-@auth.route("/change-password", methods=[HTTP_METHOD_GET, HTTP_METHOD_POST])
+@auth.route("/change-password", methods=[HTTPMethod.GET, HTTPMethod.POST])
 @login_required
 def change_password():
-    jsloads = ["js/zxcvbn.js", "js/password.js"]
     form = ChangePasswordForm()
     if form.validate_on_submit():
         if current_user.verify_password(form.old_password.data):
             current_user.password = form.password.data
             db.session.add(current_user)
             db.session.commit()
-            flash("Your password has been updated.")
+            flash("Your password has been updated. Please log in again.")
+            EmailClient.send_email(
+                ChangePasswordEmail(current_user.email, user=current_user)
+            )
             return redirect(url_for("main.index"))
         else:
             flash("Invalid password.")
     else:
         current_app.logger.info(form.errors)
-    return render_template("auth/change_password.html", form=form, jsloads=jsloads)
+    return render_template("auth/change_password.html", form=form, jsloads=js_loads)
 
 
-@auth.route("/reset", methods=[HTTP_METHOD_GET, HTTP_METHOD_POST])
+@auth.route("/reset", methods=[HTTPMethod.GET, HTTPMethod.POST])
 def password_reset_request():
     if not current_user.is_anonymous:
         return redirect(url_for("main.index"))
@@ -204,12 +196,8 @@ def password_reset_request():
         user = User.by_email(form.email.data).first()
         if user:
             token = user.generate_reset_token()
-            send_email(
-                user.email,
-                "Reset Your Password",
-                "auth/email/reset_password",
-                user=user,
-                token=token,
+            EmailClient.send_email(
+                ResetPasswordEmail(user.email, user=user, token=token)
             )
         flash("An email with instructions to reset your password has been sent to you.")
         return redirect(url_for("auth.login"))
@@ -218,7 +206,7 @@ def password_reset_request():
     return render_template("auth/reset_password.html", form=form)
 
 
-@auth.route("/reset/<token>", methods=[HTTP_METHOD_GET, HTTP_METHOD_POST])
+@auth.route("/reset/<token>", methods=[HTTPMethod.GET, HTTPMethod.POST])
 def password_reset(token):
     if not current_user.is_anonymous:
         return redirect(url_for("main.index"))
@@ -228,7 +216,7 @@ def password_reset(token):
         if user is None:
             return redirect(url_for("main.index"))
         if user.reset_password(token, form.password.data):
-            flash("Your password has been updated.")
+            flash("Your password has been updated. Please log in again.")
             return redirect(url_for("auth.login"))
         else:
             return redirect(url_for("main.index"))
@@ -237,7 +225,7 @@ def password_reset(token):
     return render_template("auth/reset_password.html", form=form)
 
 
-@auth.route("/change-email", methods=[HTTP_METHOD_GET, HTTP_METHOD_POST])
+@auth.route("/change-email", methods=[HTTPMethod.GET, HTTPMethod.POST])
 @login_required
 def change_email_request():
     form = ChangeEmailForm()
@@ -245,12 +233,8 @@ def change_email_request():
         if current_user.verify_password(form.password.data):
             new_email = form.email.data
             token = current_user.generate_email_change_token(new_email)
-            send_email(
-                new_email,
-                "Confirm your email address",
-                "auth/email/change_email",
-                user=current_user,
-                token=token,
+            EmailClient.send_email(
+                ChangeEmailAddressEmail(new_email, user=current_user, token=token)
             )
             flash(
                 "An email with instructions to confirm your new email "
@@ -268,13 +252,13 @@ def change_email_request():
 @login_required
 def change_email(token):
     if current_user.change_email(token):
-        flash("Your email address has been updated.")
+        flash("Your email address has been updated. Please log in again.")
     else:
         flash("Invalid request.")
     return redirect(url_for("main.index"))
 
 
-@auth.route("/change-dept/", methods=[HTTP_METHOD_GET, HTTP_METHOD_POST])
+@auth.route("/change-dept/", methods=[HTTPMethod.GET, HTTPMethod.POST])
 @login_required
 def change_dept():
     form = ChangeDefaultDepartmentForm()
@@ -294,32 +278,28 @@ def change_dept():
     return render_template("auth/change_dept_pref.html", form=form)
 
 
-@auth.route("/users/", methods=[HTTP_METHOD_GET])
+@auth.route("/users/", methods=[HTTPMethod.GET])
 @admin_required
 def get_users():
-    if request.args.get("page"):
-        page = int(request.args.get("page"))
-    else:
-        page = 1
-    USERS_PER_PAGE = int(current_app.config["USERS_PER_PAGE"])
+    page = int(request.args.get("page", 1))
     users = User.query.order_by(User.username).paginate(
-        page=page, per_page=USERS_PER_PAGE, error_out=False
+        page=page, per_page=current_app.config["USERS_PER_PAGE"], error_out=False
     )
 
     return render_template("auth/users.html", objects=users)
 
 
-@auth.route("/users/<int:user_id>", methods=[HTTP_METHOD_GET, HTTP_METHOD_POST])
+@auth.route("/users/<int:user_id>", methods=[HTTPMethod.GET, HTTPMethod.POST])
 @admin_required
 def edit_user(user_id):
     user = User.query.get(user_id)
     if not user:
         return render_template("404.html"), HTTPStatus.NOT_FOUND
 
-    if request.method == HTTP_METHOD_GET:
+    if request.method == HTTPMethod.GET:
         form = EditUserForm(obj=user)
         return render_template("auth/user.html", user=user, form=form)
-    elif request.method == HTTP_METHOD_POST:
+    elif request.method == HTTPMethod.POST:
         form = EditUserForm()
         if form.delete.data:
             # forward to confirm delete
@@ -338,7 +318,8 @@ def edit_user(user_id):
                 db.session.add(user)
                 db.session.commit()
 
-                # automatically send a confirmation email when approving an unconfirmed user
+                # automatically send a confirmation email when approving an
+                # unconfirmed user
                 if (
                     current_app.config["APPROVE_REGISTRATIONS"]
                     and not already_approved
@@ -347,7 +328,7 @@ def edit_user(user_id):
                 ):
                     admin_resend_confirmation(user)
 
-                flash("{} has been updated!".format(user.username))
+                flash(f"{user.username} has been updated!")
 
                 return redirect(url_for("auth.edit_user", user_id=user.id))
             else:
@@ -355,17 +336,17 @@ def edit_user(user_id):
                 return render_template("auth/user.html", user=user, form=form)
 
 
-@auth.route("/users/<int:user_id>/delete", methods=[HTTP_METHOD_GET, HTTP_METHOD_POST])
+@auth.route("/users/<int:user_id>/delete", methods=[HTTPMethod.GET, HTTPMethod.POST])
 @admin_required
 def delete_user(user_id):
     user = User.query.get(user_id)
     if not user or user.is_administrator:
         return render_template("403.html"), HTTPStatus.FORBIDDEN
-    if request.method == HTTP_METHOD_POST:
+    if request.method == HTTPMethod.POST:
         username = user.username
         db.session.delete(user)
         db.session.commit()
-        flash("User {} has been deleted!".format(username))
+        flash(f"User {username} has been deleted!")
         return redirect(url_for("auth.get_users"))
 
     return render_template("auth/user_delete.html", user=user)
@@ -373,15 +354,9 @@ def delete_user(user_id):
 
 def admin_resend_confirmation(user):
     if user.confirmed:
-        flash("User {} is already confirmed.".format(user.username))
+        flash(f"User {user.username} is already confirmed.")
     else:
         token = user.generate_confirmation_token()
-        send_email(
-            user.email,
-            "Confirm Your Account",
-            "auth/email/confirm",
-            user=user,
-            token=token,
-        )
-        flash("A new confirmation email has been sent to {}.".format(user.email))
+        EmailClient.send_email(ConfirmAccountEmail(user.email, user=user, token=token))
+        flash(f"A new confirmation email has been sent to {user.email}.")
     return redirect(url_for("auth.get_users"))

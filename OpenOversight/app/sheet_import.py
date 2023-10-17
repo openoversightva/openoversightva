@@ -1,7 +1,7 @@
 from flask import current_app, url_for, flash
 from flask_login import current_user
 
-from OpenOversight.app.models import (db, Officer, Assignment, Job, Face, User, Unit, Department,
+from OpenOversight.app.models.database import (db, Officer, Assignment, Job, Face, User, Unit, Department,
                      Incident, Link, Note, Description, Salary,
                      Document, Tag, Sheet, SheetDetail)
 from OpenOversight.app.utils.cloud import (compute_hash, upload_doc_to_s3)
@@ -96,12 +96,12 @@ where sheet_id = :sid""")
         result = connection.execute(statement=s, parameters={"sid":sheet_id})
         connection.commit()
         # insert any missing units 
-        s = text("""insert into unit_types (descrip, department_id)
+        s = text("""insert into unit_types (description, department_id)
 select distinct d.unit_name, d.department_id
 from import_sheet_details d
 left join unit_types ut
     on ut.department_id = d.department_id 
-    and ut.descrip = d.unit_name
+    and ut.description = d.unit_name
 where sheet_id = :sid
 and ut.id is null
 """)
@@ -138,7 +138,7 @@ group by d.department_id""")
             connection.rollback()
         # update the import sheet with those details
         s = text("""update import_sheet_details d
-    set unit_id = (select max(id) from unit_types u where u.department_id = d.department_id and descrip = d.unit_name),
+    set unit_id = (select max(id) from unit_types u where u.department_id = d.department_id and description = d.unit_name),
         job_id = (select max(id) from jobs j where j.department_id = d.department_id and j.job_title = d.rank_title)
 where sheet_id = :sid""")
         result = connection.execute(s, parameters={"sid":sheet_id})
@@ -288,7 +288,7 @@ def add_aux_data(officer, row):
                             star_no=row.badge_number,
                             job_id=row.job_id,
                             unit_id=row.unit_id,
-                            star_date=row.employment_date,
+                            start_date=row.employment_date,
                             department_id=row.department_id)
     db.session.add(assignment)
 
