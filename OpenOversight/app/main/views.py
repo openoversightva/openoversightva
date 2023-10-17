@@ -377,7 +377,7 @@ def officer_profile(officer_id: int):
     form = AssignmentForm()
     try:
         officer = Officer.query.filter_by(id=officer_id).one()
-        officer.incidents.query.order_by(Incident.date.desc(), Incident.time.desc())
+        #officer.incidents.query.order_by(Incident.date.desc(), Incident.time.desc())
     except NoResultFound:
         abort(HTTPStatus.NOT_FOUND)
     except:  # noqa: E722
@@ -2968,8 +2968,8 @@ def submit_document():
         preferred_dept_id = Department.query.first().id
         # try to use preferred department if available
         try:
-            if User.query.filter_by(id=current_user.get_id()).one().dept_pref:
-                preferred_dept_id = User.query.filter_by(id=current_user.get_id()).one().dept_pref
+            if User.query.filter_by(id=current_user.id).one().dept_pref:
+                preferred_dept_id = User.query.filter_by(id=current_user.id).one().dept_pref
             return render_template("submit_document.html", form=form, preferred_dept_id=preferred_dept_id)
         # that is, an anonymous user has no id attribute
         except (AttributeError, NoResultFound):
@@ -3055,7 +3055,7 @@ def submit_sheet():
     if form.validate_on_submit():
         try:
             file_data = form.file.data
-            sheet = upload_sheet(file_data, current_user.get_id())
+            sheet = upload_sheet(file_data, current_user.id)
             flash("Sheet was successfully uploaded")
             return redirect(url_for("main.sheet_map", sheet_id=sheet.id))
         except Exception as e:
