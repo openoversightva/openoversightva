@@ -28,6 +28,7 @@ from OpenOversight.app.utils.constants import (
     KEY_DEPT_TOTAL_INCIDENTS,
     KEY_DEPT_TOTAL_OFFICERS,
     SIGNATURE_ALGORITHM,
+    DEFAULT_STATE
 )
 from OpenOversight.app.validators import state_validator, url_validator
 
@@ -160,9 +161,11 @@ class Department(BaseModel, TrackUpdates):
 
     @property
     def display_name(self):
-        return self.name if not self.state else f"[{self.state}] {self.name}"
+        return self.name if ((not self.state) or self.state == DEFAULT_STATE) else f"[{self.state}] {self.name}"
 
-    @cached(cache=DB_CACHE, key=model_cache_key(KEY_DEPT_TOTAL_ASSIGNMENTS))
+    # KF 2023-10-17 - removed caching on these since they shouldn't be called in bulk
+    # see browse() in views.py for faster bulk stats
+    #@cached(cache=DB_CACHE, key=model_cache_key(KEY_DEPT_TOTAL_ASSIGNMENTS))
     def total_documented_assignments(self):
         return (
             db.session.query(Assignment.id)
@@ -171,13 +174,13 @@ class Department(BaseModel, TrackUpdates):
             .count()
         )
 
-    @cached(cache=DB_CACHE, key=model_cache_key(KEY_DEPT_TOTAL_INCIDENTS))
+    #@cached(cache=DB_CACHE, key=model_cache_key(KEY_DEPT_TOTAL_INCIDENTS))
     def total_documented_incidents(self):
         return (
             db.session.query(Incident).filter(Incident.department_id == self.id).count()
         )
 
-    @cached(cache=DB_CACHE, key=model_cache_key(KEY_DEPT_TOTAL_OFFICERS))
+    #@cached(cache=DB_CACHE, key=model_cache_key(KEY_DEPT_TOTAL_OFFICERS))
     def total_documented_officers(self):
         return (
             db.session.query(Officer).filter(Officer.department_id == self.id).count()

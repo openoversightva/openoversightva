@@ -25,9 +25,12 @@ from flask import (
 )
 from flask_login import current_user, login_required, login_user
 from flask_wtf import FlaskForm
+
+from sqlalchemy import select, func, distinct
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import contains_eager, joinedload, selectinload
 from sqlalchemy.orm.exc import NoResultFound
+
 
 from OpenOversight.app import limiter, sitemap
 from OpenOversight.app.auth.forms import LoginForm
@@ -208,10 +211,18 @@ def set_session_timezone():
 @sitemap_include
 @main.route("/browse", methods=[HTTPMethod.GET])
 def browse():
-    departments = Department.query.filter(Department.officers.any()).order_by(
+    departments = Department.query.order_by(
         Department.state.asc(), Department.name.asc()
     )
-    return render_template("browse.html", departments=departments)
+    stats_q = select(Department.id,
+                   func.count(distinct(Officer.id)).label("num_officers"),
+                   func.count(distinct(Incident.id)).label("num_incidents"),
+                   func.count(distinct(Document.id)).label("num_documents")
+    ).join(Officer, isouter=True).join(Incident, isouter=True).join(Document, isouter=True)\
+    .group_by(Department.id)
+    dept_stats = db.session.execute(stats_q).all()
+    dept_stats = {x[0]: x[1:] for x in dept_stats}
+    return render_template("browse.html", departments=departments, stats=dept_stats)
 
 
 @sitemap_include

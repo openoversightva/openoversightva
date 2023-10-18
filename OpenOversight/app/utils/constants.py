@@ -63,3 +63,6 @@ FIELD_NOT_AVAILABLE = "Field Not Available"
 FLASH_MSG_PERMANENT_REDIRECT = (
     "This page's address has changed, please update your bookmark!"
 )
+
+# hide this state name
+DEFAULT_STATE = "VA"

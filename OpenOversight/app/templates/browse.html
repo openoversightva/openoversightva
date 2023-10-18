@@ -41,25 +41,27 @@
                 </a>
               {% endif %}
             </h2>
-            <!-- from upstream; slows the page way down
             <div>
-              <b class="dept-{{ department.id }}">Officers Documented:</b> { department.total_documented_officers() | thousands_separator }
+              <b class="dept-{{ department.id }}">Officers Documented:</b> {{ stats.get(department.id,(0,0,0))[0] | thousands_separator  }}
               <br>
-              <b class="dept-{{ department.id }}">Assignments Documented:</b> { department.total_documented_assignments() | thousands_separator }
+              {% if stats.get(department.id,(0,0,0))[1] > 0 %}
+              <b class="dept-{{ department.id }}">Incidents Documented:</b> {{ stats.get(department.id,(0,0,0))[1] | thousands_separator }}
               <br>
-              <b class="dept-{{ department.id }}">Incidents Documented:</b> { department.total_documented_incidents() | thousands_separator }
+              {% endif %}
+              {% if stats.get(department.id,(0,0,0))[2] > 0 %}
+              <b class="dept-{{ department.id }}">Library Documents:</b> {{ stats.get(department.id,(0,0,0))[2] | thousands_separator  }}
+              {% endif %}
             </div>
-            -->
           <p>
           <a class="btn btn-lg btn-primary" href="{{ url_for('main.list_officer', department_id=department.id) }}">
              Officers
           </a>
-          {% if department.incidents %}
+          {% if stats.get(department.id,(0,0,0))[1] > 0 %}
             <a class="btn btn-lg btn-primary" href="{{ url_for('main.incident_api', department_id=department.id) }}">
                Incidents
             </a>
           {% endif %}
-          {% if department.documents %}
+          {% if stats.get(department.id,(0,0,0))[2] > 0 %}
             <a class="btn btn-lg btn-primary" href="/documents?title=&department={{ department.id }}">
                Library
             </a>
