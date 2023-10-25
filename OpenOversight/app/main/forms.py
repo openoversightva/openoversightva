@@ -160,9 +160,9 @@ class AssignmentForm(Form):
     )
     job_title = QuerySelectField(
         "Job Title",
-        validators=[DataRequired()],
+        validators=[Optional()],
         get_label="job_title",
-        get_pk=lambda x: x.id,
+        #get_pk=lambda x: x.id,
     )  # query set in view function
     unit = QuerySelectField(
         "Unit",

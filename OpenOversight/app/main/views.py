@@ -439,6 +439,7 @@ def officer_profile(officer_id: int):
         face_paths=face_paths,
         assignments=assignments,
         form=form,
+        jsloads=['js/dynamic_lists.js', 'js/add_assignment.js'],
     )
 
 
@@ -465,11 +466,12 @@ def redirect_add_assignment(officer_id: int):
 def add_assignment(officer_id: int):
     form = AssignmentForm()
     officer = Officer.query.filter_by(id=officer_id).first()
-    # specifically not filtering by officer.department_id 
+    # specifically not filtering by officer.department_id bc it breaks job_title validation
     form.job_title.query = (
-        Job.query.filter_by(department_id=officer.department_id)
+        Job.query
         .order_by(Job.order.asc())
         .all()
+        #.filter_by(department_id=officer.department_id)
     )
     if not officer:
         flash("Officer not found")
@@ -537,9 +539,10 @@ def edit_assignment(officer_id: int, assignment_id: int):
     assignment = Assignment.query.filter_by(id=assignment_id).one()
     form = AssignmentForm(obj=assignment)
     form.job_title.query = (
-        Job.query.filter_by(department_id=assignment.department_id)
+        Job.query
         .order_by(Job.order.asc())
         .all()
+        #.filter_by(department_id=assignment.department_id) # oova; see add_assignment
     )
     # OOVA
     form.unit.query = (
@@ -565,7 +568,10 @@ def edit_assignment(officer_id: int, assignment_id: int):
         return redirect(url_for("main.officer_profile", officer_id=officer_id))
     else:
         current_app.logger.info(form.errors)
-    return render_template("edit_assignment.html", form=form)
+    return render_template("edit_assignment.html",
+        form=form,
+        jsloads=['js/dynamic_lists.js', 'js/add_assignment.js'],
+        )
 
 # OOVA added
 @main.route("/officer/<int:officer_id>/assignment/<int:assignment_id>/delete", methods=[HTTPMethod.GET])
@@ -957,7 +963,22 @@ def edit_department(department_id: int):
             update=True,
             jsloads=["js/jquery-ui.min.js", "js/deptRanks.js"],
         )
-
+"""
+@main.route("/departments/<int:department_id>/")
+def department_profile(department_id: int):
+    try:
+        dept = Department.query.filter_by(id=department_id).one()
+    except NoResultFound:
+        abort(HTTPStatus.NOT_FOUND)
+    except:  # noqa: E722
+        exception_type, value, full_traceback = sys.exc_info()
+        error_str = " ".join([str(exception_type), str(value), format_exc()])
+        current_app.logger.error(f"Error finding department: {error_str}")
+    return render_template(
+        "department.html",
+        dept=dept,
+    )
+"""
 
 @main.route("/department/<int:department_id>")
 def redirect_list_officer(
@@ -999,7 +1020,7 @@ def redirect_list_officer(
     )
 
 
-@main.route("/departments/<int:department_id>")
+@main.route("/departments/<int:department_id>/officers/")
 def list_officer(
     department_id: int,
     page: int = 1,

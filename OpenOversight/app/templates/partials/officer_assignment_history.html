@@ -2,6 +2,9 @@
 <table class="table table-hover">
   <tr>
     <th>
+      <b>Department</b>
+    </th>
+    <th>
       <b>Job Title</b>
     </th>
     <th>
@@ -69,11 +72,11 @@
   <h3>
     Add Assignment <small>Admin only</small>
   </h3>
-  <table class="table">
-    <tbody>
-      <form action="{{ url_for('main.add_assignment', officer_id=officer.id) }}"
+  <form action="{{ url_for('main.add_assignment', officer_id=officer.id) }}"
             method="post" id="add-assignment-form" data-jobs-url="{{ url_for('main.get_dept_ranks') }}" data-units-url="{{ url_for('main.get_dept_units') }}"
 >
+  <table class="table">
+    <tbody>
         {{ form.hidden_tag() }}
         <tr>
           <td>
@@ -157,7 +160,7 @@
                    class="btn-sm btn-primary" />
           </td>
         </tr>
-      </form>
     </tbody>
   </table>
+  </form>
 {% endif %}
