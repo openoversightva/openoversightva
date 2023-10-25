@@ -1027,8 +1027,8 @@ def list_officer(
     race=None,
     gender=None,
     rank=None,
-    min_age="16",
-    max_age="100",
+    min_age=None,
+    max_age=None,
     last_name=None,
     first_name=None,
     badge=None,
@@ -1166,7 +1166,7 @@ def list_officer(
         unique_internal_identifier=form_data["unique_internal_identifier"],
         unit=form_data["unit"],
         current_job=form_data["current_job"],
-        require_photo=form_data["require_photo"],
+        require_photo='Y' if form_data["require_photo"] else '',
     )
     prev_url = url_for(
         "main.list_officer",
@@ -1183,7 +1183,7 @@ def list_officer(
         unique_internal_identifier=form_data["unique_internal_identifier"],
         unit=form_data["unit"],
         current_job=form_data["current_job"],
-        require_photo=form_data["require_photo"],
+        require_photo='Y' if form_data["require_photo"] else '',
     )
 
     return render_template(
