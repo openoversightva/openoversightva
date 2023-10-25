@@ -9,7 +9,8 @@
     <h1>Edit Officer Assignment</h1>
 </div>
 <div class="col-md-6">
-    <form class="form" method="post" role="form">
+    <form class="form" method="post" role="form" id="add-assignment-form" data-jobs-url="{{ url_for('main.get_dept_ranks') }}" data-units-url="{{ url_for('main.get_dept_units') }}"
+>
         {{ form.hidden_tag() }}
         {{ wtf.form_errors(form, hiddens="only") }}
         {{ wtf.form_field(form.dept, disabled=form.is_edit ) }}
@@ -17,7 +18,7 @@
         {{ wtf.form_field(form.job_title) }}
         {{ wtf.form_field(form.unit) }}
         <h4><small><a href="{{ url_for( 'main.add_unit' )}}">Don't see your unit? Add one!</a></small></h4>
-        {{ wtf.form_field(form.star_date) }}
+        {{ wtf.form_field(form.start_date) }}
         {{ wtf.form_field(form.resign_date) }}
         <input class="btn btn-primary btn-lg" type="submit" value="Edit" />
     </form>

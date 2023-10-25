@@ -91,6 +91,7 @@ div[role=main] {
 
  .glyphicon {
      font-size: 30px;
+     -webkit-text-stroke: 2px #fff;
  }
 
 a > .tutorial{

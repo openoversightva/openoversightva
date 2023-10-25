@@ -30,7 +30,9 @@ login_manager.anonymous_user = AnonymousUser
 login_manager.login_view = "auth.login"
 
 limiter = Limiter(
-    key_func=get_remote_address, default_limits=["100 per minute", "5 per second"]
+    key_func=get_remote_address,
+    default_limits=["100 per minute", "5 per second"],
+    storage_uri="memory://",
 )
 
 sitemap = Sitemap()
