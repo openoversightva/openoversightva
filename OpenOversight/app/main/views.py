@@ -963,7 +963,7 @@ def edit_department(department_id: int):
             update=True,
             jsloads=["js/jquery-ui.min.js", "js/deptRanks.js"],
         )
-"""
+
 @main.route("/departments/<int:department_id>/")
 def department_profile(department_id: int):
     try:
@@ -978,7 +978,7 @@ def department_profile(department_id: int):
         "department.html",
         dept=dept,
     )
-"""
+
 
 @main.route("/department/<int:department_id>")
 def redirect_list_officer(

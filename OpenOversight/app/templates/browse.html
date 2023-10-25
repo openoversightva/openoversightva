@@ -17,7 +17,7 @@
         <h2>Decertified, Dismissed, & Wandering Ex-Police
       </h2>
           <p>
-          <a class="btn btn-lg btn-primary" href="/department/2321">
+          <a class="btn btn-lg btn-primary" href="/departments/2321/officers/">
             Officers
           </a>
           
@@ -34,7 +34,7 @@
         <p>
           <div class="btn-group">
             <h2>
-              {{ department.display_name }}
+              <a href="{{ url_for('main.department_profile', department_id=department.id) }}">{{ department.display_name }}</a>
               {% if current_user.is_administrator %}
                 <a href="{{ url_for('main.edit_department', department_id=department.id) }}">
                   <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
