@@ -668,13 +668,13 @@ class BrowseForm(Form):
     )
     min_age = SelectField(
         "minimum age",
-        default=16,
+        #default=16,
         choices=AGE_CHOICES,
         validators=[AnyOf(allowed_values(AGE_CHOICES))],
     )
     max_age = SelectField(
         "maximum age",
-        default=100,
+        #default=100,
         choices=AGE_CHOICES,
         validators=[AnyOf(allowed_values(AGE_CHOICES))],
     )

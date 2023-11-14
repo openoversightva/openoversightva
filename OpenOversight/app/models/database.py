@@ -140,6 +140,14 @@ class Department(BaseModel, TrackUpdates):
     short_name = db.Column(db.String(100), unique=False, nullable=False)
     state = db.Column(db.String(2), server_default="", nullable=False)
 
+    state_id = db.Column(db.Integer) # e.g. for Virginia, DCJS TRACER ID
+    type_code = db.Column(db.String(10)) # (POLICE, SHERIFF, PRISON)
+    locality_fips = db.Column(db.String(10)) # The full FIPS-9 code for the department's location
+    county = db.Column(db.String(100)) # A display name of the county (e.g. Richmond City, or Loudoun)
+    ori = db.Column(db.String(9)) # Originating Agency Identifier (federal agency ID)
+
+    narrative = db.Column(db.Text) # a Markdown text block for a narrative description of the department
+
     # See https://github.com/lucyparsons/OpenOversight/issues/462
     unique_internal_identifier_label = db.Column(
         db.String(100), unique=False, nullable=True
@@ -162,6 +170,20 @@ class Department(BaseModel, TrackUpdates):
     @property
     def display_name(self):
         return self.name if ((not self.state) or self.state == DEFAULT_STATE) else f"[{self.state}] {self.name}"
+
+    @property
+    def display_type(self):
+        match self.type_code:
+            case 'POLICE':
+                 type_disp = "Police Department"
+            case 'SHERIFF':
+                 type_disp = "Sheriff's Office"
+            case "PRISON":
+                 type_disp = "Prison"
+            case _:
+                type_disp = "Other Agency"
+        return type_disp
+    
 
     # KF 2023-10-17 - removed caching on these since they shouldn't be called in bulk
     # see browse() in views.py for faster bulk stats
