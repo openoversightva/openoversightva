@@ -3425,3 +3425,18 @@ def submit_post():
         return redirect("/news/")
     else:
         return render_template("news/create.html", form=form)
+
+# map 
+@main.route("/map/")
+def show_map():
+
+    fips_q = select(func.substr(Department.locality_fips, 1, 5).label("county_fips"),
+        Department.id,
+        Department.name,
+        )
+    dept_fips = db.session.execute(fips_q).all()
+    ukeys = list(set([r[0] for r in dept_fips]))    # get unique counties
+    agencies = {k: [{'id': c[1], 'name': c[2]} for c in dept_fips if c[0] == k] for k in ukeys if k is not None}
+
+    return render_template(
+        "map.html", agencies=agencies)

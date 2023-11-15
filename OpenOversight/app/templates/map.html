@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}
+OpenOversightVA Map
+{% endblock title %}
+{% block meta %}
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl/dist/maplibre-gl.css' />
+    <script src='/static/js/maplibre-gl.js'></script>
+    <style>
+      html, body, #map { height: 100%; }
+
+      .maplibregl-popup {
+        max-width: 400px;
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+      }
+    </style>
+{% endblock meta %}
+{% block content %}
+<div id="map"></div>
+<script>
+    // load agencies JSON from views.py; used in on-click trigger below to list agencies in a county
+    const agencies = {{ agencies|tojson }}
+
+    const bounds = [
+        [-83.7729, 36.4855], // southwest point
+        [-75.0027, 39.5200] // northeast point
+      ]
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://api.maptiler.com/maps/dataviz/style.json?key=XdngPAeglh5F6tWGYvJQ',
+        center: [-78.48, 38.03],
+        zoom: 7,
+        maxBounds: bounds // limit to this area
+    });
+
+    // filters for classifying counties into five categories based on force strength
+    const fs1 = ['<', ['get', 'county_stats_cops_per_1k_cap'], 1.8];
+    const fs2 = ['all', ['>=', ['get', 'county_stats_cops_per_1k_cap'], 1.8], ['<', ['get', 'county_stats_cops_per_1k_cap'], 2.23]];
+    const fs3 = ['all', ['>=', ['get', 'county_stats_cops_per_1k_cap'], 2.23], ['<', ['get', 'county_stats_cops_per_1k_cap'], 2.66]];
+    const fs4 = ['all', ['>=', ['get', 'county_stats_cops_per_1k_cap'], 2.66], ['<', ['get', 'county_stats_cops_per_1k_cap'], 3.48]];
+    const fs5 = ['>=', ['get', 'county_stats_cops_per_1k_cap'], 3.48];
+
+    const colors = ['#fafafa', '#bdbdbd', '#808080', '#424242', '#050505'];
+
+    map.on('load', () => {
+        map.addSource('oova-counties', {
+          type: 'geojson',
+          data: '/static/js/va_police_counties_simplified.geojson',
+          promoteId:'source_featureid'
+        });
+        let hoveredShapeId = null;
+
+        map.addLayer({
+            'id': 'county',
+            'type': 'fill',
+            'source': 'oova-counties',
+            'paint': {
+                'fill-color': [
+                    'case',
+                    fs1,
+                    colors[0],
+                    fs2,
+                    colors[1],
+                    fs3,
+                    colors[2],
+                    fs4,
+                    colors[3],
+                    colors[4]
+                ],
+                'fill-opacity': [
+                    'case',
+                    ['boolean', ['feature-state', 'hover'], false],
+                    0.8,
+                    0.4
+                ],
+                'fill-outline-color': '#000000',
+            },
+            'filter': ['==', '$type', 'Polygon']
+        });
+
+        // When the user moves their mouse over the layer, we'll update the
+        // feature state for the feature under the mouse.
+        map.on('mousemove', 'county', (e) => {
+            if (e.features.length > 0) {
+                if (hoveredShapeId) {
+                    map.setFeatureState(
+                        {source: 'oova-counties', id: hoveredShapeId},
+                        {hover: false}
+                    );
+                }
+                hoveredShapeId = e.features[0].id;
+                map.setFeatureState(
+                    {source: 'oova-counties', id: hoveredShapeId},
+                    {hover: true}
+                );
+            }
+        });
+        // When the mouse leaves the state-fill layer, update the feature state of the
+        // previously hovered feature.
+        map.on('mouseleave', 'county', () => {
+            if (hoveredShapeId) {
+                map.setFeatureState(
+                    {source: 'oova-counties', id: hoveredShapeId},
+                    {hover: false}
+                );
+            }
+            hoveredShapeId = null;
+        });
+
+        // When a click event occurs on a feature in the layer, open a popup at the
+        // location of the click, with description HTML from its properties.
+        map.on('click', 'county', (e) => {
+            countyHTML = '<h4>' + e.features[0].properties.gnis_name + '</h4>Officers: ' + e.features[0].properties.county_stats_officers + '<br>Population: ' + e.features[0].properties.population 
+            cid = e.features[0].id
+            if (cid in agencies) {
+                countyHTML += '<br>Agencies:<br>'
+                for (var i = 0; i < agencies[cid].length; i++) {
+                  ag = agencies[cid][i]
+                  countyHTML += '<a href="/departments/'+ ag.id + '">' + ag.name + '</a><br>'
+                }
+            }
+            new maplibregl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(countyHTML)
+                .addTo(map);
+        });
+
+        // Change the cursor to a pointer when the mouse is over the states layer.
+        map.on('mouseenter', 'county', () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+
+        // Change it back to a pointer when it leaves.
+        map.on('mouseleave', 'county', () => {
+            map.getCanvas().style.cursor = '';
+        });
+
+      });
+</script>
+{% endblock content %}
