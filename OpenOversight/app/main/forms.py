@@ -691,7 +691,10 @@ class SearchTagForm(Form):
     submit = SubmitField(label="Submit")
 
 class IncidentListForm(Form):
-    department_id = HiddenField("Department Id")
+    #department_id = HiddenField("Department Id")
+    department_id = QuerySelectField("department_id", validators=[Optional()], query_factory=dept_choices,
+        get_label="display_name", allow_blank=True, blank_text='(All Departments)')
+    desc_search = StringField("Search Incident Description", render_kw={"placeholder": "Enter text to search for"})
     report_number = StringField("Report Number")
     occurred_before = DateField("Occurred Before")
     occurred_after = DateField("Occurred After")

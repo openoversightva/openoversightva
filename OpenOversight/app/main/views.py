@@ -2123,17 +2123,17 @@ class IncidentApi(ModelView):
         form = IncidentListForm()
         incidents = self.model.query
 
-        dept = None
-        if department_id := request.args.get("department_id"):
-            dept = Department.query.get_or_404(department_id)
-            form.department_id.data = department_id
-            incidents = incidents.filter_by(department_id=department_id)
-
         if report_number := request.args.get("report_number"):
             form.report_number.data = report_number
             incidents = incidents.filter(
                 Incident.report_number.contains(report_number.strip())
             )
+
+        dept = None
+        if (department_id := request.args.get("department_id")) and request.args.get("department_id") != '__None':
+            dept = Department.query.get_or_404(department_id)
+            form.department_id.data = dept
+            incidents = incidents.filter_by(department_id=dept.id)
 
         if occurred_before := request.args.get("occurred_before"):
             before_date = datetime.strptime(occurred_before, "%Y-%m-%d").date()
@@ -2144,6 +2144,11 @@ class IncidentApi(ModelView):
             after_date = datetime.strptime(occurred_after, "%Y-%m-%d").date()
             form.occurred_after.data = after_date
             incidents = incidents.filter(self.model.date > after_date)
+
+        if desc_search := request.args.get("desc_search"):
+            form.desc_search.data = desc_search
+            # just a simple exact-match search (case insensitive)
+            incidents = incidents.filter(Incident.description.ilike(f"%{desc_search}%"))
 
         incidents = incidents.order_by(
             Incident.date.desc(), Incident.time.desc()
@@ -3430,7 +3435,8 @@ def submit_post():
 @main.route("/map/")
 def show_map():
 
-    fips_q = select(func.substr(Department.locality_fips, 1, 5).label("county_fips"),
+    fips_q = select(
+        func.substr(Department.locality_fips, 1, 5).label("county_fips"),
         Department.id,
         Department.name,
         )

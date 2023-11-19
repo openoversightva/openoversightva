@@ -23,7 +23,8 @@
       <div class="filter-sidebar col-sm-3">
         <h3 class="sidebar-title">Filter incidents</h3>
         <form class="form" method="get" role="form">
-          {% if department %}<div class="hidden">{{ wtf.form_field(form.department_id) }}</div>{% endif %}
+          <div class="panel">{{ wtf.form_field(form.desc_search) }}</div>
+          <div class="panel">{{ wtf.form_field(form.department_id) }}</div>
           <div class="panel">{{ wtf.form_field(form.report_number) }}</div>
           <div class="panel">{{ wtf.form_field(form.occurred_before) }}</div>
           <div class="panel">{{ wtf.form_field(form.occurred_after) }}</div>
