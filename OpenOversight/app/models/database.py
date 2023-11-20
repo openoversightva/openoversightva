@@ -174,11 +174,11 @@ class Department(BaseModel, TrackUpdates):
     @property
     def display_type(self):
         match self.type_code:
-            case 'POLICE':
+            case '1':
                  type_disp = "Police Department"
-            case 'SHERIFF':
+            case '2':
                  type_disp = "Sheriff's Office"
-            case "PRISON":
+            case "6":
                  type_disp = "Prison"
             case _:
                 type_disp = "Other Agency"
