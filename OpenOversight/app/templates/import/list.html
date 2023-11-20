@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container theme-showcase" role="main">
+  <div class="text-center frontpage-leads">
+    <h1><small>Historic Imports</small></h1>
+  </div>
+   <table class="display">
+   <tr>
+      <th>ID</th>
+      <th>Original CSV</th>
+      <th>Date Inserted</th>
+      <th>User</th>
+      <th style="width: 30%;">Agencies</th>
+      <th>New Officers</th>
+      <th>Updated</th>
+      <th>Errors</th>
+      <th>Total Rows</th>
+   </tr>
+   {% for sheet in sheets %}
+    <tr>
+      <td><a href="/sheets/match/{{ sheet.id }}">Sheet {{ sheet.id }}</a></td>
+      <td><a href="{{ sheet.filepath }}">link</a></td>
+      <td>{{ sheet.date_inserted.strftime('%Y-%m-%d') }}</td>
+      <td>{{ sheet.username }}</td>
+      <td>{{ sheet.agencies }}</td>
+      <td>{{ sheet.inserted }}</td>
+      <td>{{ sheet.updated }}</td>
+      <td>{{ sheet.errors }}</td>
+      <td>{{ sheet.num_rows }}</td>
+    </tr>
+   {% endfor %}
+   </table>
+</div>
+{% endblock %}

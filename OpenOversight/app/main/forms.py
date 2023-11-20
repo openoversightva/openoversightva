@@ -514,6 +514,7 @@ class SheetMapForm(Form):
 
 class SheetMatchForm(Form):
     id = HiddenField(validators=[])
+    bulk_expire = BooleanField("Is this an authoritative roster? Should old officers in this department be expired?", default=False)
     submit = SubmitField(label="Attempt Matching")
     load = SubmitField(label="Load Records")
 

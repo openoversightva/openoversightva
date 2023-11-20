@@ -37,6 +37,7 @@
               </tr>-->
             </tbody>
          </table>
+         {{ wtf.form_field(form.bulk_expire) }}
          {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
          {{ wtf.form_field(form.load, id="load", button_map={'load':'primary'}) }}
       </form>

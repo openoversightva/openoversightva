@@ -26,7 +26,7 @@ from flask import (
 from flask_login import current_user, login_required, login_user
 from flask_wtf import FlaskForm
 
-from sqlalchemy import select, func, distinct
+from sqlalchemy import select, func, distinct, literal_column, case
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import contains_eager, joinedload, selectinload
 from sqlalchemy.orm.exc import NoResultFound
@@ -162,7 +162,8 @@ from OpenOversight.app.sheet_import import (
     insert_sheet_details,
     prep_ref_data,
     match_officers,
-    load_sheet
+    load_sheet,
+    bulk_expire_officers
 )
 
 # Ensure the file is read/write by the creator only
@@ -414,7 +415,10 @@ def officer_profile(officer_id: int):
             .order_by(Face.featured.desc())
             .all()
         )
-        assignments = Assignment.query.filter_by(officer_id=officer_id).all()
+        assignments = (Assignment.query
+            .filter_by(officer_id=officer_id)
+            .order_by(Assignment.resign_date.desc().nulls_first(), Assignment.start_date.desc().nulls_last())
+            .all())
         face_paths = [(face, serve_image(face.image.filepath)) for face in faces]
         if not face_paths:
             # Add in the placeholder image if no faces are found
@@ -3081,6 +3085,32 @@ def admin_page():
     return render_template(
         "admin.html")
 
+# List all sheets which have been uploaded (whether imported successfully or not)
+@main.route("/sheets/", methods=[HTTPMethod.GET])
+@login_required
+@admin_required
+def list_sheets():
+    sheets_q = (select(Sheet.id,
+                Sheet.filepath,
+                Sheet.date_inserted,
+                User.username,
+                func.count(distinct(SheetDetail.row_id)).label("num_rows"),
+                func.string_agg(distinct(SheetDetail.agency_name), ", ").label("agencies"),
+                func.sum(case((SheetDetail.status == 'OK - inserted', 1), else_=0)).label("inserted"),
+                func.sum(case((SheetDetail.status == 'OK - updated', 1), else_=0)).label("updated"),
+                func.sum(case((SheetDetail.status.like('ERROR%'), 1), else_=0)).label("errors")
+                )
+            .join(SheetDetail, isouter=True)
+            .join(User, isouter=True)
+            .group_by(Sheet.id, User.username)
+            .order_by(Sheet.id.desc())
+            )
+    sheets = db.session.execute(sheets_q).all()
+
+    return render_template(
+        "import/list.html",
+        sheets=sheets)
+
 # This is the page to upload a new spreadsheet containing a roster
 # It just uploads it to s3, nothing fancy.
 @main.route("/sheets/new", methods=[HTTPMethod.GET, HTTPMethod.POST])
@@ -3168,6 +3198,9 @@ def sheet_match(sheet_id):
                 import traceback
                 flash("Load error:")
                 flash(traceback.format_exc())
+            bulk_expire = form.data["bulk_expire"]
+            if bulk_expire:
+                bulk_expire_officers(sheet_id)
         else:
             flash("Unknown button pressed. Ignoring")
         return redirect(url_for("main.sheet_match", sheet_id=sheet_id))

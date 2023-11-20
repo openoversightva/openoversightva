@@ -26,7 +26,7 @@
     {% endif %}
   </tr>
   <tbody>
-    {% for assignment in assignments | sort(attribute='start_date_or_max', reverse=True) %}
+    {% for assignment in assignments  %}
       <tr>
         <td>
           {% if assignment.department_id %}

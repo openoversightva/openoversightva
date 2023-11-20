@@ -251,6 +251,27 @@ def load_sheet(sheet_id):
     return 'ok'
 
 """
+Expire all officer assignments in this department which weren't on this roster
+"""
+def bulk_expire_officers(sheet_id):
+    engine = db.engine
+    with engine.connect() as connection:
+       trans = connection.begin()
+       s = text("""
+update assignments a
+  set resign_date = date_trunc('year',current_date)
+where department_id = (select distinct department_id from import_sheet_details where sheet_id = :sid)
+  and officer_id not in (select officer_id from import_sheet_details where sheet_id = :sid and department_id = a.department_id)
+;
+       """)
+       try:
+          result = connection.execute(statement=s, parameters={"sid":sheet_id})
+          trans.commit() 
+       except exc.ProgrammingError:
+          flash("Error: Can only bulk expire roster sheets with ONE department on them. No officers were expired.")
+          trans.rollback();
+    return 'ok'
+"""
 Create a single officer, based on an ImportSheetDetails row
 """
 def create_officer(row):
