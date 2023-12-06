@@ -471,6 +471,15 @@ class EditDocumentForm(Form):
     description = TextAreaField(validators=[Optional()])
     submit = SubmitField(label="Submit")
 
+class AddMultiDocumentForm(Form):
+    department = QuerySelectField(
+        "Department",
+        validators=[DataRequired()],
+        query_factory=dept_choices,
+        get_label="name")
+    file = FileField(validators=[Optional()])
+    submit = SubmitField(label="Submit")
+
 class EditTagForm(Form):
     tag = StringField(validators=[DataRequired()])
 

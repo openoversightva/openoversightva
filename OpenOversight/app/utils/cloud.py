@@ -5,6 +5,7 @@ from datetime import datetime
 from io import BytesIO
 from traceback import format_exc
 from urllib.request import urlopen
+import mimetypes
 
 import boto3
 import botocore
@@ -141,11 +142,9 @@ def upload_document_to_s3_and_store_in_db(doc_buf, user_id, department_id, title
         url = upload_doc_to_s3(doc_data, new_filename, content_type)
         new_doc = Document(filepath=url, hash_doc=hash_doc,
                           url=url,
-                          date_inserted=datetime.datetime.now(),
                           department_id=department_id,
                           title=title,
-                          description=description,
-                          user_id=user_id
+                          description=description
                           )
         db.session.add(new_doc)
         db.session.commit()

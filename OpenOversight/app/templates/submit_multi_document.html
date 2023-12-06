@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}¬
+{% block title %}Submit a document{% endblock %}
+{% block meta %}
+<meta name="description" content="Submit a document">
+{% endblock %}
+{% block head %}
+<link href="{{ url_for('static', filename='css/dropzone.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/dropzone-override.css') }}" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="container theme-showcase" role="main">
+
+   <div class="page-header">
+      <h1>Submit Multiple Documents </small></h1>
+   </div>
+   <div class="form-group">
+      <form action="multi" class="form dropzone"  name="docform" id="docform" enctype="multipart/form-data" method="post" role="form" label="deptselect">
+         {{ wtf.form_field(form.department) }}
+         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+         <p>Drag documents from your computer directly into the box above or click the box to launch a finder window. If you are on mobile, you can click the box above to select a document.</p>
+         {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+      </form>
+      <br>
+      {% if form.file.errors %}
+          <ul class="errors">
+          {% for error in form.file.errors %}
+              <li>{{ error }}</li>
+          {% endfor %}
+          </ul>
+      {% endif %}
+   </div>
+
+ 
+
+   
+   <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+   <script src="{{ url_for('static', filename='js/dropzone.js') }}"></script>
+
+   <script>
+   // Select user's preferred department by default
+   document.getElementById("department").selectedIndex = {{preferred_dept_id}} - 1;
+   // Save the preferred department in dept_id
+   var dept_id = document.getElementById("department").selectedIndex + 1;
+   var csrf_token = "{{ csrf_token() }}";
+
+   const getURL = (file) => {
+      return "/upload/documents/" + dept_id;
+   }
+
+   Dropzone.options.docform = {
+      method: "post",
+      url: document.location.href,
+      uploadMultiple: true,
+      autoProcessQueue: false,
+      paramName: "file",
+      //acceptedFiles: "*/*",
+      maxFiles: 50,
+      headers: {
+        'X-CSRF-TOKEN': csrf_token
+      },
+      init: function() {
+         dz = this;
+
+         this.on("error", function(file, responseText) {
+            file.previewTemplate.appendChild(document.createTextNode(responseText));
+         });
+
+         // for Dropzone to process the queue (instead of default form behavior):
+        document.getElementById("submit").addEventListener("click", function(e) {
+            // Make sure that the form isn't actually being sent.
+            e.preventDefault();
+            e.stopPropagation();
+            dz.processQueue();
+        });
+
+        this.on("queuecomplete", function(file) {
+          window.location.href="/documents?department="+document.getElementById("department").value;
+        });
+
+      }
+   };
+   </script>
+</div>
+
+{% endblock %}

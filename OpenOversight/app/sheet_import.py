@@ -82,13 +82,14 @@ where sheet_id = :sid""")
         result = connection.execute(statement=s, parameters={"sid":sheet_id})
         connection.commit()
         # insert any missing departments
-        s = text("""insert into departments (name, short_name)
-select agency_name, agency_name
-from import_sheet_details
-where sheet_id = :sid
-and agency_name not in (select name from departments union all select short_name from departments)
-group by agency_name""")
-        result = connection.execute(statement=s, parameters={"sid":sheet_id})
+        # edit KF 12/23 - not doing this anymore, keeps creating duplicate departments
+#        s = text("""insert into departments (name, short_name)
+#select agency_name, agency_name
+#from import_sheet_details
+#where sheet_id = :sid
+#and agency_name not in (select name from departments union all select short_name from departments)
+#group by agency_name""")
+#        result = connection.execute(statement=s, parameters={"sid":sheet_id})
         # update the sheet
         s = text("""update import_sheet_details d
 set department_id = (select id from departments s where s.name = d.agency_name)

@@ -63,6 +63,7 @@ from OpenOversight.app.main.forms import (
     TextForm,
     # OOVA
     AddDocumentForm, 
+    AddMultiDocumentForm,
     EditDocumentForm,
     DocumentsForm, 
     SearchFaceForm, 
@@ -3016,6 +3017,46 @@ def submit_document():
         except (AttributeError, NoResultFound):
             preferred_dept_id = Department.query.first().id
             return render_template("submit_document.html", form=form, preferred_dept_id=preferred_dept_id)
+
+@main.route("/documents/multi", methods=[HTTPMethod.GET, HTTPMethod.POST])
+@login_required
+@admin_required
+def submit_documents():
+    form = AddMultiDocumentForm()
+    if form.validate_on_submit(): # called as XHR
+        department_id = form.department.data.id
+        files = request.files.keys()
+        success = 0
+        total = len(files)
+        for fname in files:
+            try:
+                file = request.files.get(fname)
+                title = file.filename
+                content_type = file.content_type
+                document = upload_document_to_s3_and_store_in_db(file.read(), current_user.get_id(), 
+                                    department_id=department_id, title=title, description='',
+                                    content_type=content_type)
+                db.session.commit()
+                success += 1
+            except Exception:
+                exception_type, value, full_tback = sys.exc_info()
+                current_app.logger.error("Error uploading file: {}".format(
+                    " ".join([str(exception_type), str(value),
+                              format_exc()])
+                ))
+                db.session.rollback()
+        flash(f"{success}/{total} documents uploaded")
+        return 'OK'
+    #else:
+    preferred_dept_id = Department.query.first().id
+    # try to use preferred department if available
+    try:
+        if User.query.filter_by(id=current_user.id).one().dept_pref:
+            preferred_dept_id = User.query.filter_by(id=current_user.id).one().dept_pref
+    # that is, an anonymous user has no id attribute
+    except (AttributeError, NoResultFound):
+        preferred_dept_id = Department.query.first().id 
+    return render_template("submit_multi_document.html", form=form, preferred_dept_id=preferred_dept_id)
 
 @main.route("/faces", methods=[HTTPMethod.GET, HTTPMethod.POST])
 # @limiter.limit("1/minute")
