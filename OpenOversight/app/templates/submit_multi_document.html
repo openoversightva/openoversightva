@@ -21,7 +21,7 @@
       <form action="multi" class="form dropzone"  name="docform" id="docform" enctype="multipart/form-data" method="post" role="form" label="deptselect">
          {{ wtf.form_field(form.department) }}
          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-         <p>Drag documents from your computer directly into the box above or click the box to launch a finder window. If you are on mobile, you can click the box above to select a document.</p>
+         <p>Drag documents from your computer directly into the box below or click the box to launch a finder window. If you are on mobile, you can click the box below to select a document.</p>
          {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
       </form>
       <br>
