@@ -8,12 +8,12 @@ The website and concept were created as an independent fork of the original Open
 
 This project is maintained entirely by a team of volunteers - collaboration, partnerships, and contributions are welcome. If you would like to contribute code or documentation, please email [admin@openoversightva.org](mailto:admin@openoversightva.org). You can also see this [contributing guide](/CONTRIB.md) and [code of conduct](/CODE_OF_CONDUCT.md). 
 
-If you would like to volunteer in any way, please reach out to [alice.minium@openoversightva.org](mailto:alice.minium@openoversightva.org) or [admin@openoversightva.org](mailto:admin@openoversightva.org).
+If you would like to volunteer in any way, please reach out to [alice@openoversightva.org](mailto:alice@openoversightva.org) or [admin@openoversightva.org](mailto:admin@openoversightva.org).
 
 ## Note to Law Enforcement
 
 Please contact our legal representation with requests, questions, or concerns of a legal nature at [legal@openoversightva.org](mailto:legal@openoversightva.org).
-Under Va. Code § 2.2-3705.1.(ii), public bodies are required to provide the names, job classifications, and salaries of their employees upon request by a Virginia resident. Freely disseminating this information in its entirety enriches the public interest, contributes to government transparency, and builds trust between public servants and the public itself. It is also protected by the First Amendment, with well-established legitimate precedent within state and federal case law. 
+Under Va. Code § 2.2-3705.1.(ii), public bodies are required to provide the names, job classifications, and salaries of their employees upon request by a Virginia resident. Freely disseminating this information in its entirety benefits the public interest, contributes to government transparency, and builds trust between public servants and the public itself. It is also protected by the First Amendment, with well-established legitimate precedent within state and federal case law. 
 
 ## Issues
 
