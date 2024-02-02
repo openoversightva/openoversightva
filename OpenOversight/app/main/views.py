@@ -3593,11 +3593,29 @@ def add_lawsuit():
 def edit_lawsuit(lawsuit_id=None):
     lawsuit = Lawsuit.query.filter_by(id=lawsuit_id).first()
     form = LawsuitEditForm(obj=lawsuit)
+    form.departments = request.form.getlist("departments[]")
+    form.officers = request.form.getlist("officers[]")
 
     if form.validate_on_submit():
         if not lawsuit: # add new
             lawsuit = Lawsuit()
             db.session.add(lawsuit)
+        departments = form.departments
+        del form.departments
+        lawsuit.departments = []
+        if departments:
+            for dept in departments:
+                d = Department.query.filter_by(id=int(dept)).first()
+                if d and d not in lawsuit.departments:
+                    lawsuit.departments.append(d)
+        officers = form.officers
+        del form.officers
+        lawsuit.officers = []
+        if officers:
+            for off in officers:
+                o = Officer.query.filter_by(id=int(off)).first()
+                if o and o not in lawsuit.officers:
+                    lawsuit.officers.append(o)
         lawsuit.case_number = form.case_number.data
         lawsuit.court_code = form.court_code.data
         lawsuit.location = form.location.data
@@ -3616,6 +3634,10 @@ def edit_lawsuit(lawsuit_id=None):
         flash(f"Lawsuit {lawsuit.id} edited")
         return redirect(url_for("main.show_lawsuit", lawsuit_id=lawsuit.id))
 
+    if lawsuit:
+        form.departments = lawsuit.departments
+        form.officers = lawsuit.officers
+
     if form.errors:
         current_app.logger.info(form.errors)
         flash("Error: " + str(form.errors))
@@ -3624,6 +3646,22 @@ def edit_lawsuit(lawsuit_id=None):
         "lawsuit_edit.html",
         lawsuit=lawsuit,
         form=form)
+
+# departments associated with a specific lawsuit
+@main.route("/lawsuits/<int:lawsuit_id>/departments", methods=[HTTPMethod.GET])
+def get_lawsuit_depts(lawsuit_id):
+    lawsuit = Lawsuit.query.filter_by(id=lawsuit_id).first()
+    depts = lawsuit.departments
+    dept_list = list({"id":dept.id,"text":dept.name} for dept in depts)
+    return jsonify({"results":dept_list})
+
+# officers associated with a specific lawsuit
+@main.route("/lawsuits/<int:lawsuit_id>/officers", methods=[HTTPMethod.GET])
+def get_lawsuit_officers(lawsuit_id):
+    lawsuit = Lawsuit.query.filter_by(id=lawsuit_id).first()
+    officers = lawsuit.officers
+    off_list = list({"id":officer.id,"text":officer.full_name()} for officer in officers)
+    return jsonify({"results":off_list})
 
 @login_required
 @ac_or_admin_required
@@ -3634,3 +3672,27 @@ def delete_lawsuit(lawsuit_id):
     db.session.commit()
     flash("Lawsuit deleted")
     return redirect(url_for("main.show_lawsuits"))
+
+# return JSON list of all (optionally filtered) departments. copied from tags
+@main.route("/api/departments",
+    methods=[HTTPMethod.GET])
+def get_departments(term=""):
+    term = request.args["q"]
+    depts = Department.query.filter(Department.name.ilike("%%{}%%".format(term))).limit(10)
+    
+    dept_list = list({"id":dept.id,"text":dept.name} for dept in depts)
+    return jsonify({"results":dept_list})
+
+# return JSON list of all (optionally filtered) officers. copied from tags
+@main.route("/api/officers",
+    methods=[HTTPMethod.GET])
+def get_officers(term=""):
+    term = request.args["q"]
+    officers = Officer.query.filter(
+        (Officer.last_name.ilike("%%{}%%".format(term)))
+        |
+        (Officer.first_name.ilike("%%{}%%".format(term)))
+        ).limit(10)
+    
+    officer_list = list({"id":officer.id,"text":officer.full_name()} for officer in officers)
+    return jsonify({"results":officer_list})

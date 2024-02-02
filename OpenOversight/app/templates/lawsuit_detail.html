@@ -5,16 +5,40 @@ Lawsuit Details
 {% endblock title %}
 {% block meta %}
 <meta name="description" content="Lawsuit details - {{ lawsuit.case_number }} - {{ lawsuit.plaintiff }} v. {{ lawsuit.defendant }}">
-{% endblock %}
+<!-- Google Breadcrumb https://developers.google.com/search/docs/data-types/breadcrumb -->
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [{
+            "@type": "ListItem",
+            "position": 1,
+            "name": "OpenOversight VA",
+            "item": "{{ url_for('main.index', _external=True)|replace('/index','') }}"
+        }, {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Lawsuits",
+            "item": "{{ url_for('main.show_lawsuits', _external=True) }}"
+        }, {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Lawsuit {{ lawsuit.case_number }} - {{ lawsuit.plaintiff }} v. {{ lawsuit.defendant }}"
+        }]
+    }
+</script>
+{% endblock meta %}
 
 {% import "bootstrap/wtf.html" as wtf %}
 
 {% block content %}
 <div class="container theme-showcase" role="main">
-
+  
   {% if (lawsuit) %}
     <article class="lawsuit">
       <header>
+        <br/>
+        <a href="{{ url_for('main.show_lawsuits') }}">All Lawsuits</a>
         <div class="page-header">
           <h1>{{ lawsuit.case_number }} - {{ lawsuit.plaintiff }} v. {{ lawsuit.defendant }}</h1>
           <div class="about">{% if lawsuit.case_link %}
@@ -81,6 +105,28 @@ Lawsuit Details
             <tr>
               <td><strong>External Link</strong></td>
               <td><a href="{{ lawsuit.case_link }}" target="_blank">{{ lawsuit.case_link }}</a></td>
+            </tr>
+            <tr>
+              <td><strong>Departments</strong></td>
+              <td>{% for dept in lawsuit.departments %}
+                    {% if not loop.first %}
+                    &nbsp;|&nbsp;
+                    {% endif %}
+                    <a  href="{{ url_for('main.department_profile', department_id=dept.id) }}">
+                    {{dept.name}}
+                    </a>
+                  {% endfor %}</td>
+            </tr>
+            <tr>
+              <td><strong>Officers</strong></td>
+              <td>{% for officer in lawsuit.officers %}
+                    {% if not loop.first %}
+                    &nbsp;|&nbsp;
+                    {% endif %}
+                    <a  href="{{ url_for('main.officer_profile', officer_id=officer.id) }}">
+                    {{ officer.full_name() }}
+                    </a>
+                  {% endfor %}</td></td>
             </tr>
           </tbody>
         </table>

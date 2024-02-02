@@ -38,8 +38,11 @@ Edit Lawsuit
              {{ wtf.form_field(form.judgment) }}
              {{ wtf.form_field(form.case_link) }}
              {{ wtf.form_field(form.narrative) }}
-             <div class="form-group "><label class="control-label" for="tags">Tags</label>
-                <select class="form-control" id="tags" name="tags[]" multiple="multiple"></select>
+             <div class="form-group "><label class="control-label" for="departments">Departments</label>
+                <select class="form-control" id="departments" name="departments[]" multiple="multiple"></select>
+             </div>
+             <div class="form-group "><label class="control-label" for="officers">Officers</label>
+                <select class="form-control" id="officers" name="officers[]" multiple="multiple"></select>
              </div>
              {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
           </form>
@@ -49,4 +52,75 @@ Edit Lawsuit
     </article>
 
 </div>
+<script>
+    // JS handler for departments, copied from Tags
+    $(document).ready(function() {
+       $("#departments").select2({
+       tags: true,
+       tokenSeparators: [','],
+       dataType: 'json',
+       ajax: {
+              url: '/api/departments',
+              processResults: function(data) {
+                     return {
+                     results: $.map(data.results, function(obj) {
+                            return {
+                               id: obj.id,
+                               text: obj.text
+                            };
+                     })
+                     };
+              }
+              }
+       })
+
+       // Fetch the existing depts and add
+       var deptsSelect = $('#departments');
+       $.ajax({
+              type: 'GET',
+              url: "/lawsuits/{{ lawsuit.id }}/departments"
+       }).then(function (data) {
+              // create the option and append to Select2
+              $.each(data.results, function(i, item) {
+                     var option = new Option(item.text, item.id, true, true);
+                     deptsSelect.append(option).trigger('change');
+              });
+       });
+    });
+
+    // JS handler for officers, copied from Tags
+    $(document).ready(function() {
+       $("#officers").select2({
+       tags: true,
+       tokenSeparators: [','],
+       dataType: 'json',
+       ajax: {
+              url: '/api/officers',
+              processResults: function(data) {
+                     return {
+                     results: $.map(data.results, function(obj) {
+                            return {
+                               id: obj.id,
+                               text: obj.text
+                            };
+                     })
+                     };
+              }
+              }
+       })
+
+       // Fetch the existing depts and add
+       var offSelect = $('#officers');
+       $.ajax({
+              type: 'GET',
+              url: "/lawsuits/{{ lawsuit.id }}/officers"
+       }).then(function (data) {
+              // create the option and append to Select2
+              $.each(data.results, function(i, item) {
+                     var option = new Option(item.text, item.id, true, true);
+                     offSelect.append(option).trigger('change');
+              });
+       });
+    });
+  </script>
 {% endblock content %}
