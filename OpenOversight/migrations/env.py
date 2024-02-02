@@ -82,7 +82,8 @@ with app.app_context():
     target_metadata = current_app.extensions["migrate"].db.metadata
 
     db.app = app
-    db.create_all()
+    #db.create_all() # KF 2024 - this is a terrible idea, it breaks migrations by creating new objs before they're detected
+    # see https://github.com/miguelgrinberg/Flask-Migrate/issues/378
 
     if context.is_offline_mode():
         run_migrations_offline()

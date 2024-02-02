@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}
+Lawsuit Details
+{% endblock title %}
+{% block meta %}
+<meta name="description" content="Lawsuit details - {{ lawsuit.case_number }} - {{ lawsuit.plaintiff }} v. {{ lawsuit.defendant }}">
+{% endblock %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+<div class="container theme-showcase" role="main">
+
+  {% if (lawsuit) %}
+    <article class="lawsuit">
+      <header>
+        <div class="page-header">
+          <h1>{{ lawsuit.case_number }} - {{ lawsuit.plaintiff }} v. {{ lawsuit.defendant }}</h1>
+          <div class="about">{% if lawsuit.case_link %}
+                              <a href="{{ lawsuit.case_link }}" target="_blank">View on CourtListener <i class="fa fa-external-link"></i></a>
+                              {% endif %}</div>
+          {% if current_user.is_area_coordinator or current_user.is_administrator %}
+            <div class="row">
+              <div class="col-sm-12 col-md-6">
+                <a class="btn btn-primary"
+                   href="{{ url_for('main.edit_lawsuit', lawsuit_id=lawsuit.id) }}"
+                   role="button">Edit</a>
+                <a class="btn btn-danger"
+                   href="{{ url_for('main.delete_lawsuit', lawsuit_id=lawsuit.id) }}"
+                   role="button">Delete</a>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </header>
+      <p class="body">
+        <table class="table table-hover table-responsive">
+          <tbody>
+            <tr>
+              <td><strong>Court</strong></td>
+              <td>{{ lawsuit.court_code }}</td>
+            </tr>
+            <tr>
+              <td><strong>Filing Nature</strong></td>
+              <td>{{ lawsuit.filing_nature }}</td>
+            </tr>
+            <tr>
+              <td><strong>Code Section</strong></td>
+              <td>{{ lawsuit.code_section }}</td>
+            </tr>
+            <tr>
+              <td><strong>Plaintiff</strong></td>
+              <td>{{ lawsuit.plaintiff }}</td>
+            </tr>
+            <tr>
+              <td><strong>Defendant</strong></td>
+              <td>{{ lawsuit.defendant }}</td>
+            </tr>
+            <tr>
+              <td><strong>Location (plaintiff)</strong></td>
+              <td>{{ lawsuit.location }}</td>
+            </tr>
+            <tr>
+              <td><strong>Filed Date</strong></td>
+              <td>{{ lawsuit.filed_date | display_date }}</td>
+            </tr>
+            <tr>
+              <td><strong>Termination Date</strong></td>
+              <td>{% if lawsuit.end_date %}{{ lawsuit.end_date | display_date }}
+                  {% else %}Pending{% endif %}</td>
+            </tr>
+            <tr>
+              <td><strong>Disposition</strong></td>
+              <td>{{ lawsuit.disposition }}</td>
+            </tr>
+            <tr>
+              <td><strong>Judgment</strong></td>
+              <td>{{ lawsuit.judgment }}</td>
+            </tr>
+            <tr>
+              <td><strong>External Link</strong></td>
+              <td><a href="{{ lawsuit.case_link }}" target="_blank">{{ lawsuit.case_link }}</a></td>
+            </tr>
+          </tbody>
+        </table>
+        <div>
+          {% if lawsuit.narrative %}
+          <h2>Narrative</h2>
+          <p>
+            {{ lawsuit.narrative | markdown }}
+          </p>
+          {% endif %}
+        </div>
+      </p>
+    </article>
+  {% else %}
+  Lawsuit not found
+  {% endif %}
+
+</div>
+{% endblock content %}

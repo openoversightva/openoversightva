@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block title %}
+  View lawsuits - OpenOversight VA
+{% endblock title %}
+{% block meta %}
+  {% if lawsuits.items|length > 0 %}
+    <meta name="description"
+          content="View all lawsuits for {{ department.name if department else 'OpenOversight' }}.">
+  {% else %}
+    <meta name="description" content="No lawsuits found.">
+  {% endif %}
+{% endblock meta %}
+{% block content %}
+  <div class="container" role="main">
+    <h1>Lawsuits</h1>
+    {% if department %}
+      <h2>
+        <small>{{ department.name }}</small>
+      </h2>
+    {% endif %}
+    {% if current_user.is_area_coordinator or current_user.is_administrator %}
+      <a href="{{ url_for('main.add_lawsuit') }}">
+        <i class="fa fa-plus" aria-hidden="true"></i> Create New
+      </a>
+    {% endif %}
+    <div class="row">
+      <div class="search-results col-sm-9">
+        {% with paginate=lawsuits, location="top" %}
+          {% include "partials/paginate_nav.html" %}
+        {% endwith %}
+        <ul class="list-group">
+          {% if "lawsuits.items" %}
+            <table class="table table-hover table-responsive">
+              <tbody>
+                {% for lawsuit in lawsuits.items %}
+                  {% if not loop.first %}
+                    <tr class="border:none">
+                      <td colspan="2">&nbsp;</td>
+                    </tr>
+                  {% endif %}
+                  <tr>
+                    <td colspan="2" style="border-top: 0; ">
+                      <h3>
+                        <a href="{{ url_for('main.show_lawsuit', lawsuit_id=lawsuit.id) }}"
+                          id="lawsuit-{{ loop.index }}">
+                        {{ lawsuit.case_number }} - {{ lawsuit.plaintiff }} v. {{ lawsuit.defendant }}
+                        </a>
+                        {% if current_user.is_area_coordinator or current_user.is_administrator %}
+                          <a href="{{ url_for('main.edit_lawsuit', lawsuit_id=lawsuit.id) }}">
+                            <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                          </a>
+                        {% endif %}
+                      </h3>
+                      <div class="row">
+                        <div class="col-md-6 col-xs-6">
+                          <dl>
+                            <dt>Case Type</dt>
+                            <dd>
+                              {{ lawsuit.filing_nature }} - {{ lawsuit.code_section }}
+                            </dd>
+                            <dt>Filed Date</dt>
+                            <dd>
+                              {{ lawsuit.filed_date | display_date }}
+                            </dd>
+                            <dt>Termination Date</dt>
+                            <dd>
+                              {% if lawsuit.end_date %}{{ lawsuit.end_date | display_date }}{% else %}Pending{% endif %}
+                            </dd>
+                          </dl>
+                        </div>
+                        <div class="col-md-6 col-xs-6">
+                          <dl>
+                            <dt>External Link</dt>
+                            <dd>
+                              {% if lawsuit.case_link %}
+                              <a href="{{ lawsuit.case_link }}" target="_blank">View on CourtListener <i class="fa fa-external-link"></i></a>
+                              {% else %}
+                              (none yet)
+                              {% endif %}
+                            </dd>
+                            <dt>Disposition</dt>
+                            <dd>
+                              {{ lawsuit.disposition | default('Unknown') }}
+                            </dd>
+                          </dl>
+                        </div>
+                      </div>
+                      <div>
+                        <strong>Departments involved</strong><br />
+                        {% for dept in lawsuit.departments %}{% if not loop.first %}, {% endif %}{{ dept.name }}{% endfor %}
+                      </div>
+                      <div>
+                        <strong>Officers involved</strong><br />
+                        {% for officer in lawsuit.departments %}{% if not loop.first %}, {% endif %}{{ officer.full_name() }}{% endfor %}
+                      </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p>There are no lawsuits loaded yet.</p>
+          {% endif %}
+        </ul>
+        {% if current_user.is_administrator or current_user.is_area_coordinator %}
+          <a href="#"
+             class="btn btn-primary"
+             role="button">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            Add New Lawsuit
+          </a>
+        {% endif %}
+        {% with paginate=lawsuits, location="bottom" %}
+          {% include "partials/paginate_nav.html" %}
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+{% block js_footer %}
+{% endblock js_footer %}

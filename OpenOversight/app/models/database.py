@@ -504,32 +504,6 @@ class Face(BaseModel, TrackUpdates):
     def __repr__(self):
         return f"<Tag ID {self.id}: {self.officer_id} - {self.img_id}>"
 
-# OOVA
-class Document(BaseModel, TrackUpdates):
-    __tablename__ = "documents"
-
-    id = db.Column(db.Integer, primary_key=True)
-    filepath = db.Column(db.String(255), unique=False)
-    previewpath = db.Column(db.String(255), unique=False)
-    hash_doc = db.Column(db.String(120), unique=False, nullable=True)
-
-    department_id = db.Column(db.Integer, db.ForeignKey("departments.id"))
-    department = db.relationship("Department", backref="documents")
-
-    title = db.Column(db.String(100), index=True)
-    url = db.Column(db.Text(), nullable=False)
-    doc_type = db.Column(db.String(100), index=True)
-    description = db.Column(db.Text(), nullable=True)
-
-    tags = db.relationship(
-        "Tag",
-        secondary=document_tags,
-        backref=db.backref("documents", lazy=True))
-    
-    def __repr__(self):
-        return "<Document ID {}: {}>".format(self.id, self.filepath)
-
-
 class Image(BaseModel, TrackUpdates):
     __tablename__ = "raw_images"
 
@@ -553,64 +527,6 @@ class Image(BaseModel, TrackUpdates):
 
     def __repr__(self):
         return f"<Image ID {self.id}: {self.filepath}>"
-
-# OOVA - for blog
-class Post(BaseModel, TrackUpdates):
-    __tablename__ = "posts"
-
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255), unique=False)
-    body = db.Column(db.Text, unique=False)
-
-# OOVA - for imports
-class Sheet(BaseModel):
-    __tablename__ = "import_sheets"
-
-    id = db.Column(db.Integer, primary_key=True)
-    filepath = db.Column(db.String(255), unique=False)
-    hash_sheet = db.Column(db.String(120), unique=False, nullable=True)
-    # Track when the CSV was put into our database
-    date_inserted = db.Column(db.DateTime, unique=False, nullable=True)
-    date_loaded = db.Column(db.DateTime, unique=False, nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
-    user = db.relationship("User", backref="sheets")
-    # json dict mapping CSV cols to column names
-    column_mapping = db.Column(db.String, unique=False)
-
-    def __repr__(self):
-        return "<Sheet ID {}: {}>".format(self.id, self.filepath)
-
-# OOVA - for imports
-class SheetDetail(BaseModel):
-    __tablename__ = "import_sheet_details"
-    # composite primary key (sheet_id, row_id)
-    sheet_id = db.Column(db.Integer, db.ForeignKey("import_sheets.id"), primary_key=True)
-    sheet = db.relationship("Sheet", backref="import_sheet_details")
-    row_id = db.Column(db.Integer, primary_key=True)
-    ## Calculated fields
-    # avoid Relationships here bc it will try to auto-update them
-    # candidate officer id
-    officer_id = db.Column(db.Integer, nullable=True)
-    department_id = db.Column(db.Integer, nullable=True)
-    unit_id = db.Column(db.Integer, nullable=True)
-    job_id = db.Column(db.Integer, nullable=True)
-    status = db.Column(db.String, unique=False, nullable=True)
-    ## Raw fields
-    last_name = db.Column(db.String, unique=False, nullable=True)
-    first_name = db.Column(db.String, unique=False, nullable=True)
-    middle_initial = db.Column(db.String, unique=False, nullable=True)
-    suffix = db.Column(db.String, unique=False, nullable=True)
-    badge_number = db.Column(db.String, unique=False, nullable=True)
-    rank_title = db.Column(db.String, unique=False, nullable=True)
-    unit_name = db.Column(db.String, unique=False, nullable=True)
-    gender = db.Column(db.String, unique=False, nullable=True)
-    race = db.Column(db.String, unique=False, nullable=True)
-    employment_date = db.Column(db.String, unique=False, nullable=True)
-    salary = db.Column(db.String, unique=False, nullable=True)
-    salary_overtime = db.Column(db.String, unique=False, nullable=True)
-    salary_year = db.Column(db.String, unique=False, nullable=True)
-    salary_is_fy = db.Column(db.String, unique=False, nullable=True)
-    agency_name = db.Column(db.String, unique=False, nullable=True)
 
 incident_links = db.Table(
     "incident_links",
@@ -987,11 +903,186 @@ class User(UserMixin, BaseModel):
         return f"<User {self.username!r}>"
 
 # OOVA
+class Document(BaseModel, TrackUpdates):
+    __tablename__ = "documents"
+
+    id = db.Column(db.Integer, primary_key=True)
+    filepath = db.Column(db.String(255), unique=False)
+    previewpath = db.Column(db.String(255), unique=False)
+    hash_doc = db.Column(db.String(120), unique=False, nullable=True)
+
+    department_id = db.Column(db.Integer, db.ForeignKey("departments.id"))
+    department = db.relationship("Department", backref="documents")
+
+    title = db.Column(db.String(100), index=True)
+    url = db.Column(db.Text(), nullable=False)
+    doc_type = db.Column(db.String(100), index=True)
+    description = db.Column(db.Text(), nullable=True)
+
+    tags = db.relationship(
+        "Tag",
+        secondary=document_tags,
+        backref=db.backref("documents", lazy=True))
+    
+    def __repr__(self):
+        return "<Document ID {}: {}>".format(self.id, self.filepath)
+
+# OOVA - for blog
+class Post(BaseModel, TrackUpdates):
+    __tablename__ = "posts"
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), unique=False)
+    body = db.Column(db.Text, unique=False)
+
+# OOVA - for imports
+class Sheet(BaseModel):
+    __tablename__ = "import_sheets"
+
+    id = db.Column(db.Integer, primary_key=True)
+    filepath = db.Column(db.String(255), unique=False)
+    hash_sheet = db.Column(db.String(120), unique=False, nullable=True)
+    # Track when the CSV was put into our database
+    date_inserted = db.Column(db.DateTime, unique=False, nullable=True)
+    date_loaded = db.Column(db.DateTime, unique=False, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    user = db.relationship("User", backref="sheets")
+    # json dict mapping CSV cols to column names
+    column_mapping = db.Column(db.String, unique=False)
+
+    def __repr__(self):
+        return "<Sheet ID {}: {}>".format(self.id, self.filepath)
+
+# OOVA - for imports
+class SheetDetail(BaseModel):
+    __tablename__ = "import_sheet_details"
+    # composite primary key (sheet_id, row_id)
+    sheet_id = db.Column(db.Integer, db.ForeignKey("import_sheets.id"), primary_key=True)
+    sheet = db.relationship("Sheet", backref="import_sheet_details")
+    row_id = db.Column(db.Integer, primary_key=True)
+    ## Calculated fields
+    # avoid Relationships here bc it will try to auto-update them
+    # candidate officer id
+    officer_id = db.Column(db.Integer, nullable=True)
+    department_id = db.Column(db.Integer, nullable=True)
+    unit_id = db.Column(db.Integer, nullable=True)
+    job_id = db.Column(db.Integer, nullable=True)
+    status = db.Column(db.String, unique=False, nullable=True)
+    ## Raw fields
+    last_name = db.Column(db.String, unique=False, nullable=True)
+    first_name = db.Column(db.String, unique=False, nullable=True)
+    middle_initial = db.Column(db.String, unique=False, nullable=True)
+    suffix = db.Column(db.String, unique=False, nullable=True)
+    badge_number = db.Column(db.String, unique=False, nullable=True)
+    rank_title = db.Column(db.String, unique=False, nullable=True)
+    unit_name = db.Column(db.String, unique=False, nullable=True)
+    gender = db.Column(db.String, unique=False, nullable=True)
+    race = db.Column(db.String, unique=False, nullable=True)
+    employment_date = db.Column(db.String, unique=False, nullable=True)
+    salary = db.Column(db.String, unique=False, nullable=True)
+    salary_overtime = db.Column(db.String, unique=False, nullable=True)
+    salary_year = db.Column(db.String, unique=False, nullable=True)
+    salary_is_fy = db.Column(db.String, unique=False, nullable=True)
+    agency_name = db.Column(db.String, unique=False, nullable=True)
+
+
+# OOVA
 class Tag(BaseModel):
     __tablename__ = "tags"
 
     id = db.Column(db.Integer, primary_key=True)
     tag = db.Column(db.String(100), index=True)
+
+
+# OOVA    
+officer_lawsuits = db.Table(
+    "officer_cases",
+    db.Column(
+        "officer_id",
+        db.Integer,
+        db.ForeignKey("officers.id", name="officer_lawsuits_officer_id_fkey"),
+        primary_key=True,
+    ),
+    db.Column(
+        "case_id",
+        db.Integer,
+        db.ForeignKey("cases.id", name="officer_lawsuits_case_id_fkey"),
+        primary_key=True,
+    ),
+    db.Column(
+        "created_at",
+        db.DateTime(timezone=True),
+        nullable=False,
+        server_default=sql_func.now(),
+        unique=False,
+    ),
+)
+# OOVA
+department_lawsuits = db.Table(
+    "department_cases",
+    db.Column(
+        "department_id",
+        db.Integer,
+        db.ForeignKey("departments.id", name="department_lawsuits_department_id_fkey"),
+        primary_key=True,
+    ),
+    db.Column(
+        "case_id",
+        db.Integer,
+        db.ForeignKey("cases.id", name="department_lawsuits_case_id_fkey"),
+        primary_key=True,
+    ),
+    db.Column(
+        "created_at",
+        db.DateTime(timezone=True),
+        nullable=False,
+        server_default=sql_func.now(),
+        unique=False,
+    ),
+)
+
+# OOVA
+class Lawsuit(BaseModel, TrackUpdates):  # aka civil cases against officers/depts
+    __tablename__ = 'cases'
+
+    id = db.Column(db.Integer, primary_key=True)
+    court_code = db.Column(db.String)
+    case_number = db.Column(db.String)
+    location = db.Column(db.String)
+    filed_date = db.Column(db.Date)
+    filing_nature = db.Column(db.String)
+    code_section = db.Column(db.String)
+    plaintiff = db.Column(db.String)
+    defendant = db.Column(db.String)
+    disposition = db.Column(db.String)
+    judgment = db.Column(db.String)
+    end_date = db.Column(db.Date)
+    case_link = db.Column(db.String)
+    narrative = db.Column(db.String)
+    # these cols only used by certain types of cases
+    pacer_link = db.Column(db.String)
+    # criminal cases
+    #charge            # e.g. "grand larcency"
+    #charge_type       # felony, misdemeanor, etc
+    # race (of defendant)
+    # sex (def)
+    # address (def city, state, zip)
+    # dob (def)
+
+    officers = db.relationship(
+        "Officer",
+        secondary=officer_lawsuits,
+        lazy="subquery",
+        backref=db.backref("lawsuits"),
+    )
+    departments = db.relationship(
+        "Department",
+        secondary=department_lawsuits,
+        lazy="subquery",
+        backref=db.backref("lawsuits"),
+    )
+    
+
 
 # moved to models/database_imports.py
 # @login_manager.user_loader

@@ -73,7 +73,9 @@ from OpenOversight.app.main.forms import (
     PostForm,
     AddSheetForm, 
     SheetMapForm, 
-    SheetMatchForm
+    SheetMatchForm,
+    LawsuitListForm,
+    LawsuitEditForm,
 )
 from OpenOversight.app.main.model_view import ModelView
 from OpenOversight.app.models.database import (
@@ -99,6 +101,7 @@ from OpenOversight.app.models.database import (
     Sheet,
     SheetDetail,
     Tag,
+    Lawsuit
 )
 from OpenOversight.app.models.database_cache import (
     get_database_cache_entry,
@@ -3520,3 +3523,114 @@ def show_map():
 
     return render_template(
         "map.html", agencies=agencies)
+
+@main.route("/lawsuits")
+def show_lawsuits(page=1,
+        case_number=None,
+        ):
+    CASES_PER_PAGE = int(current_app.config[KEY_OFFICERS_PER_PAGE])
+
+    form = LawsuitListForm()
+    lawsuits = Lawsuit.query
+    # Set form data based on URL
+    if request.args.get("page"):
+        page = int(request.args.get("page"))
+    if request.args.get("case_number"):
+        form.case_number.data = request.args.get("case_number")
+    if form.case_number.data:
+        lawsuits = lawsuits.filter(
+            Lawsuit.case_number.contains(form.case_number.data.strip())
+        )
+    if request.args.get("party"):
+        form.party.data = request.args.get("party")
+    if form.party.data:
+        lawsuits = lawsuits.filter(
+            (Lawsuit.plaintiff.contains(form.party.data))
+            |
+            (Lawsuit.defendant.contains(form.party.data))
+        )
+
+    lawsuits = lawsuits.order_by(Lawsuit.filed_date.desc())
+    lawsuits = lawsuits.paginate(page=page, per_page=CASES_PER_PAGE, error_out=False)
+
+    next_url = url_for("main.show_lawsuits",
+                       page=lawsuits.next_num,
+                       case_number=form.case_number.data,
+                       party=form.party.data)
+    prev_url = url_for("main.show_lawsuits",
+                       page=lawsuits.prev_num,
+                       case_number=form.case_number.data,
+                       party=form.party.data)
+
+    return render_template(
+        "lawsuits_list.html",
+        lawsuits=lawsuits,
+        form=form,
+        next_url=next_url,
+        prev_url=prev_url)
+
+@main.route("/lawsuits/<int:lawsuit_id>")
+def show_lawsuit(lawsuit_id):
+    lawsuit = Lawsuit.query.filter_by(id=lawsuit_id).first()
+    if not lawsuit:
+        flash("Lawsuit not found")
+        abort(HTTPStatus.NOT_FOUND)
+    return render_template(
+        "lawsuit_detail.html",
+        lawsuit=lawsuit)
+
+@login_required
+@ac_or_admin_required
+@main.route("/lawsuits/new", methods=[HTTPMethod.GET, HTTPMethod.POST])
+def add_lawsuit():
+    return edit_lawsuit(None)
+
+@main.route("/lawsuits/<int:lawsuit_id>/edit",
+    methods=[HTTPMethod.GET, HTTPMethod.POST],
+)
+@login_required
+@ac_or_admin_required
+def edit_lawsuit(lawsuit_id=None):
+    lawsuit = Lawsuit.query.filter_by(id=lawsuit_id).first()
+    form = LawsuitEditForm(obj=lawsuit)
+
+    if form.validate_on_submit():
+        if not lawsuit: # add new
+            lawsuit = Lawsuit()
+            db.session.add(lawsuit)
+        lawsuit.case_number = form.case_number.data
+        lawsuit.court_code = form.court_code.data
+        lawsuit.location = form.location.data
+        lawsuit.filed_date = form.filed_date.data
+        lawsuit.filing_nature = form.filing_nature.data
+        lawsuit.code_section = form.code_section.data
+        lawsuit.plaintiff = form.plaintiff.data
+        lawsuit.defendant = form.defendant.data
+        lawsuit.disposition = form.disposition.data
+        lawsuit.judgment = form.judgment.data
+        lawsuit.end_date = form.end_date.data
+        lawsuit.case_link = form.case_link.data
+        lawsuit.narrative = form.narrative.data
+        db.session.flush()
+        db.session.commit()
+        flash(f"Lawsuit {lawsuit.id} edited")
+        return redirect(url_for("main.show_lawsuit", lawsuit_id=lawsuit.id))
+
+    if form.errors:
+        current_app.logger.info(form.errors)
+        flash("Error: " + str(form.errors))
+
+    return render_template(
+        "lawsuit_edit.html",
+        lawsuit=lawsuit,
+        form=form)
+
+@login_required
+@ac_or_admin_required
+@main.route("/lawsuits/<int:lawsuit_id>/delete", methods=[HTTPMethod.GET])
+def delete_lawsuit(lawsuit_id):
+    lawsuit = Lawsuit.query.filter_by(id=lawsuit_id).first()
+    db.session.delete(lawsuit)
+    db.session.commit()
+    flash("Lawsuit deleted")
+    return redirect(url_for("main.show_lawsuits"))
