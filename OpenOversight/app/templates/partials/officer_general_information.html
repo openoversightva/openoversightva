@@ -80,5 +80,9 @@
         </tr>
       </tbody>
     </table>
+    {% if officer.tags %}
+    <b>Tags</b> 
+    {% for tag in officer.tags %}{% if not loop.first %}, {% endif %}{{ tag.tag }}{% endfor %}
+    {% endif %}
   </div>
 </div>

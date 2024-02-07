@@ -698,3 +698,8 @@ table.display th, table.display td {
 .import-generated {
     background-color: #99cc99;
 }
+
+/* fix display overflow */
+#add-assignment-form {
+    overflow: hidden;
+}

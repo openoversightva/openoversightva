@@ -71,7 +71,7 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-            <a class="navbar-link navbar-brand" href="{{ url_for("main.index") }}">OpenOversight<span style="color:#f9285c">VA</span></a>
+            <a class="navbar-link navbar-brand" href="{{ url_for('main.index') }}">OpenOversight<span style="color:#f9285c">VA</span></a>
           </div>
           <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
@@ -88,6 +88,9 @@
                 <a class="navbar-link" href="/documents">FOIA Library</a>
               </li>
               <li>
+                <a class="navbar-link" href="/lawsuits">Lawsuits</a>
+              </li>
+              <li>
                 <a class="navbar-link" href="/submit">Submit Images</a>
               </li>
               <li>
@@ -97,11 +100,6 @@
                 <a class="navbar-link" href="/labels">Volunteer</a>
               </li>
               <!--<li><a class="navbar-link" href="/about">About</a></li>-->
-              {% if current_user and current_user.is_administrator %}
-                <li>
-                  <a class="navbar-link" href="{{ url_for("auth.get_users") }}">Users</a>
-                </li>
-              {% endif %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
               {% if current_user and current_user.is_authenticated %}
@@ -110,6 +108,7 @@
                   <ul class="dropdown-menu">
                     {% if current_user and current_user.is_administrator %}
                     <li><a class="navbar-link" href="/admin">Admin Page</a></li>
+                    <li><a class="navbar-link" href="{{ url_for("auth.get_users") }}">Users</a></li>
                     {% endif%}
                     <li><a class="navbar-link" href="{{ url_for('main.profile', username=current_user.username) }}">Profile</a></li>
                     <li><a class="navbar-link" href="{{ url_for('auth.change_password') }}">Change Password</a></li>

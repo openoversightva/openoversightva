@@ -714,3 +714,32 @@ class PostForm(Form):
     title = StringField("Title")
     body = TextAreaField("Post Body", render_kw={"class": "form-control", "rows": 10})
     submit = SubmitField(label="Submit")
+
+class LawsuitListForm(Form):
+    #department_id = QuerySelectField("Department", validators=[Optional()], query_factory=dept_choices,
+    #    get_label="display_name", allow_blank=True, blank_text='(All Departments)')
+    case_number = StringField("Case Number")
+    party = StringField("Plaintiff or Defendant")
+    include_pending = BooleanField("Include Open/Pending", default=None, validators=[Optional()])
+    #occurred_before = DateField("Occurred Before")
+    #occurred_after = DateField("Occurred After")
+    submit = SubmitField(label="Submit")
+
+class LawsuitEditForm(Form):
+    id = HiddenField()
+    case_number = StringField("Case Number")
+    court_code = StringField("Court")
+    location = StringField("Location")
+    filed_date = DateField("Filed Date",validators=[Optional()])
+    filing_nature = StringField("Filing Nature")
+    code_section = StringField("Code Section")
+    plaintiff = StringField("Plaintiff")
+    defendant = StringField("Defendant")
+    disposition = StringField("Disposition")
+    judgment = StringField("Judgment")
+    end_date = DateField("Termination Date",validators=[Optional()])
+    case_link = StringField("External Link")
+    narrative = TextAreaField("Case Narrative")
+    # these cols only used by certain types of cases
+    #pacer_link = StringField("PACER Link")
+    submit = SubmitField(label="Submit")

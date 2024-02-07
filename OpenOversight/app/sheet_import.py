@@ -240,9 +240,11 @@ Final stage! Insert/update records into the database!
 
 """
 def load_sheet(sheet_id):
-    details = SheetDetail.query.filter_by(sheet_id=sheet_id)\
-            .order_by(SheetDetail.row_id).all()
-    for row in details:
+    #details = SheetDetail.query.filter_by(sheet_id=sheet_id)\
+    #        .order_by(SheetDetail.row_id).all()
+    for row in SheetDetail.query.filter_by(
+                sheet_id=sheet_id
+            ).order_by(SheetDetail.row_id):
         if (row.status is not None) and (row.status[0:2] == 'OK'):
             continue     #skip this row
         if row.officer_id is None:
