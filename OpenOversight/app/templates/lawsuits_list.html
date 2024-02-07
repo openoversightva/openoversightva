@@ -30,6 +30,7 @@
         <form class="form" method="get" role="form">
           <div class="panel">{{ wtf.form_field(form.case_number) }}</div>
           <div class="panel">{{ wtf.form_field(form.party) }}</div>
+          <div class="panel">{{ wtf.form_field(form.include_pending) }}</div>
           <div class="panel">{{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}</div>
         </form>
       </div>
@@ -89,7 +90,7 @@
                             </dd>
                             <dt>Disposition</dt>
                             <dd>
-                              {{ lawsuit.disposition | default('Unknown') }}
+                              {% if lawsuit.disposition %}{{ lawsuit.disposition }}{% else %}Pending{% endif %}
                             </dd>
                           </dl>
                         </div>
@@ -100,7 +101,7 @@
                       </div>
                       <div>
                         <strong>Officers involved</strong><br />
-                        {% for officer in lawsuit.departments %}{% if not loop.first %}, {% endif %}{{ officer.full_name() }}{% endfor %}
+                        {% for officer in lawsuit.officers %}{% if not loop.first %}, {% endif %}{{ officer.full_name() }}{% endfor %}
                       </div>
                   </td>
                 </tr>

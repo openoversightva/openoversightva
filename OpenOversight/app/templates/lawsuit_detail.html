@@ -106,6 +106,12 @@ Lawsuit Details
               <td><strong>External Link</strong></td>
               <td><a href="{{ lawsuit.case_link }}" target="_blank">{{ lawsuit.case_link }}</a></td>
             </tr>
+            {% if lawsuit.pacer_link %}
+            <tr>
+              <td><strong>PACER Link</strong></td>
+              <td><a href="{{ lawsuit.pacer_link }}" target="_blank">{{ lawsuit.pacer_link }}</a></td>
+            </tr>
+            {% endif %}
             <tr>
               <td><strong>Departments</strong></td>
               <td>{% for dept in lawsuit.departments %}

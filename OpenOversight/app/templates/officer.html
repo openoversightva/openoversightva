@@ -128,6 +128,11 @@
         {% if officer.incidents or is_admin_or_coordinator %}
           {% include "partials/officer_incidents.html" %}
         {% endif %}
+
+        {% if officer.lawsuits %}
+          {% include "partials/officer_lawsuits.html" %}
+        {% endif %}
+        
         {% with obj=officer %}
           {% include "partials/links_and_videos_row.html" %}
         {% endwith %}

@@ -720,7 +720,7 @@ class LawsuitListForm(Form):
     #    get_label="display_name", allow_blank=True, blank_text='(All Departments)')
     case_number = StringField("Case Number")
     party = StringField("Plaintiff or Defendant")
-    #narrative_search = StringField("Search Narrative")
+    include_pending = BooleanField("Include Open/Pending", default=None, validators=[Optional()])
     #occurred_before = DateField("Occurred Before")
     #occurred_after = DateField("Occurred After")
     submit = SubmitField(label="Submit")

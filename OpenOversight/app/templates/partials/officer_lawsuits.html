@@ -1,0 +1,13 @@
+<h3>Lawsuits</h3>
+{% if officer.lawsuits %}
+  <ul class="list-group">
+    {% for lawsuit in officer.lawsuits %}
+      <li class="list-group-item">
+        <a href="{{ url_for('main.show_lawsuit', lawsuit_id=lawsuit.id) }}">
+        {{ lawsuit.case_number }} - {{ lawsuit.plaintiff }} v. {{ lawsuit.defendant }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+

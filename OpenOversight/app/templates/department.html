@@ -183,17 +183,35 @@
               </a>
             </div>
           </div>
+          {% if dept.lawsuits %}
+          <div class="thumbnail">
+            <div class="caption">
+              <h3>Lawsuits</h3>
+              <ul class="list-group">
+              {% for lawsuit in dept.lawsuits %}
+                <li class="list-group-item">
+                  <a href="{{ url_for('main.show_lawsuit', lawsuit_id=lawsuit.id) }}">
+                  {{ lawsuit.case_number }} - {{ lawsuit.plaintiff }} v. {{ lawsuit.defendant }}
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
       <div class="col-md-6">
         {% if dept.narrative %}
-          <div class="thumbnail">
-            <div class="caption">
-              {{ dept.narrative|markdown }}
-            </div>
+        <div class="thumbnail">
+          <div class="caption">
+            {{ dept.narrative|markdown }}
           </div>
+        </div>
         {% endif %}
+
         {% if dept.id != 2321 %}
+        <h3>Map</h3>
         <div style="max-width:100%;overflow:hidden;color:red;width:500px;height:500px;">
         <div id="my-map-canvas" style="height:100%; width:100%;max-width:100%;">
         <iframe style="height:100%;width:100%;border:0;" frameborder="0" src="https://www.google.com/maps/embed/v1/place?q={{ dept.name.replace(' ','+') }}+Virginia&key=AIzaSyCYy1kK8nb6I1wyKTKmWr7xU7Z0p_n8kkM"></iframe>
