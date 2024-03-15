@@ -29,7 +29,7 @@ from flask_wtf import FlaskForm
 
 from sqlalchemy import select, func, distinct, literal_column, case
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import contains_eager, joinedload, selectinload
+from sqlalchemy.orm import aliased, contains_eager, joinedload, selectinload
 from sqlalchemy.orm.exc import NoResultFound
 
 
@@ -77,6 +77,8 @@ from OpenOversight.app.main.forms import (
     SheetMatchForm,
     LawsuitListForm,
     LawsuitEditForm,
+    DupOfficerForm,
+    DupMergeForm,
 )
 from OpenOversight.app.main.model_view import ModelView
 from OpenOversight.app.models.database import (
@@ -102,7 +104,8 @@ from OpenOversight.app.models.database import (
     Sheet,
     SheetDetail,
     Tag,
-    Lawsuit
+    Lawsuit,
+    DupOfficerMatches,
 )
 from OpenOversight.app.models.database_cache import (
     get_database_cache_entry,
@@ -169,6 +172,11 @@ from OpenOversight.app.sheet_import import (
     match_officers,
     load_sheet,
     bulk_expire_officers
+)
+
+from OpenOversight.app.officer_matching import (
+    duplicate_officer_bulk_search,
+    merge_officers,
 )
 
 # Ensure the file is read/write by the creator only
@@ -3697,6 +3705,59 @@ def get_pacer_link(lawsuit_id):
         current_app.logger.error(inst)
         return {'status': 'error', 'message': str(inst), 'resp': resp.text}
     return {'status': 'no_case_found', 'message': resp.content}
+
+@login_required
+@ac_or_admin_required
+@main.route("/duplicates", methods=[HTTPMethod.GET, HTTPMethod.POST])
+def dup_officer_list(): # todo: filter by department?
+    form = DupOfficerForm()
+    if form.validate_on_submit():
+        # run a new search to refresh the underlying Matches table 
+        duplicate_officer_bulk_search()
+    matches = DupOfficerMatches.query
+    # Set form data based on URL
+    if request.args.get("include_all"):
+        form.include_all.data = request.args.get("include_all")
+    if not form.include_all.data:
+        # by default, hide matches with the Excluded flag on
+        matches = matches.filter_by(excluded=False)
+
+    matches = matches.order_by(DupOfficerMatches.match_score.desc())
+
+    return render_template(
+        "matching/dup_list.html",
+        matches=matches,
+        form=form)
+
+@login_required
+@ac_or_admin_required
+@main.route("/duplicates/details", methods=[HTTPMethod.GET, HTTPMethod.POST])
+def dup_officer_details(id_1=None,id2=None): 
+    form = DupMergeForm()
+    try:
+        id_1 = int(request.args.get("id1"))
+        id_2 = int(request.args.get("id2"))
+        officer1 = Officer.query.filter_by(id=id_1).one()
+        officer2 = Officer.query.filter_by(id=id_2).one()
+    except Exception:
+        flash("Invalid Officer IDs")
+        return redirect(url_for("main.dup_officer_list"))
+
+    if form.validate_on_submit():
+        # merge one of the records into the other one
+        if "merge1" in request.form:
+            merge_officers(keep_me=officer2, delete_me=officer1)
+            flash(f"Officer {id_1} merged into {id_2} and deleted")
+        elif "merge2" in request.form:
+            merge_officers(keep_me=officer1, delete_me=officer2)
+            flash(f"Officer {id_2} merged into {id_1} and deleted")
+        return redirect(url_for("main.dup_officer_list"))
+
+    return render_template(
+        "matching/dup_details.html",
+        officer1=officer1,
+        officer2=officer2,
+        form=form)
 
 # return JSON list of all (optionally filtered) departments. copied from tags
 @main.route("/api/departments",

@@ -13,6 +13,7 @@ from flask.cli import with_appcontext
 from OpenOversight.app.utils.constants import ENCODING_UTF_8
 from OpenOversight.app.utils.db import get_officer
 from OpenOversight.app.utils.general import normalize_gender, prompt_yes_no, str_is_true
+from OpenOversight.app.models.database import User, db
 
 from .csv_imports import import_csv_files
 

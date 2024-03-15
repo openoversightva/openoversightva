@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block content %}
+<div class="container theme-showcase" role="main">
+  <div class="text-center frontpage-leads">
+    <h1><small>Duplicate Officer Matching</small></h1>
+  </div>
+  <form class="form"  name = "dupofficerform" id = "dupofficerform" enctype="multipart/form-data" method="post" role="form">
+    <div>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+      {{ wtf.form_field(form.include_all) }}
+    </div>
+     <table class="table table-hover">
+     <tr>
+        <th>ID 1</th>
+        <th>Name</th>
+        <th>Department</th>
+        <th>ID 2</th>
+        <th>Name</th>
+        <th>Department</th>
+        <th>Match Score</th>
+        <th>Details / Merge</th>
+        <th>Exclude</th>
+     </tr>
+     {% for match in matches %}
+      <tr>
+        <td>{{ match.id_1 }}</td>
+        <td>{% if match.officer1 is not none %}{{ match.officer1.full_name() }}{% else %}NONE{% endif %}</td>
+        <td>{% if match.officer1 is not none %}{{ match.officer1.department.display_name }}{% else %}NONE{% endif %}</td>
+        <td>{{ match.id_2 }}</td>
+        <td>{% if match.officer2 is not none %}{{ match.officer2.full_name() }}{% else %}NONE{% endif %}</td>
+        <td>{% if match.officer2 is not none %}{{ match.officer2.department.display_name }}{% else %}NONE{% endif %}</td>
+        <td>{{ '{:03.1f}'.format(match.match_score) }}</td>
+        <td><a href="/duplicates/details?id1={{ match.id_1 }}&id2={{ match.id_2 }}">Details</a></td>
+        <td>{{ match.exclude }}</td>
+      </tr>
+     {% endfor %}
+     </table>
+   </form>
+</div>
+{% endblock %}

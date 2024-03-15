@@ -743,3 +743,22 @@ class LawsuitEditForm(Form):
     # these cols only used by certain types of cases
     #pacer_link = StringField("PACER Link")
     submit = SubmitField(label="Submit")
+
+class DupOfficerForm(Form):
+    include_all = BooleanField("Show All", default=None, validators=[Optional()])
+    submit = SubmitField(label="Refresh matches list")
+
+class DupMergeForm(Form):
+    merge1 = SubmitField(label="Merge into ->")
+    merge2 = SubmitField(label="<- Merge into")
+
+class MatchRow(Form):
+    id_1 = IntegerField("ID 1")
+    name_1 = StringField("Officer 1")
+    dept_1 = StringField("Dept 1")
+    id_2 = IntegerField("ID 2")
+    name_2 = StringField("Officer 2")
+    dept_2 = StringField("Dept 2")
+    match_score = StringField("Match Score")
+    details_link = StringField("Details / Merge")
+    excluded = StringField("Exclude")

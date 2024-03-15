@@ -141,7 +141,7 @@ class Department(BaseModel, TrackUpdates):
     state = db.Column(db.String(2), server_default="", nullable=False)
 
     state_id = db.Column(db.Integer) # e.g. for Virginia, DCJS TRACER ID
-    type_code = db.Column(db.String(10)) # (POLICE, SHERIFF, PRISON)
+    type_code = db.Column(db.String(10)) # (1=POLICE, 2=SHERIFF, 3=PRISON)
     locality_fips = db.Column(db.String(10)) # The full FIPS-9 code for the department's location
     county = db.Column(db.String(100)) # A display name of the county (e.g. Richmond City, or Loudoun)
     ori = db.Column(db.String(9)) # Originating Agency Identifier (federal agency ID)
@@ -985,6 +985,15 @@ class SheetDetail(BaseModel):
     salary_is_fy = db.Column(db.String, unique=False, nullable=True)
     agency_name = db.Column(db.String, unique=False, nullable=True)
 
+# OOVA - duplicate officer detection
+class DupOfficerMatches(BaseModel):
+    __tablename__ = "dup_officer_matches"
+    id_1 = db.Column(db.Integer, db.ForeignKey("officers.id"), primary_key=True)
+    id_2 = db.Column(db.Integer, db.ForeignKey("officers.id"), primary_key=True)
+    match_score = db.Column(db.Numeric, index=True, unique=False, nullable=False)
+    excluded = db.Column(db.Boolean, default=False) # a user has flagged this as NOT a match
+    officer1 = db.relationship("Officer", foreign_keys=[id_1])
+    officer2 = db.relationship("Officer", foreign_keys=[id_2])
 
 # OOVA
 class Tag(BaseModel):

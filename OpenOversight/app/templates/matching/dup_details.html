@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block title %}OpenOversight Admin - Duplicate Match Details{% endblock %}
+
+{% block content %}
+<div class="container theme-showcase" role="main">
+
+<div class="page-header">
+    <h1>Duplicate Match Details</h1>
+</div>
+
+    <form class="form" method="post" role="form" id="add-assignment-form" data-jobs-url="{{ url_for('main.get_dept_ranks') }}" data-units-url="{{ url_for('main.get_dept_units') }}"
+>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      {{ wtf.form_errors(form, hiddens="only") }}
+      <div class="row">
+        <div class="col-sm-6" id="officer1">
+          {{ wtf.form_field(form.merge1, id="merge1") }}
+          <p><a href="/officers/{{ officer1.id }}" target="_blank">View full officer details</a></p>
+          {% with officer=officer1, assignments=officer1.assignments %}
+            {% include "partials/officer_general_information.html" %}
+            {% include "partials/officer_assignment_history.html" %}
+            {% include "partials/officer_salary.html" %}
+            {% include "partials/officer_incidents.html" %}
+            {% include "partials/officer_lawsuits.html" %}
+          {% endwith %}
+        </div>
+        <div class="col-sm-6" id="officer2">
+          {{ wtf.form_field(form.merge2, id="merge2") }}
+          <p><a href="/officers/{{ officer2.id }}" target="_blank">View full officer details</a></p>
+          {% with officer=officer2, assignments=officer2.assignments %}
+            {% include "partials/officer_general_information.html" %}
+            {% include "partials/officer_assignment_history.html" %}
+            {% include "partials/officer_salary.html" %}
+            {% include "partials/officer_incidents.html" %}
+            {% include "partials/officer_lawsuits.html" %}
+          {% endwith %}
+        </div>
+      </div>
+    </form>
+    <br>
+
+</div>
+{% endblock %}
