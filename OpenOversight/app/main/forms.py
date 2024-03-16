@@ -724,7 +724,7 @@ class LawsuitListForm(Form):
     party = StringField("Plaintiff or Defendant")
     include_pending = BooleanField("Include Open/Pending", default=False, validators=[Optional()])
     disposition = SelectField("Disposition")
-    judgment = SelectField("Disposition", choices=[(x,x) for x in ["","Defendant","Plaintiff","Both"]])
+    judgment = SelectField("Judgment", choices=[(x,x) for x in ["","Defendant","Plaintiff","Both"]])
     #occurred_before = DateField("Occurred Before")
     #occurred_after = DateField("Occurred After")
     submit = SubmitField(label="Submit")

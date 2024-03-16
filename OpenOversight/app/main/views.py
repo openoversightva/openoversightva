@@ -3532,7 +3532,7 @@ def show_lawsuits(page=1,
     CASES_PER_PAGE = int(current_app.config[KEY_OFFICERS_PER_PAGE])
 
     form = LawsuitListForm()
-    disp_choices = [(i[0], f"{i[0]} ({i[1]})") for i in db.session.query(Lawsuit.disposition, db.func.count()).group_by(Lawsuit.disposition).order_by(Lawsuit.disposition.asc()).all()]
+    disp_choices = [("","")]+[(i[0], f"{i[0]} ({i[1]})") for i in db.session.query(Lawsuit.disposition, db.func.count()).group_by(Lawsuit.disposition).order_by(Lawsuit.disposition.asc()).all() if i[0] != ""]
     form.disposition.choices = disp_choices
 
     lawsuits = Lawsuit.query
