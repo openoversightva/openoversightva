@@ -40,7 +40,9 @@ from OpenOversight.app.utils.choices import (
     STATE_CHOICES,
     SUFFIX_CHOICES,
 )
-from OpenOversight.app.utils.db import dept_choices, unit_choices, tag_choices, unsorted_dept_choices
+from OpenOversight.app.utils.db import (
+    dept_choices, unit_choices, tag_choices, unsorted_dept_choices,
+)
 from OpenOversight.app.widgets import BootstrapListWidget, FormFieldWidget
 
 
@@ -720,7 +722,9 @@ class LawsuitListForm(Form):
     #    get_label="display_name", allow_blank=True, blank_text='(All Departments)')
     case_number = StringField("Case Number")
     party = StringField("Plaintiff or Defendant")
-    include_pending = BooleanField("Include Open/Pending", default=None, validators=[Optional()])
+    include_pending = BooleanField("Include Open/Pending", default=False, validators=[Optional()])
+    disposition = SelectField("Disposition")
+    judgment = SelectField("Disposition", choices=[(x,x) for x in ["","Defendant","Plaintiff","Both"]])
     #occurred_before = DateField("Occurred Before")
     #occurred_after = DateField("Occurred After")
     submit = SubmitField(label="Submit")

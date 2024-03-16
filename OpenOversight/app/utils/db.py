@@ -11,7 +11,8 @@ from OpenOversight.app.models.database import (
     Unit,
     User,
     db,
-    Tag
+    Tag,
+    Lawsuit,
 )
 
 
@@ -94,3 +95,4 @@ def unit_choices(department_id: Optional[int] = None):
             .all()
         )
     return db.session.query(Unit).order_by(Unit.description.asc()).all()
+

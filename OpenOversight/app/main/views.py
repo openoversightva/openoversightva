@@ -3532,6 +3532,9 @@ def show_lawsuits(page=1,
     CASES_PER_PAGE = int(current_app.config[KEY_OFFICERS_PER_PAGE])
 
     form = LawsuitListForm()
+    disp_choices = [(i[0], f"{i[0]} ({i[1]})") for i in db.session.query(Lawsuit.disposition, db.func.count()).group_by(Lawsuit.disposition).order_by(Lawsuit.disposition.asc()).all()]
+    form.disposition.choices = disp_choices
+
     lawsuits = Lawsuit.query
     # Set form data based on URL
     if request.args.get("page"):
@@ -3546,13 +3549,23 @@ def show_lawsuits(page=1,
         form.party.data = request.args.get("party")
     if form.party.data:
         lawsuits = lawsuits.filter(
-            (Lawsuit.plaintiff.contains(form.party.data))
+            (Lawsuit.plaintiff.ilike(f"%{form.party.data}%"))
             |
-            (Lawsuit.defendant.contains(form.party.data))
+            (Lawsuit.defendant.ilike(f"%{form.party.data}%"))
         )
-    if request.args.get("include_pending"):
-        form.include_pending.data = request.args.get("include_pending")
-    if not form.include_pending.data:
+    if request.args.get('disposition'):
+        form.disposition.data = request.args.get('disposition')
+    if form.disposition.data:
+        lawsuits = lawsuits.filter(Lawsuit.disposition == form.disposition.data)
+    if request.args.get('judgment'):
+        form.judgment.data = request.args.get('judgment')
+    if form.judgment.data:
+        lawsuits = lawsuits.filter(Lawsuit.judgment == form.judgment.data)
+    if "include_pending" in request.args and request.args.get("include_pending") == 'y':
+        form.include_pending.data = True
+    else:
+        form.include_pending.data = False
+    if (not form.include_pending.data):
         # by default, hide null end dates
         lawsuits = lawsuits.filter(
             Lawsuit.end_date.isnot(None)
@@ -3565,11 +3578,15 @@ def show_lawsuits(page=1,
     next_url = url_for("main.show_lawsuits",
                        page=lawsuits.next_num,
                        case_number=form.case_number.data,
-                       party=form.party.data)
+                       party=form.party.data,
+                       disposition=form.disposition.data,
+                       include_pending=form.include_pending.data)
     prev_url = url_for("main.show_lawsuits",
                        page=lawsuits.prev_num,
                        case_number=form.case_number.data,
-                       party=form.party.data)
+                       party=form.party.data,
+                       disposition=form.disposition.data,
+                       include_pending=form.include_pending.data)
 
     return render_template(
         "lawsuits_list.html",
