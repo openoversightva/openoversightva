@@ -3791,10 +3791,9 @@ def get_departments(term=""):
     methods=[HTTPMethod.GET])
 def get_officers(term=""):
     term = request.args["q"]
+    full_name = Officer.first_name + ' ' + Officer.middle_initial + ' ' + Officer.last_name
     officers = Officer.query.filter(
-        (Officer.last_name.ilike("%%{}%%".format(term)))
-        |
-        (Officer.first_name.ilike("%%{}%%".format(term)))
+    	full_name.ilike("%%{}%%".format(term))
         ).limit(10)
     
     officer_list = list({"id":officer.id,"text":officer.full_name()} for officer in officers)
