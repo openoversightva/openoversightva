@@ -1,10 +1,16 @@
 {
 	"name": "AzureKeyVault1",
 	"properties": {
+		"parameters": {
+			"API_key": {
+				"type": "string",
+				"defaultValue": "AIzaSyCjAMuWaq0ACBeHboolVS6kVOAJb5r9QPc"
+			}
+		},
 		"annotations": [],
 		"type": "AzureKeyVault",
 		"typeProperties": {
-			"baseUrl": "https://aaawwwww.vault.azure.net/"
+			"baseUrl": "https://console.cloud.google.com/google/maps-apis/home?project=cloudstartups"
 		}
 	}
 }
