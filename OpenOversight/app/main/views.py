@@ -1096,7 +1096,7 @@ def list_officer(
     ):
         form_data["gender"] = genders
     if require_photo_arg := request.args.get("require_photo"):
-        form_data["require_photo"] = require_photo_arg
+        form_data["require_photo"] = (require_photo_arg.lower() in ('y','true'))
 
     unit_selections = ["Not Sure"] + [
         uc[0]
@@ -3543,7 +3543,7 @@ def show_lawsuits(page=1,
         form.case_number.data = request.args.get("case_number")
     if form.case_number.data:
         lawsuits = lawsuits.filter(
-            Lawsuit.case_number.contains(form.case_number.data.strip())
+            Lawsuit.case_number.ilike(f"%{form.case_number.data.strip()}%")
         )
     if request.args.get("party"):
         form.party.data = request.args.get("party")
@@ -3768,6 +3768,13 @@ def dup_officer_details(id_1=None,id2=None):
         elif "merge2" in request.form:
             merge_officers(keep_me=officer1, delete_me=officer2)
             flash(f"Officer {id_2} merged into {id_1} and deleted")
+        elif "exclude" in request.form:
+            nomatch = DupOfficerMatches.query.filter_by(id_1=id_1,id_2=id_2).one_or_none()
+            if nomatch:
+                nomatch.excluded = True
+                db.session.add(nomatch)
+                db.session.commit()
+            flash(f"Match excluded and hidden from view")
         return redirect(url_for("main.dup_officer_list"))
 
     return render_template(

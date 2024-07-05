@@ -13,6 +13,10 @@
 >
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       {{ wtf.form_errors(form, hiddens="only") }}
+      <div style="margin: 0 auto; width:30%">
+        {{ wtf.form_field(form.exclude, id="exclude") }}
+      </div>
+      <hr>
       <div class="row">
         <div class="col-sm-6" id="officer1">
           {{ wtf.form_field(form.merge1, id="merge1") }}

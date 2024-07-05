@@ -721,6 +721,7 @@ class LawsuitListForm(Form):
     #department_id = QuerySelectField("Department", validators=[Optional()], query_factory=dept_choices,
     #    get_label="display_name", allow_blank=True, blank_text='(All Departments)')
     case_number = StringField("Case Number")
+    case_type = SelectField("Case Type")
     party = StringField("Plaintiff or Defendant")
     include_pending = BooleanField("Include Open/Pending", default=False, validators=[Optional()])
     disposition = SelectField("Disposition")
@@ -755,6 +756,7 @@ class DupOfficerForm(Form):
 class DupMergeForm(Form):
     merge1 = SubmitField(label="Merge into ->")
     merge2 = SubmitField(label="<- Merge into")
+    exclude = SubmitField(label="Exclude (this is not a match)")
 
 class MatchRow(Form):
     id_1 = IntegerField("ID 1")
