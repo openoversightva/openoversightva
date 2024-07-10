@@ -1980,7 +1980,7 @@ def download_dept_descriptions_csv(department_id: int):
 @sitemap_include
 @main.route("/download/all", methods=[HTTPMethod.GET])
 def all_data():
-    departments = Department.query.filter(Department.officers.any())
+    departments = Department.query.filter(Department.officers.any()).order_by(Department.name)
     return render_template("departments_all.html", departments=departments)
 
 
