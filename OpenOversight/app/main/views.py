@@ -1173,7 +1173,7 @@ def list_officer(
         unique_internal_identifier=form_data["unique_internal_identifier"],
         unit=form_data["unit"],
         current_job=form_data["current_job"],
-        require_photo='Y' if form_data["require_photo"] else '',
+        require_photo='Y' if form_data["require_photo"] else None,
     )
     prev_url = url_for(
         "main.list_officer",
@@ -1190,7 +1190,7 @@ def list_officer(
         unique_internal_identifier=form_data["unique_internal_identifier"],
         unit=form_data["unit"],
         current_job=form_data["current_job"],
-        require_photo='Y' if form_data["require_photo"] else '',
+        require_photo='Y' if form_data["require_photo"] else None,
     )
 
     return render_template(

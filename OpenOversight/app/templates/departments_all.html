@@ -1,26 +1,55 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
+{% block title %}
+  Download department data - OpenOversight
+{% endblock title %}
 {% block content %}
 
-    <div class="container theme-showcase" role="main">
-
-        <div class="text-center frontpage-leads">
-            {% for dept in departments %}
-                <p>
-                <h2>{{ dept.name }}</h2>
+    <div class="container" role="main">
+        <div class="row">
+        <h1>Download Data</h1>
+        <div class="text-center frontpage-leads col-md-8">
+            <h2>Download by Department</h2>
+            <select class="form-control" id="department" name="department">
+                <option value="" selected> - Select a department - </option>
+                {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+            <div id="dept_links" style="display:none">
+                <h2>dept_name</h2>
                 <ul class="list-group">
-                    <a href={{ url_for('main.download_dept_officers_csv',department_id=dept.id) }}><li class="list-group-item">officers.csv</li></a>
-                    <a href={{ url_for('main.download_dept_assignments_csv',department_id=dept.id) }}><li class="list-group-item">assignments.csv</li></a>
-                    <a href={{ url_for('main.download_dept_salaries_csv',department_id=dept.id) }}><li class="list-group-item">salaries.csv</li></a>
-                    <a href={{ url_for('main.download_dept_links_csv',department_id=dept.id) }}><li class="list-group-item">links.csv</li></a>
-                    <a href={{ url_for('main.download_dept_descriptions_csv',department_id=dept.id) }}><li class="list-group-item">descriptions.csv</li></a>
-                    {% if dept.incidents %}
-                        <a href={{ url_for('main.download_incidents_csv',department_id=dept.id) }}><li class="list-group-item">incidents.csv</li></a>
-                    {% endif %}
+                    <a href="/download/departments/ID/officers"><li class="list-group-item">officers.csv</li></a>
+                    <a href="/download/departments/ID/incidents"><li class="list-group-item">incidents.csv</li></a>
+                    <a href="/download/departments/ID/assignments"><li class="list-group-item">assignments.csv</li></a>
+                    <a href="/download/departments/ID/salaries"><li class="list-group-item">salaries.csv</li></a>
                 </ul>
-                </p>
-            {% endfor %}
+            </div>
         </div>
     </div>
+
+<script>
+function update_links() {
+  var dept_id = $('#department').val();
+  var dept_name = $('#department option:selected').text();
+
+  if (dept_id) {
+      $('#dept_links').replaceWith(`<div id="dept_links"><h2>${dept_name}</h2>
+                    <ul class="list-group">
+                        <a href="/download/departments/${dept_id}/officers"><li class="list-group-item">officers.csv</li></a>
+                        <a href="/download/departments/${dept_id}/incidents"><li class="list-group-item">incidents.csv</li></a>
+                        <a href="/download/departments/${dept_id}/assignments"><li class="list-group-item">assignments.csv</li></a>
+                        <a href="/download/departments/${dept_id}/salaries"><li class="list-group-item">salaries.csv</li></a>
+                    </ul>
+                </div>`);
+  } else {
+    $('#dept_links').replaceWith('<div id="dept_links"></div>');
+  }
+}
+
+$(document).ready(function() {
+  $('#department').change(update_links);
+});
+</script>
 
 {% endblock %}
