@@ -62,8 +62,8 @@
 
   <body role="document">
 
-    <nav class="navbar navbar-default navbar-fixed-top">
-      <div class="container">
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <!--div class="container"-->
           <div class="navbar-header navbar-default">
             <button type="button" class="navbar-default navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
               <span class="sr-only">Toggle navigation</span>
@@ -123,7 +123,7 @@
               {% endif %}
             </ul>
         </div>
-      </div>
+      <!--/div-->
     </nav>
 
     {% with messages = get_flashed_messages() %}
@@ -154,8 +154,6 @@
             Virginia's only statewide police transparency database. Codebase and concept thanks to the original OpenOversight
             instance by <a href="https://lucyparsonslabs.com/" target="_blank" class="btn-unstyled">Lucy Parsons Labs</a>
             in Chicago, IL. We are volunteer-run and donation-funded.<br>
-            <!--<a href="https://lucyparsonslabs.com/securedrop/" target="_blank" class="btn-unstyled">SecureDrop</a><br>
-            --><a href="{{ url_for('main.all_data') }}" target="_blank" class="btn-unstyled">Download department data</a>
           </p>
         </div>
 
@@ -165,8 +163,10 @@
               <a href="mailto:alice@openoversightva.org" class="btn-unstyled">Admin</a> | 
               <a href="mailto:legal@openoversightva.org" class="btn-unstyled">Legal</a> | 
               <a href="mailto:press@openoversightva.org" class="btn-unstyled">Press</a>
-            <br>
+          </p><p>
             <a href="/privacy" class="btn">Privacy Policy</a>
+            <br>
+            <a href="{{ url_for('main.all_data') }}" target="_blank" class="btn-unstyled">Download data</a>
           </p>
         </div>
         <div class="col-sm-4">
@@ -190,5 +190,6 @@
       <script src="{{ url_for('static', filename=item) }}"></script>
       {% endfor %}
     {% endblock js_footer %}
+
   </body>
 </html>

@@ -13,6 +13,12 @@
 {% endblock head %}
 {% block content %}
   <div class="container" role="main">
+    <div class="pull-right" id="csv-download" style="margin: 34px 0 10px 0;">
+      <a href="/download/department/{{ department.id }}/officers" title="Download Roster as CSV">
+        <span class="visible-md-inline visible-lg-inline">Download</span>
+        <span class="glyphicon glyphicon-download-alt" style="font-size: 18px"></span>
+      </a>
+    </div>
     <h1>{{ department.display_name }} Officers</h1>
     <div class="row">
       <div class="filter-sidebar col-sm-3">

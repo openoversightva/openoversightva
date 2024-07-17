@@ -133,17 +133,25 @@ a > .tutorial{
    min-height: 700px;
    margin-top: 50px;
  }
- .carousel-inner > .item > img {
-   position: absolute;
+ .carousel-inner > .item img {
+   /*
    top: 0;
    left: 0;
    width: 100%;
+   KF - allow overflow but center
+   */
+   margin-left: 50%;
+   transform: translateX(-50%);
+   max-width: unset !important;
  }
 
  /* Limit image width to avoid overflow the cropper container */
+ /* KF - turn this off because it squishes large pics
+  * prefer stretch-to-height, allow overflow but centered
  img {
    max-width: 100%;
  }
+ */
 
  meter {
      margin: 0 auto 1em;
