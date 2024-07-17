@@ -5,16 +5,16 @@
   <div class="carousel-inner">
     {% for face, path in face_paths %}
       <div class="item{{ ' active' if loop.index == 1 else '' }}">
-        <div class="row text-center">
-          <div class="col-12">
+        <!--div class="row text-center"-->
+          <!--div class="col-12"-->
             {# Don't try to link if only image is the placeholder #}
             {% if face %}<a href="{{ url_for('main.display_tag', tag_id=face.id) }}">{% endif %}
               <img class="officer-face officer-profile"
                    src="{{ path }}"
                    alt="Submission">
               {% if face %}</a>{% endif %}
-          </div>
-        </div>
+          <!--/div-->
+        <!--/div-->
       </div>
     {% endfor %}
   </div>
