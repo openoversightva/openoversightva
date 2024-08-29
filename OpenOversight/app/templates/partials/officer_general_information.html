@@ -74,7 +74,7 @@
         </tr>
         <tr>
           <td>
-            <b>Currently on the force</b>
+            <b data-toggle="tooltip" title="This field is calculated automatically - if the officer has active (not ended) assignments in this department it will be Yes." style="text-decoration: underline; text-decoration-color: #888; text-decoration-style: dashed;">Currently on the force</b>
           </td>
           <td><span {% if officer.currently_on_force() != 'Yes' %} style="color: #c00" {% endif %}>{{ officer.currently_on_force() }}<span></td>
         </tr>
