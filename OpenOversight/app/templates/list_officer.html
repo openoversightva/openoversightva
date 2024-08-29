@@ -135,19 +135,6 @@
             <div class="collapse {{ form_data | field_in_query("rank") }} {{ form_data | field_in_query("unit") }} {{ form_data | field_in_query("current_job") }}"
                  id="filter-job">
               <div class="panel-body panel-body-long">
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="current_job">
-                      <input id="current_job"
-                             name="current_job"
-                             type="checkbox"
-                             value="True"
-                             {% if form_data.get("current_job") %}checked{% endif %}>
-                      Currently employed
-                    </label>
-                    <span><i>(in this rank and/or unit, if specified)</i></span>
-                  </div>
-                </div>
                 <br />
                 <div class="form-row">
                   <div class="form-group">
@@ -259,6 +246,21 @@
                 </div>
               </div>
             </div>
+          </div>
+          <div class="panel">
+	  	<div class="form-row">
+		  <div class="form-group">
+		    <label for="current_job">
+		      <input id="current_job"
+		             name="current_job"
+		             type="checkbox"
+		             value="True"
+		             {% if form_data.get("current_job") %}checked{% endif %}>
+		      Include previously employed
+		    </label>
+		    <!-- <span><i>(in this rank and/or unit, if specified)</i></span> -->
+		  </div>
+		</div>
           </div>
           {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
           <a class="btn btn-primary"

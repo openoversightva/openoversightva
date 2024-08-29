@@ -357,9 +357,9 @@ class Officer(BaseModel, TrackUpdates):
                 self.assignments, key=operator.attrgetter("start_date_or_min")
             )
             if "ACAB" in self.department.short_name:
-                return "No"
+                return "Not currently employed"
             else:
-                return "Yes" if most_recent.resign_date is None else "No"
+                return "Yes" if most_recent.resign_date is None else "Not currently employed"
         return "Uncertain"
 
     def __repr__(self):

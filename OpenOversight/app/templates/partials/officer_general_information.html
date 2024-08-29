@@ -76,7 +76,7 @@
           <td>
             <b>Currently on the force</b>
           </td>
-          <td>{{ officer.currently_on_force() }}</td>
+          <td><span {% if officer.currently_on_force() != 'Yes' %} style="color: #c00" {% endif %}>{{ officer.currently_on_force() }}<span></td>
         </tr>
       </tbody>
     </table>
