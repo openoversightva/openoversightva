@@ -362,9 +362,10 @@ def filter_by_form(form_data: BrowseForm, officer_query, department_id=None):
         or unit_ids
         or include_null_unit
         or job_ids
-        or form_data.get("current_job")
+        or not form_data.get("current_job")
     ):
         officer_query = officer_query.join(Officer.assignments)
+        
         if form_data.get("badge"):
             officer_query = officer_query.filter(
                 Assignment.star_no.like(f"%%{form_data['badge']}%%")
@@ -381,9 +382,12 @@ def filter_by_form(form_data: BrowseForm, officer_query, department_id=None):
 
         if job_ids:
             officer_query = officer_query.filter(Assignment.job_id.in_(job_ids))
+        
+        # default to showing only currently employed (except for Wandering dept)
+        if not form_data.get("current_job") and form_data.get("dept_short_name") != 'ACAB':
+                officer_query = officer_query.filter(Assignment.resign_date.is_(None))
+        
 
-        if form_data.get("current_job"):
-            officer_query = officer_query.filter(Assignment.resign_date.is_(None))
     officer_query = officer_query.options(selectinload(Officer.assignments)).distinct()
 
     return officer_query

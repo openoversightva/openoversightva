@@ -1041,7 +1041,7 @@ def list_officer(
     badge=None,
     unique_internal_identifier=None,
     unit=None,
-    current_job=None,
+    current_job=False,
     require_photo: bool = False,
 ):
     form = BrowseForm()
@@ -1060,7 +1060,7 @@ def list_officer(
     form_data["first_name"] = first_name
     form_data["badge"] = badge
     form_data["unit"] = unit or []
-    form_data["current_job"] = current_job
+    form_data["current_job"] = current_job or False
     form_data["unique_internal_identifier"] = unique_internal_identifier
     form_data["require_photo"] = require_photo
 
@@ -1120,11 +1120,15 @@ def list_officer(
         rank in rank_selections for rank in ranks
     ):
         form_data["rank"] = ranks
-    if current_job_arg := request.args.get("current_job"):
-        form_data["current_job"] = current_job_arg
+    if current_job_arg := request.args.get("current_job") :
+        form_data["current_job"] = (current_job_arg.lower() in ('y','true'))
+    
 
     #if len(form_data["unit"]) == 1 and "Not Sure" in form_data["unit"]:
     #    form_data["unit"].remove("Not Sure")
+    
+    # pass short name for acab/wandering filter
+    form_data["dept_short_name"] = department.short_name
 
     officers = filter_by_form(form_data, Officer.query, department_id).filter(
         Officer.department_id == department_id
@@ -1172,7 +1176,7 @@ def list_officer(
         badge=form_data["badge"],
         unique_internal_identifier=form_data["unique_internal_identifier"],
         unit=form_data["unit"],
-        current_job=form_data["current_job"],
+        current_job='Y' if form_data["current_job"] else None,
         require_photo='Y' if form_data["require_photo"] else None,
     )
     prev_url = url_for(
@@ -1189,7 +1193,7 @@ def list_officer(
         badge=form_data["badge"],
         unique_internal_identifier=form_data["unique_internal_identifier"],
         unit=form_data["unit"],
-        current_job=form_data["current_job"],
+        current_job='Y' if form_data["current_job"] else None,
         require_photo='Y' if form_data["require_photo"] else None,
     )
 
