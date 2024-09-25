@@ -23,6 +23,7 @@ from flask import (
     request,
     session,
     url_for,
+    send_from_directory,
 )
 from flask_login import current_user, login_required, login_user
 from flask_wtf import FlaskForm
@@ -209,6 +210,10 @@ def redirect_url(default="main.index"):
 @main.route("/index")
 def index():
     return render_template("index.html")
+    
+@main.route("/robots.txt")
+def static_from_root():
+    return send_from_directory(current_app.static_folder, request.path[1:])
 
 
 @main.route("/timezone", methods=[HTTPMethod.POST])
@@ -987,6 +992,10 @@ def department_profile(department_id: int):
         dept=dept,
     )
 
+@sitemap.register_generator
+def sitemap_departments():
+    for dept in Department.query.all():
+        yield "main.department_profile", {"department_id": dept.id}
 
 @main.route("/department/<int:department_id>")
 def redirect_list_officer(
@@ -2703,6 +2712,7 @@ main.add_url_rule(
 )
 
 ## OOVA additions
+@sitemap_include
 @main.route("/search")
 def search_officer(page=1, race=[], gender=[], min_age="16", max_age="100", last_name=None,
                    badge=None, unique_internal_identifier=None, department=[],
@@ -2854,7 +2864,7 @@ def get_ooid():
         current_app.logger.info(form.errors)
     return render_template("input_find_ooid.html", form=form)
 
-
+@sitemap_include
 @main.route("/documents")
 def show_documents(page=1, department=[], title=None):
     form = DocumentsForm()
@@ -3066,6 +3076,7 @@ def submit_documents():
         preferred_dept_id = Department.query.first().id 
     return render_template("submit_multi_document.html", form=form, preferred_dept_id=preferred_dept_id)
 
+@sitemap_include
 @main.route("/faces", methods=[HTTPMethod.GET, HTTPMethod.POST])
 # @limiter.limit("1/minute")
 def submit_face():
@@ -3408,6 +3419,7 @@ def delete_docinc_tag(tag_id):
 
 
 ## News/Blog posts
+@sitemap_include
 @main.route("/news/")
 def show_posts(page=1):
 
@@ -3529,6 +3541,7 @@ def show_map():
     return render_template(
         "map.html", agencies=agencies)
 
+@sitemap_include
 @main.route("/lawsuits")
 def show_lawsuits(page=1,
         case_number=None,
@@ -3608,6 +3621,11 @@ def show_lawsuit(lawsuit_id):
     return render_template(
         "lawsuit_detail.html",
         lawsuit=lawsuit)
+        
+@sitemap.register_generator
+def sitemap_lawsuits():
+    for lawsuit in Lawsuit.query.all():
+        yield "main.show_lawsuit", {"lawsuit_id": lawsuit.id}
 
 @login_required
 @ac_or_admin_required

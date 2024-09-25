@@ -11,6 +11,7 @@ from botocore.exceptions import ClientError
 import datetime
 import uuid
 import traceback
+import collections
 import numpy as np
 import pandas as pd
 from sqlalchemy.sql import text
@@ -240,16 +241,20 @@ Final stage! Insert/update records into the database!
 
 """
 def load_sheet(sheet_id):
-    #details = SheetDetail.query.filter_by(sheet_id=sheet_id)\
-    #        .order_by(SheetDetail.row_id).all()
-    for row in SheetDetail.query.filter_by(
-                sheet_id=sheet_id
-            ).order_by(SheetDetail.row_id):
+    details = SheetDetail.query.filter_by(sheet_id=sheet_id)\
+            .order_by(SheetDetail.row_id)
+    # check for duplicate officers in the same sheet (usually incorrect)
+    oids = [r.officer_id for r in details]
+    dup_oids = [item for item, count in collections.Counter(oids).items() if count > 1]
+    for row in details:
         if (row.status is not None) and (row.status[0:2] == 'OK'):
             continue     #skip this row
         if row.officer_id is None:
             create_officer(row)
         else:
+            if (row.officer_id in dup_oids):
+                row.status = 'ERROR - duplicate officer ID detected in sheet'
+                continue # skip update
             update_officer(row)
     return 'ok'
 
