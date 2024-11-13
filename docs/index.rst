@@ -14,7 +14,7 @@ Welcome to OpenOversight's documentation!
    bulk_upload
    advanced_csv_import
 
-OpenOversight is a Lucy Parsons Labs project to improve law enforcement
+OpenOversightVA is a fork of the Lucy Parsons Labs project to improve law enforcement
 accountability through public and crowdsourced data. We maintain a database
 of officer demographic information and provide digital galleries of photographs.
 This is done to help people identify law enforcement officers for filing
