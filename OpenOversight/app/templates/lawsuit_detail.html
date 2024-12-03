@@ -44,7 +44,8 @@ Lawsuit Details
           <div class="about">{% if lawsuit.case_link %}
                               <a href="{{ lawsuit.case_link }}" target="_blank">View on CourtListener <i class="fa fa-external-link"></i></a>
                               {% endif %}</div>
-          {% if current_user.is_area_coordinator or current_user.is_administrator %}
+          {% if lawsuit.created_by == current_user.id or
+                                current_user.is_administrator %}
             <div class="row">
               <div class="col-sm-12 col-md-6">
                 <a class="btn btn-primary"

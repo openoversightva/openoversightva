@@ -22,7 +22,7 @@
     {% endfor %}
   </ul>
 {% endif %}
-{% if is_admin_or_coordinator %}
+{% if can_edit %}
   <a href="{{ url_for('main.description_api_new', officer_id=officer.id) }}"
      class="btn btn-primary">New description</a>
 {% endif %}

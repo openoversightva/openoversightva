@@ -19,11 +19,6 @@
         <small>{{ department.name }}</small>
       </h2>
     {% endif %}
-    {% if current_user.is_area_coordinator or current_user.is_administrator %}
-      <a href="{{ url_for('main.add_lawsuit') }}">
-        <i class="fa fa-plus" aria-hidden="true"></i> Create New
-      </a>
-    {% endif %}
     <div class="row">
       <div class="filter-sidebar col-sm-3">
         <h3 class="sidebar-title">Filter lawsuits</h3>
@@ -35,6 +30,13 @@
           <div class="panel">{{ wtf.form_field(form.include_pending) }}</div>
           <div class="panel">{{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}</div>
         </form>
+        {% if current_user.can_edit() %}
+          <p><a href="{{ url_for('main.add_lawsuit') }}"
+             class="btn btn-lg btn-primary"
+             role="button">
+            <i class="fa fa-plus" aria-hidden="true"></i> Create New
+          </a></p>
+        {% endif %}
       </div>
       <div class="search-results col-sm-9">
         {% with paginate=lawsuits, location="top" %}
@@ -57,7 +59,8 @@
                           id="lawsuit-{{ loop.index }}">
                         {{ lawsuit.case_number }} - {{ lawsuit.plaintiff }} v. {{ lawsuit.defendant }}
                         </a>
-                        {% if current_user.is_area_coordinator or current_user.is_administrator %}
+                        {% if lawsuit.created_by == current_user.id or
+                                current_user.is_administrator %}
                           <a href="{{ url_for('main.edit_lawsuit', lawsuit_id=lawsuit.id) }}">
                             <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
                           </a>

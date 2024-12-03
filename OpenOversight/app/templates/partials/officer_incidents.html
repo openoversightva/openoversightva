@@ -35,7 +35,7 @@
     <script src="{{ url_for('static', filename='js/incidentDescription.js') }}"></script>
   {% endblock js_footer %}
 {% endif %}
-{% if is_admin_or_coordinator %}
+{% if can_edit %}
   <a href="{{ url_for("main.incident_api_new", officer_id=officer.id) }}"
      class="btn btn-primary">New
   Incident</a>

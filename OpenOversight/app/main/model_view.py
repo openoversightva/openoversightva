@@ -16,7 +16,7 @@ from OpenOversight.app.models.database import (
     db,
     Tag
 )
-from OpenOversight.app.utils.auth import ac_or_admin_required
+from OpenOversight.app.utils.auth import ac_or_admin_required, edit_required
 from OpenOversight.app.utils.constants import (
     KEY_DEPT_ALL_INCIDENTS,
     KEY_DEPT_ALL_LINKS,
@@ -69,7 +69,7 @@ class ModelView(MethodView):
             )
 
     @login_required
-    @ac_or_admin_required
+    @edit_required
     def new(self, form=None):
         if not form:
             form = self.get_new_form()
@@ -130,13 +130,14 @@ class ModelView(MethodView):
         return render_template(f"{self.model_name}_new.html", form=form)
 
     @login_required
-    @ac_or_admin_required
+    @edit_required
     def edit(self, obj_id, form=None):
         obj = self.model.query.get_or_404(obj_id)
         if self.department_check:
             if (
                 not current_user.is_administrator
                 and current_user.ac_department_id != self.get_department_id(obj)
+                and obj.created_by != current_user.id # users can only edit things they created
             ):
                 abort(403)
 

@@ -1,4 +1,4 @@
-{% if obj.links|length > 0 or is_admin_or_coordinator %}
+{% if obj.links|length > 0 or can_edit %}
   <h3>Links</h3>
   {% for type, list in obj.links|groupby("link_type") %}
     {% if type == "link" %}
@@ -30,7 +30,7 @@
       </ul>
     {% endif %}
   {% endfor %}
-  {% if officer and (current_user.is_admin_or_coordinator(officer.department)) %}
+  {% if officer and (can_edit) %}
     <a href="{{ url_for("main.link_api_new", officer_id=officer.id) }}"
        class="btn btn-primary">New Link/Video</a>
   {% endif %}
