@@ -84,7 +84,7 @@
                 <a class="navbar-link" href="/search">Search All Cops</a>
               </li>
               <li>
-                <a class="navbar-link" href="/browse">Agencies (A-Z)</a>
+                <a class="navbar-link" href="{{ url_for('main.browse') }}">Agencies (A-Z)</a>
               </li>
               <li>
                 <a class="navbar-link" href="/incidents">Incidents</a>
@@ -113,7 +113,7 @@
                   <ul class="dropdown-menu">
                     {% if current_user and current_user.is_administrator %}
                     <li><a class="navbar-link" href="/admin">Admin Page</a></li>
-                    <li><a class="navbar-link" href="{{ url_for("auth.get_users") }}">Users</a></li>
+                    <li><a class="navbar-link" href="{{ url_for('auth.get_users') }}">Users</a></li>
                     {% endif%}
                     <li><a class="navbar-link" href="{{ url_for('main.profile', username=current_user.username) }}">Profile</a></li>
                     <li><a class="navbar-link" href="{{ url_for('auth.change_password') }}">Change Password</a></li>
