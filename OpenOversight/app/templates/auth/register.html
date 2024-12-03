@@ -1,16 +1,22 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
-{% block title %}Volunteer Registration - OpenOversight{% endblock %}
+
 {% block meta %}<meta name="description" content="Register here as an OpenOversight volunteer.">{% endblock %}
+
+{% block title %}Volunteer Registration - OpenOversightVA{% endblock %}
+
+{% block head %}
+<script src="https://www.google.com/recaptcha/enterprise.js?render=6LdpJpEqAAAAAK4f7WI_CBRMqe31wPvzRWeBmgHt"></script>
+{% endblock %}
 
 {% block content %}
 <div class="container theme-showcase" role="main">
 
 <div class="page-header">
-    <h1>Register as an OpenOversight Volunteer</h1>
+    <h1>Register as an OpenOversightVA Volunteer</h1>
 </div>
 <div class="col-md-4">
-    <form class="form form-horizontal" method="post" role="form">
+    <form id="regform" class="form form-horizontal" method="post" role="form" onsubmit="checkRecaptcha(this); return false;">
         {{ form.hidden_tag() }}
         {{ wtf.form_errors(form, hiddens="only") }}
 
@@ -33,8 +39,18 @@
                 <p class="help-block">{% for error in form.password2.errors %}{{ error }} {% endfor %}</p>
             {% endif %}
         </div>
-        {{ wtf.form_field(form.submit, id="password-button", button_map={'submit':'primary'}, disabled=True) }}
+        {{ wtf.form_field(form.submit_button, id="password-button", button_map={'submit':'primary'}, disabled=True) }}
     </form>
+
+    <script type="text/javascript">
+    function checkRecaptcha(form) {
+        grecaptcha.enterprise.ready(async () => {
+          const token = await grecaptcha.enterprise.execute('6LdpJpEqAAAAAK4f7WI_CBRMqe31wPvzRWeBmgHt', {action: 'create_user'});
+          document.getElementById("recaptcha_response").value = token;
+          form.submit();
+        });
+    }
+    </script>
 </div>
 <div class="col-md-4">Please <a href="https://github.com/openoversightva/openoversightva/wiki" target="_blank">read the wiki</a> and send us an email with more details about yourself, or your account will not get approved. Thanks for helping us avoid spammers!</div>
 </div>
