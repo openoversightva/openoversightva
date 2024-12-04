@@ -107,7 +107,7 @@ def logout():
 
 def check_recaptcha():
     # from https://console.cloud.google.com/security/recaptcha/
-    recaptchaUrl = 'https://recaptchaenterprise.googleapis.com/v1/projects/recaptcha-1733256654045/assessments?key=AIzaSyDZ127N2U0s5qKoBGLG_z0agRNqnrUTnhc'
+    recaptchaUrl = f"https://recaptchaenterprise.googleapis.com/v1/projects/recaptcha-1733256654045/assessments?key={current_app.config['RECAPTCHA_API_KEY']}"
     # from the javascript on the page
     recaptchaResponse = request.form.get('recaptcha_response', None)
     params = {
