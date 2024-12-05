@@ -4,10 +4,30 @@
 <style type="text/css">
 table.updateList {
   margin: 0 auto;
+  table-layout: fixed;
+  width:100%;
 }  
 table.updateList td,th {
   border: 0px;
-  padding: 2px 20px;
+  padding: 2px 10px;
+}
+.col1 {
+  width: 30%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.col2,.col3 {
+  width: 15%;
+  white-space: nowrap;
+  text-overflow: clip;
+  overflow: hidden;
+}
+.col4 {
+  width: 40%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 </style>
 {% endblock %}
@@ -40,17 +60,17 @@ table.updateList td,th {
   </nav>
    <table class="updateList">
    <tr>
-      <th>Link</th>
-      <th>Updated At</th>
-      <th>Updated By</th>
-      <th>Value</th>
+      <th class="col1">Link</th>
+      <th class="col2">Updated At</th>
+      <th class="col3">Updated By</th>
+      <th class="col4">Value</th>
    </tr>
    {% for obj in objs %}
     <tr>
-      <td><a href="{{ obj.url }}">{{ obj.label }}</a></td>
-      <td>{{ obj.last_updated_at | display_datetime }}</td>
-      <td>{{ obj.username }}</td>
-      <td>{{ obj.value }}</td>
+      <td class="col1"><a href="{{ obj.url }}">{{ obj.label }}</a></td>
+      <td class="col2">{{ obj.last_updated_at | display_datetime }}</td>
+      <td class="col3">{{ obj.username }}</td>
+      <td class="col4">{{ obj.value }}</td>
     </tr>
    {% endfor %}
    </table>
