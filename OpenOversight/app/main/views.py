@@ -3804,7 +3804,9 @@ def dup_officer_details(id_1=None,id2=None):
         form=form)
 
 @main.route("/recent", methods=[HTTPMethod.GET])
-def recent_updates(page=1): 
+def recent_updates(page: int=1): 
+    if page_arg := request.args.get("page"):
+        page = int(page_arg)
     officer_q = (
         select(literal_column("'/officers/' || cast(officers.id as text)").label("url"),
             literal_column("'Officer ' || officers.first_name || ' ' || officers.last_name").label("label"),
