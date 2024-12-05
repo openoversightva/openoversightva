@@ -3816,7 +3816,7 @@ def recent_updates(page=1):
         )
     incident_q = (
         select(literal_column("'/incidents/' || cast(incidents.id as text)").label("url"),
-            literal_column("'Incident' || incidents.report_number").label("label"),
+            literal_column("'Incident ' || incidents.report_number").label("label"),
             Incident.last_updated_at, 
             User.username,
             literal_column("''").label("value")
