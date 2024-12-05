@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style type="text/css">
+table.updateList {
+  margin: 0 auto;
+}  
+table.updateList td,th {
+  border: 0px;
+  padding: 2px 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container theme-showcase" role="main">
+  <div class="text-center frontpage-leads">
+    <h1><small>Recent Updates</small></h1>
+  </div>
+  <nav aria-label="Page navigation - {{ location }}">
+    <ul class="pager">
+      {% if page > 1 %}
+        <li class="previous">
+          <a role="button" href="recent?page={{ page - 1 }}">
+            <span aria-hidden="true">←</span>
+            Previous
+          </a>
+        </li>
+      {% endif %}
+      {% if objs|length > 0 %}
+        Showing {{ (page-1) * 50 + 1 }}-{{ (page) * 50 }}
+        <li class="next">
+          <a role="button" href="recent?page={{ page + 1 }}">
+            Next
+            <span aria-hidden="true">→</span>
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+   <table class="updateList">
+   <tr>
+      <th>Link</th>
+      <th>Updated At</th>
+      <th>Updated By</th>
+      <th>Value</th>
+   </tr>
+   {% for obj in objs %}
+    <tr>
+      <td><a href="{{ obj.url }}">{{ obj.label }}</a></td>
+      <td>{{ obj.last_updated_at | display_datetime }}</td>
+      <td>{{ obj.username }}</td>
+      <td>{{ obj.value }}</td>
+    </tr>
+   {% endfor %}
+   </table>
+</div>
+{% endblock %}

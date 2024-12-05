@@ -28,7 +28,7 @@ from flask import (
 from flask_login import current_user, login_required, login_user
 from flask_wtf import FlaskForm
 
-from sqlalchemy import select, func, distinct, literal_column, case
+from sqlalchemy import select, func, distinct, literal_column, case, union_all, desc, literal_column
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased, contains_eager, joinedload, selectinload
 from sqlalchemy.orm.exc import NoResultFound
@@ -107,6 +107,7 @@ from OpenOversight.app.models.database import (
     Tag,
     Lawsuit,
     DupOfficerMatches,
+    officer_links
 )
 from OpenOversight.app.models.database_cache import (
     get_database_cache_entry,
@@ -3801,6 +3802,51 @@ def dup_officer_details(id_1=None,id2=None):
         officer1=officer1,
         officer2=officer2,
         form=form)
+
+@main.route("/recent", methods=[HTTPMethod.GET])
+def recent_updates(page=1): 
+    officer_q = (
+        select(literal_column("'/officers/' || cast(officers.id as text)").label("url"),
+            literal_column("'Officer ' || officers.first_name || ' ' || officers.last_name").label("label"),
+            Officer.last_updated_at, 
+            User.username,
+            literal_column("''").label("value")
+            )
+        .join(User, User.id == Officer.last_updated_by, isouter=True)
+        )
+    incident_q = (
+        select(literal_column("'/incidents/' || cast(incidents.id as text)").label("url"),
+            literal_column("'Incident' || incidents.report_number").label("label"),
+            Incident.last_updated_at, 
+            User.username,
+            literal_column("''").label("value")
+            )
+        .join(User, User.id == Incident.last_updated_by, isouter=True)
+        )
+    link_q = (
+        select(literal_column("'/officers/' || cast(officers.id as text)").label("url"),
+            literal_column("'Link ' || cast(links.id as text) || ', Officer ' || officers.first_name || ' ' || officers.last_name").label("label"),
+            Link.last_updated_at, 
+            User.username,
+            (Link.url).label("value")
+            )
+        .select_from(Link)
+        .join(officer_links)
+        .join(Officer)
+        .join(User, User.id == Link.last_updated_by, isouter=True)
+        )
+
+    recent_q = (
+        union_all(officer_q, incident_q, link_q)
+        .order_by(desc("last_updated_at"))
+        .offset((page-1)*50)
+        .limit(50)
+        )
+    recent_objs = db.session.execute(recent_q).all()
+
+    return render_template(
+        "recent.html",
+        objs=recent_objs, page=page)
 
 # return JSON list of all (optionally filtered) departments. copied from tags
 @main.route("/api/departments",
