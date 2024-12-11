@@ -96,6 +96,10 @@ incidents_tags = db.Table("incidents_tags",
                              db.Column("incident_id", db.Integer, db.ForeignKey("incidents.id"), primary_key=True),
                              db.Column("tag_id", db.Integer, db.ForeignKey("tags.id"), primary_key=True))
 
+department_tags = db.Table("department_tags",
+                             db.Column("department_id", db.Integer, db.ForeignKey("departments.id"), primary_key=True),
+                             db.Column("tag_id", db.Integer, db.ForeignKey("tags.id"), primary_key=True))
+
 @declarative_mixin
 class TrackUpdates:
     """Add columns to track the date of and user who created and last modified
@@ -147,6 +151,11 @@ class Department(BaseModel, TrackUpdates):
     ori = db.Column(db.String(9)) # Originating Agency Identifier (federal agency ID)
 
     narrative = db.Column(db.Text) # a Markdown text block for a narrative description of the department
+
+    tags = db.relationship(
+        "Tag",
+        secondary=department_tags,
+        backref=db.backref("departments", lazy=True))
 
     # See https://github.com/lucyparsons/OpenOversight/issues/462
     unique_internal_identifier_label = db.Column(
