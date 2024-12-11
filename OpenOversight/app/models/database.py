@@ -732,13 +732,14 @@ class User(UserMixin, BaseModel):
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
     approved = db.Column(db.Boolean, default=False)
-    is_area_coordinator = db.Column(db.Boolean, default=False)
     ac_department_id = db.Column(
         db.Integer, db.ForeignKey("departments.id", name="users_ac_department_id_fkey")
     )
     ac_department = db.relationship(
         "Department", backref="coordinators", foreign_keys=[ac_department_id]
     )
+    is_contributor = db.Column(db.Boolean, default=False)
+    is_area_coordinator = db.Column(db.Boolean, default=False)
     is_administrator = db.Column(db.Boolean, default=False)
     is_disabled = db.Column(db.Boolean, default=False)
     dept_pref = db.Column(
@@ -780,6 +781,14 @@ class User(UserMixin, BaseModel):
             department is not None
             and (self.is_area_coordinator and self.ac_department_id == department.id)
         )
+        
+    # we want most validated users to be able to create objects and edit fields
+    def can_edit(self) -> bool:
+    	return self.is_administrator or (
+    		self.confirmed
+    		and self.approved
+    		and not self.is_disabled
+    	)
 
     def _jwt_encode(self, payload, expiration):
         secret = current_app.config["SECRET_KEY"]

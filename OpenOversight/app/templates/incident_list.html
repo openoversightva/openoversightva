@@ -30,6 +30,15 @@
           <div class="panel">{{ wtf.form_field(form.occurred_after) }}</div>
           <div class="panel">{{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}</div>
         </form>
+        {% if current_user.can_edit() %}
+        <p>
+          <a href="{{ url_for("main.incident_api_new") }}"
+             class="btn btn-lg btn-primary"
+             role="button">
+            <i class="fa fa-plus" aria-hidden="true"></i> Add New Incident
+          </a>
+        </p>
+        {% endif %}
       </div>
       <div class="search-results col-sm-9">
         {% with paginate=incidents, location="top" %}
@@ -67,14 +76,6 @@
             <p>There are no incidents.</p>
           {% endif %}
         </ul>
-        {% if current_user.is_administrator or current_user.is_area_coordinator %}
-          <a href="{{ url_for("main.incident_api_new") }}"
-             class="btn btn-primary"
-             role="button">
-            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-            Add New Incident
-          </a>
-        {% endif %}
         {% with paginate=incidents, location="bottom" %}
           {% include "partials/paginate_nav.html" %}
         {% endwith %}

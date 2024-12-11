@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style type="text/css">
+table.updateList {
+  margin: 0 auto;
+  table-layout: fixed;
+  width:100%;
+}  
+table.updateList td,th {
+  border: 0px;
+  padding: 2px 10px;
+}
+.col1 {
+  width: 30%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.col2,.col3 {
+  width: 15%;
+  white-space: nowrap;
+  text-overflow: clip;
+  overflow: hidden;
+}
+.col4 {
+  width: 40%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container theme-showcase" role="main">
+  <div class="text-center frontpage-leads">
+    <h1><small>Recent Updates</small></h1>
+  </div>
+  <nav aria-label="Page navigation - {{ location }}">
+    <ul class="pager">
+      {% if page > 1 %}
+        <li class="previous">
+          <a role="button" href="recent?page={{ page - 1 }}">
+            <span aria-hidden="true">←</span>
+            Previous
+          </a>
+        </li>
+      {% endif %}
+      {% if objs|length > 0 %}
+        Showing {{ (page-1) * 50 + 1 }}-{{ (page) * 50 }}
+        <li class="next">
+          <a role="button" href="recent?page={{ page + 1 }}">
+            Next
+            <span aria-hidden="true">→</span>
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+   <table class="updateList">
+   <tr>
+      <th class="col1">Link</th>
+      <th class="col2">Updated At</th>
+      <th class="col3">Updated By</th>
+      <th class="col4">Value</th>
+   </tr>
+   {% for obj in objs %}
+    <tr>
+      <td class="col1"><a href="{{ obj.url }}">{{ obj.label }}</a></td>
+      <td class="col2">{{ obj.last_updated_at | display_datetime }}</td>
+      <td class="col3">{{ obj.username }}</td>
+      <td class="col4">{{ obj.value }}</td>
+    </tr>
+   {% endfor %}
+   </table>
+</div>
+{% endblock %}

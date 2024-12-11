@@ -122,8 +122,10 @@
                     <button class="btn btn-primary">Tag this image</button>
                   </a>
                 </p>
+              {% endif %}
+              {% if current_user.can_edit() %}
                 <h3>
-                  Set as featured tag <small>Admin only</small>
+                  Set as featured tag
                 </h3>
                 <p>
                   <form action="{{ url_for('main.set_featured_tag', tag_id=face.id) }}"

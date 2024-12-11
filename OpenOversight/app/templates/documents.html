@@ -40,15 +40,19 @@
         </div>
         {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
       </form>
-      {% if current_user.is_administrator %}
+      {% if current_user.can_edit() %}
         <p>
-          <a class="btn btn-lg btn-primary" href="{{ url_for('main.submit_document') }}">
-            Add a Document
+          <a href="{{ url_for('main.submit_document') }}"
+             class="btn btn-lg btn-primary"
+             role="button">
+            <i class="fa fa-plus" aria-hidden="true"></i> Add a Document
           </a>
         </p>
         <p>
-          <a class="btn btn-lg btn-primary" href="{{ url_for('main.submit_documents') }}">
-            Add Multi Documents
+          <a href="{{ url_for('main.submit_documents') }}"
+             class="btn btn-lg btn-primary"
+             role="button">
+            <i class="fa fa-plus" aria-hidden="true"></i> Add Multi Documents
           </a>
         </p>
       {% endif %}

@@ -9,7 +9,7 @@
     <h1><small>Browse a Department</small></h1>
   </div>
   <div id="dept-search-box">
-    <input id="dept-search" type="text" placeholder="Enter text to filter list">
+    <input id="dept-search" type="text" placeholder="Enter text to filter list" autofocus>
   </div>
   <p>
     <div id="dept-list" class="text-center frontpage-leads">
@@ -86,6 +86,7 @@ $( document ).ready(function() {
          }
       });
   });
+  document.getElementById("dept-search").focus();
 });
 
 </script>

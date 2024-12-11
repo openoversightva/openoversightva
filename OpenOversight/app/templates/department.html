@@ -67,6 +67,7 @@
 {% endblock meta %}
 {% block content %}
   {% set is_admin_or_coordinator = current_user.is_admin_or_coordinator(dept.department) %}
+  {% set can_edit = current_user.can_edit() %}
   <div class="container theme-showcase" role="main">
     <div class="page-header">
       <ol class="breadcrumb">

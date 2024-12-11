@@ -3,6 +3,7 @@ from wtforms import (
     BooleanField,
     PasswordField,
     StringField,
+    HiddenField,
     SubmitField,
     ValidationError,
 )
@@ -43,7 +44,9 @@ class RegistrationForm(Form):
         ],
     )
     password2 = PasswordField("Confirm password", validators=[DataRequired()])
-    submit = SubmitField("Register")
+    submit_button = SubmitField("Register")
+
+    recaptcha_response = HiddenField("Recaptcha")
 
     def validate_email(self, field):
         if User.by_email(field.data).first():

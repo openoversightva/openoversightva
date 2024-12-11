@@ -88,6 +88,9 @@ class BaseConfig():
         # User settings
         self.APPROVE_REGISTRATIONS = os.environ.get("APPROVE_REGISTRATIONS", False)
 
+        # recaptcha
+        self.RECAPTCHA_API_KEY = os.environ.get("RECAPTCHA_API_KEY", False)
+
 
 class DevelopmentConfig(BaseConfig):
     def __init__(self):

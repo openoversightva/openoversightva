@@ -49,7 +49,7 @@
     </tbody>
   </table>
 {% endif %}
-{% if is_admin_or_coordinator %}
+{% if can_edit %}
   <a href="{{ url_for('main.add_salary', officer_id=officer.id) }}"
      class="btn btn-primary">New Salary</a>
 {% endif %}

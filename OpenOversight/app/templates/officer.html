@@ -86,6 +86,7 @@
 {% endblock meta %}
 {% block content %}
   {% set is_admin_or_coordinator = current_user.is_admin_or_coordinator(officer.department) %}
+  {% set can_edit = current_user.can_edit() %}
   <div class="container theme-showcase" role="main">
     <div class="page-header">
       <ol class="breadcrumb">
@@ -112,20 +113,20 @@
     <div class="row">
       <div class="col-sm-12 col-md-6">
         {% include "partials/officer_assignment_history.html" %}
-        {% if officer.descriptions or is_admin_or_coordinator %}
+        {% if officer.descriptions or can_edit %}
           {% include "partials/officer_descriptions.html" %}
         {% endif %}
         {# Notes are for internal use #}
-        {% if is_admin_or_coordinator %}
+        {% if can_edit %}
           {% include "partials/officer_notes.html" %}
         {% endif %}
       </div>
       {# end col #}
       <div class="col-sm-12 col-md-6">
-        {% if officer.salaries or is_admin_or_coordinator %}
+        {% if officer.salaries or can_edit %}
           {% include "partials/officer_salary.html" %}
         {% endif %}
-        {% if officer.incidents or is_admin_or_coordinator %}
+        {% if officer.incidents or can_edit %}
           {% include "partials/officer_incidents.html" %}
         {% endif %}
 

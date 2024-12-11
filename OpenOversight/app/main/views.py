@@ -28,7 +28,7 @@ from flask import (
 from flask_login import current_user, login_required, login_user
 from flask_wtf import FlaskForm
 
-from sqlalchemy import select, func, distinct, literal_column, case
+from sqlalchemy import select, func, distinct, literal_column, case, union_all, desc, literal_column
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased, contains_eager, joinedload, selectinload
 from sqlalchemy.orm.exc import NoResultFound
@@ -107,12 +107,13 @@ from OpenOversight.app.models.database import (
     Tag,
     Lawsuit,
     DupOfficerMatches,
+    officer_links
 )
 from OpenOversight.app.models.database_cache import (
     get_database_cache_entry,
     put_database_cache_entry,
 )
-from OpenOversight.app.utils.auth import ac_or_admin_required, admin_required
+from OpenOversight.app.utils.auth import ac_or_admin_required, admin_required, edit_required
 from OpenOversight.app.utils.choices import AGE_CHOICES, GENDER_CHOICES, RACE_CHOICES
 from OpenOversight.app.utils.cloud import (
     crop_image,
@@ -621,7 +622,7 @@ def delete_assignment(officer_id, assignment_id):
 @main.route(
     "/officer/<int:officer_id>/salary/new", methods=[HTTPMethod.GET, HTTPMethod.POST]
 )
-@ac_or_admin_required
+@edit_required
 def redirect_add_salary(officer_id: int):
     return redirect(
         url_for("main.add_salary", officer_id=officer_id),
@@ -632,7 +633,7 @@ def redirect_add_salary(officer_id: int):
 @main.route(
     "/officers/<int:officer_id>/salaries/new", methods=[HTTPMethod.GET, HTTPMethod.POST]
 )
-@ac_or_admin_required
+@edit_required
 def add_salary(officer_id: int):
     form = SalaryForm()
     officer = Officer.query.filter_by(id=officer_id).first()
@@ -641,11 +642,7 @@ def add_salary(officer_id: int):
         abort(HTTPStatus.NOT_FOUND)
 
     if form.validate_on_submit() and (
-        current_user.is_administrator
-        or (
-            current_user.is_area_coordinator
-            and officer.department_id == current_user.ac_department_id
-        )
+        current_user.can_edit()
     ):
         try:
             new_salary = Salary(
@@ -670,11 +667,6 @@ def add_salary(officer_id: int):
             url_for("main.officer_profile", officer_id=officer_id),
             code=HTTPStatus.FOUND,
         )
-    elif (
-        current_user.is_area_coordinator
-        and not officer.department_id == current_user.ac_department_id
-    ):
-        abort(HTTPStatus.FORBIDDEN)
     else:
         return render_template("add_edit_salary.html", form=form)
 
@@ -1470,7 +1462,7 @@ def delete_tag(tag_id: int):
 
 @main.route("/tag/set_featured/<int:tag_id>", methods=[HTTPMethod.POST])
 @login_required
-@ac_or_admin_required
+@edit_required
 def redirect_set_featured_tag(tag_id: int):
     return redirect(
         url_for("main.set_featured_tag", tag_id=tag_id),
@@ -1480,7 +1472,7 @@ def redirect_set_featured_tag(tag_id: int):
 
 @main.route("/tags/set_featured/<int:tag_id>", methods=[HTTPMethod.POST])
 @login_required
-@ac_or_admin_required
+@edit_required
 def set_featured_tag(tag_id: int):
     tag = Face.query.filter_by(id=tag_id).first()
 
@@ -1488,9 +1480,8 @@ def set_featured_tag(tag_id: int):
         flash("Tag not found")
         abort(HTTPStatus.NOT_FOUND)
 
-    if not current_user.is_administrator and current_user.is_area_coordinator:
-        if current_user.ac_department_id != tag.officer.department_id:
-            abort(HTTPStatus.FORBIDDEN)
+    if not current_user.can_edit:
+        abort(HTTPStatus.FORBIDDEN)
 
     # Set featured=False on all other tags for the same officer
     for face in Face.query.filter_by(officer_id=tag.officer_id).all():
@@ -2002,7 +1993,7 @@ def all_data():
     methods=[HTTPMethod.GET, HTTPMethod.POST],
 )
 @login_required
-@ac_or_admin_required
+@edit_required
 def redirect_submit_officer_images(officer_id: int):
     return redirect(
         url_for("main.submit_officer_images", officer_id=officer_id),
@@ -2015,7 +2006,7 @@ def redirect_submit_officer_images(officer_id: int):
     methods=[HTTPMethod.GET, HTTPMethod.POST],
 )
 @login_required
-@ac_or_admin_required
+@edit_required
 def submit_officer_images(officer_id: int):
     officer = Officer.query.get_or_404(officer_id)
     return render_template("submit_officer_image.html", officer=officer)
@@ -2047,6 +2038,8 @@ def upload(department_id: int = 0, officer_id: int = 0):
         if not officer:
             return jsonify(error="This officer does not exist."), HTTPStatus.NOT_FOUND
         if not (
+            current_user.can_edit()
+            or
             current_user.is_administrator
             or (
                 current_user.is_area_coordinator
@@ -2389,7 +2382,7 @@ class DescriptionApi(TextApi):
 
 
 @login_required
-@ac_or_admin_required
+@edit_required
 def redirect_new_note(officer_id: int):
     return redirect(
         url_for("main.note_api", officer_id=officer_id),
@@ -2570,11 +2563,10 @@ class OfficerLinkApi(ModelView):
         return self._officer
 
     @login_required
-    @ac_or_admin_required
+    @edit_required
     def new(self, form: FlaskForm = None):
         if (
-            not current_user.is_administrator
-            and current_user.ac_department_id != self.officer.department_id
+            not current_user.can_edit()
         ):
             abort(HTTPStatus.FORBIDDEN)
         if not form:
@@ -2654,7 +2646,7 @@ class OfficerLinkApi(ModelView):
 
 
 @login_required
-@ac_or_admin_required
+@edit_required
 def redirect_new_link(officer_id: int):
     return redirect(
         url_for("main.link_api_new", officer_id=officer_id),
@@ -2663,7 +2655,7 @@ def redirect_new_link(officer_id: int):
 
 
 @login_required
-@ac_or_admin_required
+@edit_required
 def redirect_edit_link(officer_id: int, obj_id=None):
     return redirect(
         url_for("main.link_api_edit", officer_id=officer_id, obj_id=obj_id),
@@ -2981,7 +2973,7 @@ def edit_document(document_id):
 
 @main.route("/documents/new", methods=[HTTPMethod.GET, HTTPMethod.POST])
 @login_required
-@admin_required
+@edit_required
 @limiter.limit("5/minute")
 def submit_document():
     form = AddDocumentForm()
@@ -3038,7 +3030,7 @@ def submit_document():
 
 @main.route("/documents/multi", methods=[HTTPMethod.GET, HTTPMethod.POST])
 @login_required
-@admin_required
+@edit_required
 def submit_documents():
     form = AddMultiDocumentForm()
     if form.validate_on_submit(): # called as XHR
@@ -3606,7 +3598,7 @@ def show_lawsuits(page=1,
                        include_pending=form.include_pending.data)
 
     return render_template(
-        "lawsuits_list.html",
+        "lawsuit_list.html",
         lawsuits=lawsuits,
         form=form,
         next_url=next_url,
@@ -3628,7 +3620,7 @@ def sitemap_lawsuits():
         yield "main.show_lawsuit", {"lawsuit_id": lawsuit.id}
 
 @login_required
-@ac_or_admin_required
+@edit_required
 @main.route("/lawsuits/new", methods=[HTTPMethod.GET, HTTPMethod.POST])
 def add_lawsuit():
     return edit_lawsuit(None)
@@ -3637,9 +3629,15 @@ def add_lawsuit():
     methods=[HTTPMethod.GET, HTTPMethod.POST],
 )
 @login_required
-@ac_or_admin_required
+@edit_required
 def edit_lawsuit(lawsuit_id=None):
     lawsuit = Lawsuit.query.filter_by(id=lawsuit_id).first()
+    if (lawsuit and
+            not current_user.is_administrator
+            and current_user.ac_department_id != self.get_department_id(lawsuit)
+            and lawsuit.created_by != current_user.id # users can only edit things they created
+        ):
+        abort(HTTPStatus.FORBIDDEN)
     form = LawsuitEditForm(obj=lawsuit)
     form.departments = request.form.getlist("departments[]")
     form.officers = request.form.getlist("officers[]")
@@ -3804,6 +3802,53 @@ def dup_officer_details(id_1=None,id2=None):
         officer1=officer1,
         officer2=officer2,
         form=form)
+
+@main.route("/recent", methods=[HTTPMethod.GET])
+def recent_updates(page: int=1): 
+    if page_arg := request.args.get("page"):
+        page = int(page_arg)
+    officer_q = (
+        select(literal_column("'/officers/' || cast(officers.id as text)").label("url"),
+            literal_column("'Officer ' || officers.first_name || ' ' || officers.last_name").label("label"),
+            Officer.last_updated_at, 
+            User.username,
+            literal_column("''").label("value")
+            )
+        .join(User, User.id == Officer.last_updated_by, isouter=True)
+        )
+    incident_q = (
+        select(literal_column("'/incidents/' || cast(incidents.id as text)").label("url"),
+            literal_column("'Incident ' || incidents.report_number").label("label"),
+            Incident.last_updated_at, 
+            User.username,
+            literal_column("''").label("value")
+            )
+        .join(User, User.id == Incident.last_updated_by, isouter=True)
+        )
+    link_q = (
+        select(literal_column("'/officers/' || cast(officers.id as text)").label("url"),
+            literal_column("'Link ' || cast(links.id as text) || ', Officer ' || officers.first_name || ' ' || officers.last_name").label("label"),
+            Link.last_updated_at, 
+            User.username,
+            (Link.url).label("value")
+            )
+        .select_from(Link)
+        .join(officer_links)
+        .join(Officer)
+        .join(User, User.id == Link.last_updated_by, isouter=True)
+        )
+
+    recent_q = (
+        union_all(officer_q, incident_q, link_q)
+        .order_by(desc("last_updated_at"))
+        .offset((page-1)*50)
+        .limit(50)
+        )
+    recent_objs = db.session.execute(recent_q).all()
+
+    return render_template(
+        "recent.html",
+        objs=recent_objs, page=page)
 
 # return JSON list of all (optionally filtered) departments. copied from tags
 @main.route("/api/departments",

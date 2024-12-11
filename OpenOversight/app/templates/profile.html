@@ -38,9 +38,6 @@
 
           {% if current_user.is_administrator and user.is_administrator == False %}
           <h3><a href="{{ url_for('auth.edit_user', user_id=user.id) }}">Edit user</a> <small>Admin only</small></h3>
-          <!-- <p>
-            <a href="{{ url_for('auth.edit_user', user_id=user.id) }}">Change user access</a>
-          </p> -->
           {% endif %}
 
           {% if current_user.is_administrator %}
@@ -60,56 +57,6 @@
     </div>
   </div>
 
-{% if user.classifications %}
-  <div class="row">
-    <div class="col-sm-12 col-md-12">
-    <h2>Image classifications</h2>
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <td><b>Image ID</b></td>
-            <td><b>Did the user find officers in the image?</b></td>
-          </tr>
-        </thead>
-        <tbody>
-          {% for classification in user.classifications %}
-          <tr>
-            <td><a href="{{ url_for( 'main.display_submission', image_id=classification.id ) }}">
-                Image {{ classification.id }}</a></td>
-            <td>{{ classification.contains_cops }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-{% endif %}
-
-{% if user.tags %}
-  <div class="row">
-    <div class="col-sm-12 col-md-12">
-    <h2>Officer Identifications</h2>
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <td><b>Tag ID</b></td>
-            <td><b>Officer ID</b></td>
-          </tr>
-        </thead>
-        <tbody>
-          {% for tag in user.tags %}
-          <tr>
-            <td><a href="{{ url_for( 'main.display_tag', tag_id=tag.id ) }}">
-                Tag {{ tag.id }}</a></td>
-            <td><a href="{{ url_for('main.officer_profile', officer_id=tag.officer_id) }}">
-                {{ tag.officer_id }}</a></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-{% endif %}
 
 </div>
 

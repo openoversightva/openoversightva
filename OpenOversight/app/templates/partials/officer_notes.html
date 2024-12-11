@@ -19,5 +19,7 @@
     </li>
   {% endfor %}
 </ul>
+{% if can_edit %}
 <a href="{{ url_for('main.note_api', officer_id=officer.id) }}"
    class="btn btn-primary">New Note</a>
+{% endif %}

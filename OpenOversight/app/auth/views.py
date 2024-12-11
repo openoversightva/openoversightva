@@ -1,5 +1,7 @@
 from http import HTTPMethod, HTTPStatus
 
+import requests
+
 from flask import (
     current_app,
     flash,
@@ -103,11 +105,38 @@ def logout():
     return redirect(url_for("main.index"))
 
 
+def check_recaptcha():
+    # from https://console.cloud.google.com/security/recaptcha/
+    recaptchaUrl = f"https://recaptchaenterprise.googleapis.com/v1/projects/recaptcha-1733256654045/assessments?key={current_app.config['RECAPTCHA_API_KEY']}"
+    # from the javascript on the page
+    recaptchaResponse = request.form.get('recaptcha_response', None)
+    params = {
+      'event': {
+        'token': recaptchaResponse,
+        'expectedAction': "create_user",
+        'siteKey': "6LdpJpEqAAAAAK4f7WI_CBRMqe31wPvzRWeBmgHt",
+      }
+    }
+    goog_resp = requests.post(recaptchaUrl, json=params)
+    result = goog_resp.json()
+    tokenProperties = result.get("tokenProperties")
+    valid = tokenProperties.get("valid") if tokenProperties else False
+    if valid:
+        return True # captcha successful
+    invalidReason = tokenProperties.get("invalidReason") if tokenProperties else 'None'
+    riskAnalysis = result.get("riskAnalysis")
+    current_app.logger.info(f"Recaptcha failed with reason {invalidReason}, details: {riskAnalysis}")
+    return False
+
 @sitemap_include
 @auth.route("/register", methods=[HTTPMethod.GET, HTTPMethod.POST])
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
+        if not check_recaptcha():
+            flash('Captcha validation failed')
+            return render_template("auth/register.html", form=form, jsloads=js_loads)
+
         user = User(
             email=form.email.data,
             username=form.username.data,

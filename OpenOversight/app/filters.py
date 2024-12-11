@@ -95,6 +95,9 @@ def thousands_separator(value: int) -> str:
 def display_currency(value: float) -> str:
     return f"${value:,.2f}"
 
+def display_datetime(value: datetime) -> str:
+    return value.strftime("%Y-%m-%d %H:%M:%S")
+
 
 def instantiate_filters(app: Flask):
     """Instantiate all template filters"""
@@ -109,3 +112,4 @@ def instantiate_filters(app: Flask):
     app.template_filter("local_time")(local_time)
     app.template_filter("thousands_separator")(thousands_separator)
     app.template_filter("display_currency")(display_currency)
+    app.template_filter("display_datetime")(display_datetime)
