@@ -7,7 +7,7 @@ Edit Lawsuit
 <meta name="description" content="Edit a lawsuit">
 {% endblock %}
 
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}
 
 {% block content %}
 <div class="container theme-showcase" role="main">
@@ -25,26 +25,26 @@ Edit Lawsuit
         <div class="form-group">
           <form class="form" method="post" role="form">
              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-             {{ wtf.form_field(form.court_code) }}
-             {{ wtf.form_field(form.case_number) }}
-             {{ wtf.form_field(form.filing_nature) }}
-             {{ wtf.form_field(form.code_section) }}
-             {{ wtf.form_field(form.plaintiff) }}
-             {{ wtf.form_field(form.defendant) }}
-             {{ wtf.form_field(form.location) }}
-             {{ wtf.form_field(form.filed_date) }}
-             {{ wtf.form_field(form.end_date) }}
-             {{ wtf.form_field(form.disposition) }}
-             {{ wtf.form_field(form.judgment) }}
-             {{ wtf.form_field(form.case_link) }}
-             {{ wtf.form_field(form.narrative) }}
+             {{ render_field(form.court_code) }}
+             {{ render_field(form.case_number) }}
+             {{ render_field(form.filing_nature) }}
+             {{ render_field(form.code_section) }}
+             {{ render_field(form.plaintiff) }}
+             {{ render_field(form.defendant) }}
+             {{ render_field(form.location) }}
+             {{ render_field(form.filed_date) }}
+             {{ render_field(form.end_date) }}
+             {{ render_field(form.disposition) }}
+             {{ render_field(form.judgment) }}
+             {{ render_field(form.case_link) }}
+             {{ render_field(form.narrative) }}
              <div class="form-group "><label class="control-label" for="departments">Departments</label>
                 <select class="form-control" id="departments" name="departments[]" multiple="multiple"></select>
              </div>
              <div class="form-group "><label class="control-label" for="officers">Officers</label>
                 <select class="form-control" id="officers" name="officers[]" multiple="multiple"></select>
              </div>
-             {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+             {{ render_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
           </form>
           <br>
        </div>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}
 {% block title %}OpenOversight Admin - Edit Officer Assignment{% endblock %}
 
 {% block content %}
@@ -12,14 +12,14 @@
     <form class="form" method="post" role="form" id="add-assignment-form" data-jobs-url="{{ url_for('main.get_dept_ranks') }}" data-units-url="{{ url_for('main.get_dept_units') }}"
 >
         {{ form.hidden_tag() }}
-        {{ wtf.form_errors(form, hiddens="only") }}
-        {{ wtf.form_field(form.dept, disabled=form.is_edit ) }}
-        {{ wtf.form_field(form.star_no) }}
-        {{ wtf.form_field(form.job_title) }}
-        {{ wtf.form_field(form.unit) }}
+        {{ render_hidden_errors(form) }}
+        {{ render_field(form.dept, disabled=form.is_edit ) }}
+        {{ render_field(form.star_no) }}
+        {{ render_field(form.job_title) }}
+        {{ render_field(form.unit) }}
         <h4><small><a href="{{ url_for( 'main.add_unit' )}}">Don't see your unit? Add one!</a></small></h4>
-        {{ wtf.form_field(form.start_date) }}
-        {{ wtf.form_field(form.resign_date) }}
+        {{ render_field(form.start_date) }}
+        {{ render_field(form.resign_date) }}
         <input class="btn btn-primary btn-lg" type="submit" value="Edit" />
     </form>
     <br>

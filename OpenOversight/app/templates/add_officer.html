@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}
 {% block title %}
   OpenOversight Admin - Add New Officer
 {% endblock title %}
@@ -15,23 +15,23 @@
             id="add-officer-form"
             data-jobs-url="{{ url_for('main.get_dept_ranks') }}" data-units-url="{{ url_for('main.get_dept_units') }}">
         {{ form.hidden_tag() }}
-        {{ wtf.form_errors(form, hiddens="only") }}
-        {{ wtf.form_field(form.department) }}
-        {{ wtf.form_field(form.first_name, autofocus="autofocus") }}
-        {{ wtf.form_field(form.middle_initial) }}
-        {{ wtf.form_field(form.last_name) }}
-        {{ wtf.form_field(form.suffix) }}
-        {{ wtf.form_field(form.race) }}
-        {{ wtf.form_field(form.gender) }}
-        {{ wtf.form_field(form.star_no) }}
-        {{ wtf.form_field(form.unique_internal_identifier) }}
-        {{ wtf.form_field(form.job_id) }}
-        {{ wtf.form_field(form.unit) }}
+        {{ render_hidden_errors(form) }}
+        {{ render_field(form.department) }}
+        {{ render_field(form.first_name, autofocus="autofocus") }}
+        {{ render_field(form.middle_initial) }}
+        {{ render_field(form.last_name) }}
+        {{ render_field(form.suffix) }}
+        {{ render_field(form.race) }}
+        {{ render_field(form.gender) }}
+        {{ render_field(form.star_no) }}
+        {{ render_field(form.unique_internal_identifier) }}
+        {{ render_field(form.job_id) }}
+        {{ render_field(form.unit) }}
         <h4>
           <small><a href="{{ url_for('main.add_unit') }}">Don't see your unit? Add one!</a></small>
         </h4>
-        {{ wtf.form_field(form.employment_date) }}
-        {{ wtf.form_field(form.birth_year) }}
+        {{ render_field(form.employment_date) }}
+        {{ render_field(form.birth_year) }}
         <div>
           <legend>{{ form.salaries.label }}</legend>
           {% for subform in form.salaries %}
@@ -54,7 +54,7 @@
           {% endfor %}
           <button class="btn btn-success js-add-another-button" disabled>Add another description</button>
         </div>
-        {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+        {{ render_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
       </form>
       <br>
     </div>

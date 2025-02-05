@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_form %}
 {% block title %}OpenOversight - Volunteer Change Default Department{% endblock %}
 
 {% block content %}
@@ -9,7 +9,7 @@
     <h1>Change default department for uploading images</h1>
 </div>
 <div class="col-md-6">
-    {{ wtf.quick_form(form, button_map={'submit':'primary'}) }}
+    {{ render_form(form, button_map={'submit':'primary'}) }}
 </div>
 
 </div>

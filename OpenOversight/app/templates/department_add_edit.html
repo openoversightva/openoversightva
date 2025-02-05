@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}
 {% block title %}
   OpenOversight Admin -
   {% if update %}
@@ -24,16 +24,16 @@
     <div class="col-md-6">
       <form class="form" method="post" role="form">
         {{ form.hidden_tag() }}
-        {{ wtf.form_errors(form, hiddens="only") }}
-        {{ wtf.form_field(form.name, autofocus="autofocus") }}
-        {{ wtf.form_field(form.short_name) }}
-        {{ wtf.form_field(form.state) }}
+        {{ render_hidden_errors(form) }}
+        {{ render_field(form.name, autofocus="autofocus") }}
+        {{ render_field(form.short_name) }}
+        {{ render_field(form.state) }}
         <div class="sortable sortable-fields">
           <legend>{{ form.jobs.label }}</legend>
           <div>
             <h5>Enter ranks in hierarchical order, from lowest to highest rank:</h5>
           </div>
-          <div class="text-danger">{{ wtf.form_errors(form.jobs, hiddens="only") }}</div>
+          <div class="text-danger">{{ render_hidden_errors(form.jobs) }}</div>
           {% if form.jobs|length > 1 %}
             {% for subfield in (form.jobs|sort(attribute='data.order')|list) %}
               <fieldset>
@@ -63,7 +63,7 @@
           {% endif %}
           <button class="btn btn-success js-add-another-button" disabled>Add another rank</button>
         </div>
-        {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+        {{ render_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
       </form>
       <br>
     </div>

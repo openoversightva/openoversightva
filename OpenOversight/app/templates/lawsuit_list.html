@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}
 {% block title %}
   View lawsuits - OpenOversight VA
 {% endblock title %}
@@ -23,12 +23,12 @@
       <div class="filter-sidebar col-sm-3">
         <h3 class="sidebar-title">Filter lawsuits</h3>
         <form class="form" method="get" role="form">
-          <div class="panel">{{ wtf.form_field(form.case_number) }}</div>
-          <div class="panel">{{ wtf.form_field(form.party) }}</div>
-          <div class="panel">{{ wtf.form_field(form.disposition) }}</div>
-          <div class="panel">{{ wtf.form_field(form.judgment) }}</div>
-          <div class="panel">{{ wtf.form_field(form.include_pending) }}</div>
-          <div class="panel">{{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}</div>
+          <div class="panel">{{ render_field(form.case_number) }}</div>
+          <div class="panel">{{ render_field(form.party) }}</div>
+          <div class="panel">{{ render_field(form.disposition) }}</div>
+          <div class="panel">{{ render_field(form.judgment) }}</div>
+          <div class="panel">{{ render_field(form.include_pending) }}</div>
+          <div class="panel">{{ render_field(form.submit, id="submit", button_map={'submit':'primary'}) }}</div>
         </form>
         {% if current_user.can_edit() %}
           <p><a href="{{ url_for('main.add_lawsuit') }}"

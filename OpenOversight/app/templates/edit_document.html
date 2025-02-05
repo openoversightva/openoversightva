@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}¬
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}¬
 {% block title %}Submit a document{% endblock %}
 {% block meta %}
 <meta name="description" content="Edit a document">
@@ -15,13 +15,13 @@
    <div class="form-group">
       <form class="form" method="post" role="form">
          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-         {{ wtf.form_field(form.department) }}
-         {{ wtf.form_field(form.title) }}
-         {{ wtf.form_field(form.description) }}
+         {{ render_field(form.department) }}
+         {{ render_field(form.title) }}
+         {{ render_field(form.description) }}
          <div class="form-group "><label class="control-label" for="tags">Tags</label>
             <select class="form-control" id="tags" name="tags[]" multiple="multiple"></select>
          </div>
-         {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+         {{ render_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
       </form>
       <br>
    </div>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}
 
 {% block meta %}<meta name="description" content="Register here as an OpenOversight volunteer.">{% endblock %}
 
@@ -18,10 +18,10 @@
 <div class="col-md-4">
     <form id="regform" class="form form-horizontal" method="post" role="form" onsubmit="checkRecaptcha(this); return false;">
         {{ form.hidden_tag() }}
-        {{ wtf.form_errors(form, hiddens="only") }}
+        {{ render_hidden_errors(form) }}
 
-        {{ wtf.form_field(form.email, autofocus="autofocus") }}
-        {{ wtf.form_field(form.username) }}
+        {{ render_field(form.email, autofocus="autofocus") }}
+        {{ render_field(form.username) }}
         <div class="form-group {% if form.password.errors %}has-error{%endif%} required">
             <label class="control-label" for="password">Password</label>
             <input class="form-control" id="password" name="password" required="" type="password" value="">
@@ -39,7 +39,7 @@
                 <p class="help-block">{% for error in form.password2.errors %}{{ error }} {% endfor %}</p>
             {% endif %}
         </div>
-        {{ wtf.form_field(form.submit_button, id="password-button", button_map={'submit':'primary'}, disabled=True) }}
+        {{ render_field(form.submit_button, id="password-button", button_map={'submit':'primary'}, disabled=True) }}
     </form>
 
     <script type="text/javascript">

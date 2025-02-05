@@ -1,12 +1,12 @@
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}
 <form class="form" method="post" role="form">
   {{ form.hidden_tag() }}
-  <div class="text-danger">{{ wtf.form_errors(form, hiddens="only") }}</div>
-  {{ wtf.form_field(form.date_field, autofocus="autofocus") }}
-  {{ wtf.form_field(form.time_field) }}
-  {{ wtf.form_field(form.report_number) }}
-  {{ wtf.form_field(form.department) }}
-  {{ wtf.form_field(form.description) }}
+  <div class="text-danger">{{ render_hidden_errors(form) }}</div>
+  {{ render_field(form.date_field, autofocus="autofocus") }}
+  {{ render_field(form.time_field) }}
+  {{ render_field(form.report_number) }}
+  {{ render_field(form.department) }}
+  {{ render_field(form.description) }}
   <div class="form-group "><label class="control-label" for="tags">Tags</label>
       <select class="form-control" id="tags" name="tags[]" multiple="multiple"></select>
   </div>
@@ -73,5 +73,5 @@
        });
     });
   </script>
-  {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+  {{ render_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
 </form>

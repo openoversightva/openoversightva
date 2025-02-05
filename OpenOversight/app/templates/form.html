@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_form %}
 {% block content %}
   <div class="container theme-showcase" role="main">
     <div class="page-header">
@@ -12,7 +12,7 @@
     {% endblock page_header %}
     <div class="col-md-6 col-xs-12">
       {% block form %}
-        {{ wtf.quick_form(form, action=post_url, method='post', button_map={'submit':'primary'}) }}
+        {{ render_form(form, action=post_url, method='post', button_map={'submit':'primary'}) }}
         <br>
       {% endblock form %}
     </div>

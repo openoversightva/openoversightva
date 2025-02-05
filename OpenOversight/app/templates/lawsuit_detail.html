@@ -29,7 +29,7 @@ Lawsuit Details
 </script>
 {% endblock meta %}
 
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}
 
 {% block content %}
 <div class="container theme-showcase" role="main">

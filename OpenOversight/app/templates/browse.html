@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}
 {% block title %}Browse OpenOversight{% endblock %}
 {% block meta %}<meta name="description" content="Browse a department on OpenOversight.">{% endblock %}
 {% block content %}
