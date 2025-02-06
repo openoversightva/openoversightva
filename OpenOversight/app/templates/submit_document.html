@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}¬
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}¬
 {% block title %}Submit a document{% endblock %}
 {% block meta %}
 <meta name="description" content="Submit a document">
@@ -19,18 +19,18 @@
    </div>
    <div class="form-group">
       <form class="form"  name = "docform" id = "docform" enctype="multipart/form-data" method="post" role="form" label="deptselect">
-         {{ wtf.form_field(form.department) }}
-         {{ wtf.form_field(form.title) }}
-         {{ wtf.form_field(form.description) }}
+         {{ render_field(form.department) }}
+         {{ render_field(form.title) }}
+         {{ render_field(form.description) }}
          <div class="form-group "><label class="control-label" for="tags">Tags</label>
             <select class="form-control" id="tags" name="tags[]" multiple="multiple"></select>
          </div>
          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-         {{ wtf.form_field(form.file) }}
+         {{ render_field(form.file) }}
          <div id="my-cop-dropzone"  class='dropzone'>
          </div>
          <p>Drag documents from your computer directly into the box above or click the box to launch a finder window. If you are on mobile, you can click the box above to select a document.</p>
-         {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+         {{ render_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
       </form>
       <br>
    </div>

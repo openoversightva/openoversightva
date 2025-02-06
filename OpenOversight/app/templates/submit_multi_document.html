@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}¬
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}¬
 {% block title %}Submit a document{% endblock %}
 {% block meta %}
 <meta name="description" content="Submit a document">
@@ -19,10 +19,10 @@
    </div>
    <div class="form-group">
       <form action="multi" class="form dropzone"  name="docform" id="docform" enctype="multipart/form-data" method="post" role="form" label="deptselect">
-         {{ wtf.form_field(form.department) }}
+         {{ render_field(form.department) }}
          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
          <p>Drag documents from your computer directly into the box below or click the box to launch a finder window. If you are on mobile, you can click the box below to select a document.</p>
-         {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
+         {{ render_field(form.submit, id="submit", button_map={'submit':'primary'}) }}
       </form>
       <br>
       {% if form.file.errors %}

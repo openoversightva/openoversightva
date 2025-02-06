@@ -1,11 +1,11 @@
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}
 <fieldset {% if id and number %}id="{{ id }}-{{ number }}"{% endif %}
           class="well">
   {{ subform.hidden_tag() }}
-  <div class="text-danger">{{ wtf.form_errors(subform, hiddens="only") }}</div>
+  <div class="text-danger">{{ render_hidden_errors(subform) }}</div>
   {% for subfield in subform %}
     {% if not bootstrap_is_hidden_field(subfield) %}
-      {{ wtf.form_field(subfield,
+      {{ render_field(subfield,
             form_type=form_type,
             horizontal_columns=horizontal_columns,
             button_map=button_map) }}

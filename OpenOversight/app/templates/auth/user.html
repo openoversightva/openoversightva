@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_form %}
 {% block title %}OpenOversight Admin - Update User{% endblock %}
 
 {% block content %}
@@ -13,7 +13,7 @@
 	</div>
 	<div class="col-md-6 col-xs-12">
 	    <form class="form" method="post" role="form">
-				{{ wtf.quick_form(form, button_map={"submit":"primary", "delete": "danger"}) }}
+				{{ render_form(form, button_map={"submit":"primary", "delete": "danger"}) }}
 	    </form>
 	    <br>
 	</div>

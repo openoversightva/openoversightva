@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}¬
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}¬
 {% block title %}Edit a tag{% endblock %}
 {% block meta %}
 <meta name="description" content="Edit a tag">
@@ -18,7 +18,7 @@
 
          {{ form.merge_tags(class="form-control") }}
          <br>
-         {{ wtf.form_field(form.submit, id="submit") }}
+         {{ render_field(form.submit, id="submit") }}
       </form>
       <br>
    </div>

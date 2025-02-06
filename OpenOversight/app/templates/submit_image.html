@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}¬
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}¬
 {% block title %}Submit images to OpenOversight{% endblock %}
 {% block meta %}
 <meta name="description" content="Submit images of officers in uniform. Officer faces should be clearly visible in each photograph. It is preferred if the name and/or badge number is also visible.">
@@ -28,7 +28,7 @@
    <h3>Select the department that the police officer in your image belongs to:</h3>
    <div class="form-group">
       <form class="form" name = "deptselect" id = "deptselect" method="post" role="form" label="deptselect">
-         {{ wtf.form_field(form.department) }}
+         {{ render_field(form.department) }}
       </form>
       <br>
    </div>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_hidden_errors, render_field %}
 {% block title %}Volunteer with OpenOversight{% endblock %}
 {% block meta %}
 <meta name="description" content="Help OpenOversight create transparency with the first public, searchable database of law enforcement officers.">
@@ -155,12 +155,12 @@
 
                     <form class="form" method="post" role="form">
                         {{ form.hidden_tag() }}
-                        {{ wtf.form_errors(form, hiddens="only") }}
+                        {{ render_hidden_errors(form) }}
 
-                        {{ wtf.form_field(form.email) }}
-                        {{ wtf.form_field(form.password) }}
+                        {{ render_field(form.email) }}
+                        {{ render_field(form.password) }}
                         <div class="text-center">
-                            {{ wtf.form_field(form.submit, id="submit", button_map={'submit':'secondary btn-lg'}) }}
+                            {{ render_field(form.submit, id="submit", button_map={'submit':'secondary btn-lg'}) }}
                             {% if error %}
                                 {{ error }}
                             {% endif %}
