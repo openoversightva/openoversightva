@@ -107,10 +107,10 @@ def upload_doc_to_s3(file_obj, dest_filename, content_type):
     s3_client = boto3.client('s3')
 
     # Folder to store files in on S3 is first two chars of dest_filename
-    s3_folder = dest_filename[0:2]
-    s3_filename = dest_filename[2:]
+    s3_folder = 'documents'
+    s3_filename = dest_filename
     s3_content_type = content_type
-    s3_path = '{}/{}'.format(s3_folder, s3_filename)
+    s3_path = f"{s3_folder}/{s3_filename}"
     s3_client.upload_fileobj(file_obj,
                              current_app.config['S3_BUCKET_NAME'],
                              s3_path,

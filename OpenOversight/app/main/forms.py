@@ -546,6 +546,7 @@ class LocationForm(Form):
         validators=[
             AnyOf(allowed_values(STATE_CHOICES, False), message="Must select a state.")
         ],
+        default='VA',
     )
     zip_code = StringField(
         "Zip Code",
@@ -600,6 +601,7 @@ class OOIdForm(Form):
 
 class IncidentForm(DateFieldForm):
     report_number = StringField(
+        label="Incident Title",
         validators=[
             Regexp(
                 r"^[a-zA-Z0-9- ]*$",
@@ -622,12 +624,12 @@ class IncidentForm(DateFieldForm):
         min_entries=1,
         widget=BootstrapListWidget(),
     )
-    license_plates = FieldList(
-        FormField(LicensePlateForm, widget=FormFieldWidget()),
-        description="License plates of police vehicles at the incident.",
-        min_entries=1,
-        widget=BootstrapListWidget(),
-    )
+    #license_plates = FieldList(
+    #    FormField(LicensePlateForm, widget=FormFieldWidget()),
+    #    description="License plates of police vehicles at the incident.",
+    #    min_entries=1,
+    #    widget=BootstrapListWidget(),
+    #)
     links = FieldList(
         FormField(LinkForm, widget=FormFieldWidget()),
         description="Links to articles about or videos of the incident.",

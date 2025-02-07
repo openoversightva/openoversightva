@@ -3,7 +3,7 @@ from flask_login import current_user
 
 from OpenOversight.app.models.database import (db, Officer, Assignment, Job, Face, User, Unit, Department,
                      Incident, Link, Note, Description, Salary,
-                     Document, Tag, Sheet, SheetDetail)
+                     Document, Tag, Sheet, SheetDetail, Location)
 from OpenOversight.app.utils.cloud import (compute_hash, upload_doc_to_s3)
 
 from io import BytesIO
@@ -17,7 +17,7 @@ import pandas as pd
 from sqlalchemy.sql import text
 from sqlalchemy import exc
 
-def upload_sheet(sheet_buf, user_id, file_ext='csv'):
+def upload_sheet(sheet_buf, user_id, filename):
     file = sheet_buf.read()
     sheet_data = BytesIO(file)
     hash_sheet = compute_hash(file)
@@ -25,8 +25,7 @@ def upload_sheet(sheet_buf, user_id, file_ext='csv'):
     if existing_doc:
         return existing_doc
     try:
-        new_filename = '{}.{}'.format(hash_sheet, file_ext)
-        url = upload_doc_to_s3(sheet_data, new_filename, 'text/csv')
+        url = upload_doc_to_s3(sheet_data, filename, 'text/csv')
         new_sheet = Sheet(filepath=url, hash_sheet=hash_sheet,
                           date_inserted=datetime.datetime.now(),
                           date_loaded=None,
@@ -352,3 +351,37 @@ def update_officer(row):
         row.status = f"ERROR - {traceback.format_exc()}"
     db.session.commit()
     return 'ok'
+
+"""
+Incidents section
+"""
+
+def load_incident_sheet(sheet):
+    df = pd.read_csv(sheet.filepath, dtype='str')
+    df.columns = ['agency_name', 'date', 'city', 'state', 'incident_title', 'description','officer_ids','links']
+    df['sheet_id'] = sheet.id
+    df['date'] = pd.to_datetime(df['date'], errors="coerce")
+    for (i, row) in df.iterrows():
+        try:
+            new_incident = Incident(
+                address=Location(city=row['city'], state=row['state']),
+                date=row['date'],
+                department=Department.query.filter_by(name=row['agency_name']).first(),
+                description=row["description"],
+                report_number=row["incident_title"],
+            )
+            for oid in row['officer_ids'].split(','):
+                cop = Officer.query.filter_by(id=oid).first()
+                if not cop:
+                    flash(f"Officer id {oid} not found, for incident #{i} in sheet")
+                    continue
+                new_incident.officers.append(cop)
+            for l in row['links'].split(','):
+                link = Link(url=l, link_type='link')
+                new_incident.links.append(link)
+            db.session.add(new_incident)
+        except exc.IntegrityError as e:
+            flash(f"Error on row {i}: {e}")
+            continue
+    db.session.commit()
+    flash("Load complete")
