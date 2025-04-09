@@ -78,6 +78,11 @@ def create_app(config_name="default"):
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
     app.logger.info("OpenOversight startup")
+    
+    # create db tables if they don't already exist
+    with app.app_context():
+	    db.create_all()
+    
 # oova - removed by LPL
 #    gunicorn_logger = logging.getLogger('gunicorn.error')
 #    app.logger.handlers = gunicorn_logger.handlers

@@ -11,7 +11,7 @@ ENV DEBIAN-FRONTEND noninteractive
 ENV DISPLAY :1
 
 # install apt dependencies
-RUN apt-get update && apt-get install -y xvfb firefox-esr libpq-dev python3-dev && \
+RUN apt-get update && apt-get install -y xvfb firefox-esr libpq-dev build-essential python3-dev && \
     apt-get install -y libsqlite3-0 ca-certificates gnupg && apt-get clean
 
 # install node (updated to v20) https://github.com/nodesource/distributions#debian-versions
@@ -42,6 +42,7 @@ RUN chmod -R 777 /usr/src/app/ /var/lib/xkb /.cache /.yarn /.mozilla
 
 
 COPY requirements.txt dev-requirements.txt /usr/src/app/
+RUN pip3 install -U pip wheel setuptools
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 RUN test "${DOCKER_BUILD_ENV}" = production || pip3 install --no-cache-dir -r dev-requirements.txt
