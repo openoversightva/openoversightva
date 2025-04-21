@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container theme-showcase text-center" role="main">
+        <div class="container horizontal-padding bg-blue-gray">
+            <h2>Information</h2>
+        </div>
+
+        <div class="container horizontal-padding">
+            <div class="row pb-50">
+                <div class="col-lg-6 horizontal-padding">
+                    <p class="lead margin-less">
+                        <a href="/donate">Donate</a>
+                    </p>
+                    <div class="font-weight-300">
+                        Anything you can spare will be used directly for FOIA fees, hosting costs, or legal/paperwork fees. OpenOversightVA is a registered 501(c)3 nonprofit organization.
+                    </div>
+                </div>
+                <div class="col-lg-6 horizontal-padding">
+                    <p class="lead margin-less">
+                        <a href="/volunteer">Volunteer</a>
+                    </p>
+                    <div class="font-weight-300">
+                        We're an all-volunteer organization. If you enjoy this kind of work and have some free time, sign up!
+                    </div>
+                </div>
+            </div>
+
+            <div class="row pb-50">
+                <p class="lead margin-less">
+                    Contact Us
+                </p>
+                <p class="font-weight-300">
+                    If you need assistance or have questions, please email us at <a href="mailto:contact@openoversightva.org">contact@openoversightva.org</a>
+                </p>
+            </div>
+
+
+            <h2 class="horizontal-padding font-weight-300">
+                Resources
+            </h2>
+            <div class="row pb-50">
+                <div class="col-lg-6 horizontal-padding">
+                    <p class="lead margin-less">
+                        Public Virginia policing datasets
+                    </p>
+                    <div class="font-weight-300 text-left">
+                        <ul>
+                          <li><a href="/download/all">Our data (download by department)</a></li>
+                          <li><a href="https://www.documentcloud.org/documents/?q=%2Buser%3Aopen-oversight-rva-108012">Our DocumentCloud files</a></li>
+                          <li><a href="https://data.virginia.gov/dataset/community-policing-data">Virginia Community Policing Act data</a>, statewide traffic stops 2020-present (~1GB)</li>
+                          <ul><li>Now including partial location data!</li></ul>
+                          <li><a href="https://va.beyond2020.com/">VA Beyond 2020</a> - statewide incident-based reporting collected by Virginia State Police, submitted to FBI NIBRS</li>
+                          <li>Richmond City:
+                            <ul>
+                              <li><a href="https://catbriar.org/data/ric_active_calls.csv">Active Calls, Aug 2023-present</a> (~80 MB)</li>
+                            </ul>
+                          </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-6 horizontal-padding">
+                    <p class="lead margin-less">
+                        Affiliated regional police oversight databases
+                    </p>
+                    <div class="font-weight-300 text-left">
+                        <ul>
+                            <li><a href="https://bpdwatch.com/">BPDWatch</a> - Baltimore Police Database</li>
+                            <li><a href="https://cpdp.co/">Civic Police Data Project</a> - Chicago police misconduct database</li>
+                            <li><a href="https://openoversight.com/">OpenOversight</a> - The original OpenOversight project run by Lucy Parsons Labs. Started with Chicago, now includes NYC and LA</li>
+                            <li><a href="https://openoversight.tech-bloc-sea.dev/">SPD Watch</a> - OpenOversight Seattle run by Seattle Tech Bloc</li>
+                            <li><a href="https://llead.co/">LLEAD</a> - Louisiana police misconduct database</li>
+                            <li><a href="https://copdb.org/">CopDB</a> - Community sourced police database - Utah</li>
+                            <li><a href="https://www.50-a.org/">50-a.org</a> - NYPD police misconduct database</li>
+                            <li><a href="https://copthedata.com/officer-suspensions-dashboard/">Cop the Data</a> - Texas police misconduct/suspension database</li>
+                        </ul>
+                    </div>
+                </div>
+              </div>
+              <div class="row pb-50">
+                <div class="col-lg-6 horizontal-padding">
+                    <p class="lead margin-less">
+                        National U.S. policing datasets
+                    </p>
+                    <div class="font-weight-300 text-left">
+                        <ul>
+                          <li><a href="https://national.cpdp.co/">National Police Index</a> - collects POST (police officer standards and training) certification and employment history across the United States</li>
+                          <li><a href="https://pdap.io/data">Police Data Access Point</a> - national police data catalog / clearinghouse</li>
+                          <li><a href="https://www.fbi.gov/how-we-can-help-you/more-fbi-services-and-information/ucr">FBI Uniform Crime Reporting</a> - unified statistics reported by local police agencies</li>
+                          <li><a href="https://openpolicing.stanford.edu/data/">Stanford Open Policing Project</a> - national traffic stop database</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-6 horizontal-padding">
+                    <p class="lead margin-less">
+                        National policing datasets
+                    </p>
+                    <div class="font-weight-300 text-left">
+                        <ul>
+                          <li><a href="https://national.cpdp.co/">National Police Index</a> - collects police employment history across the United States</li>
+                        </ul>
+                    </div>
+                </div>
+              </div>
+
+          </div>
+
+
+{% endblock %}

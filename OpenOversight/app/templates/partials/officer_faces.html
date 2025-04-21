@@ -4,7 +4,7 @@
      data-ride="carousel">
   <div class="carousel-inner">
     {% for face, path in face_paths %}
-      <div class="item{{ ' active' if loop.index == 1 else '' }}">
+      <div class="carousel-item{{ ' active' if loop.index == 1 else '' }}">
         <!--div class="row text-center"-->
           <!--div class="col-12"-->
             {# Don't try to link if only image is the placeholder #}
@@ -19,18 +19,18 @@
     {% endfor %}
   </div>
   {% if face_paths | length > 1 %}
-    <a class="left carousel-control"
+    <a class="left carousel-control-prev"
        href="#face-carousel"
        role="button"
        data-slide="prev">
-      <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
       <span class="sr-only">Previous</span>
     </a>
-    <a class="right carousel-control"
+    <a class="right carousel-control-next"
        href="#face-carousel"
        role="button"
        data-slide="next">
-      <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
       <span class="sr-only">Next</span>
     </a>
   {% endif %}

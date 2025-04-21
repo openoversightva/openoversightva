@@ -11,6 +11,7 @@ from xml.etree import ElementTree # for PACER get
 from datetime import datetime
 from http import HTTPMethod, HTTPStatus
 from traceback import format_exc
+from werkzeug.utils import secure_filename
 
 from flask import (
     Response,
@@ -29,7 +30,7 @@ from flask_login import current_user, login_required, login_user
 from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
 
-from sqlalchemy import select, func, distinct, literal_column, case, union_all, desc, literal_column
+from sqlalchemy import select, func, distinct, literal_column, case, union_all, desc, literal_column, and_, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased, contains_eager, joinedload, selectinload
 from sqlalchemy.orm.exc import NoResultFound
@@ -303,6 +304,8 @@ def redirect_get_started_labeling():
 @sitemap_include
 @main.route("/labels", methods=[HTTPMethod.GET, HTTPMethod.POST])
 def get_started_labeling():
+    if not current_user.is_authenticated:
+        return redirect(url_for("main.volunteer"))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.by_email(form.email.data).first()
@@ -312,35 +315,30 @@ def get_started_labeling():
         flash("Invalid username or password.")
     else:
         current_app.logger.info(form.errors)
-    departments = Department.query.all()
-    return render_template("label_data.html", departments=departments, form=form)
 
-    depts_images = []
-    for department in departments:
-        has_sort = False
-        has_face = False
+    # fast way to list all departments with (a) unclassified images (is there any cop), (b) untagged images (cop with unknown id)
+    dept_images = db.session.execute(
+            select(Department)
+                .join(Image.department)
+                .where(
+                    or_(Image.contains_cops == None, 
+                        and_(Image.contains_cops == True,
+                             Image.is_tagged==False)
+                        )
+                    ).distinct()
+        ).scalars().all()
 
-        sort_query = Image.query.filter_by(contains_cops=None) \
-                             .filter_by(department_id=department.id)
+    return render_template("label_data.html", departments=dept_images, form=form)
 
-        sort = get_random_image(sort_query)
+@sitemap_include
+@main.route("/volunteer", methods=[HTTPMethod.GET])
+def volunteer():
+    return render_template("volunteer.html")
 
-        if sort:
-            has_sort = True
-
-        face_query = Image.query.filter_by(contains_cops=True) \
-                               .filter_by(department_id=department.id) \
-                               .filter_by(is_tagged=False)
-        
-        face = get_random_image(face_query)
-
-        if face:
-            has_face = True
-        
-        if sort or face:
-            depts_images.append(department)
-
-    return render_template("label_data.html", departments=depts_images, form=form)
+@sitemap_include
+@main.route("/information", methods=[HTTPMethod.GET])
+def information():
+    return render_template("information.html")
 
 @main.route(
     "/sort/department/<int:department_id>", methods=[HTTPMethod.GET, HTTPMethod.POST]
@@ -3200,7 +3198,7 @@ def submit_sheet():
     if form.validate_on_submit():
         try:
             file_data = form.file.data
-            filename = secure_filename(form.file.filename)
+            filename = secure_filename(form.file.data.filename)
             sheet = upload_sheet(file_data, current_user.id, filename)
             flash("Sheet was successfully uploaded")
             return redirect(url_for("main.sheet_map", sheet_id=sheet.id))

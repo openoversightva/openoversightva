@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Volunteer with OpenOversight{% endblock %}
+{% block content %}
+
+<div role="main">
+    <div class="text-center frontpage-leads">
+        <div class="container horizontal-padding bg-blue-gray">
+            <h2>Volunteer</h2>
+
+            <h3>Help OpenOversightVA create transparency with the first public, searchable database of law enforcement officers in Virginia.</h3>
+
+            <div class="text-center">
+                <h1>
+                    <small>Interested in volunteering?</small>
+                </h1>
+                <div class="horizontal-padding">
+                    <p><a href="https://github.com/openoversightva/openoversight/wiki"><b>Read our wiki for more details</b></a></p>
+                    <p>and</p>
+                    <a class="btn btn-lg btn-info" href="{{ url_for('auth.register') }}">
+                        Sign Up for an Account
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="container horizontal-padding">
+            <h2 class="horizontal-padding font-weight-300">
+                How you can help
+            </h2>
+            <div class="row pb-50">
+                <div class="col-lg-4 horizontal-padding">
+                    <span class="fa fa-picture-o fa-2x"></span>
+                    <p class="lead margin-less">
+                        Agency Rosters
+                    </p>
+                    <div class="font-weight-300">
+                        Volunteers submit open data requests to law enforcement agencies, then clean up and format the documents they receive.
+                    </div>
+                </div>
+                <div class="col-lg-4 horizontal-padding">
+                    <span class="fa fa-users fa-2x"></span>
+                    <p class="lead margin-less">
+                        Incidents
+                    </p>
+                    <div class="font-weight-300">
+                        Volunteers track reported incidents of police shootings, lawsuits, and complaints - recording details and documenting allegations.
+                    </div>
+                </div>
+                <div class="col-lg-4 horizontal-padding">
+                    <span class="fa fa-envelope fa-2x"></span>
+                    <p class="lead margin-less">
+                        Policies
+                    </p>
+                    <div class="font-weight-300">
+                        Volunteers request and process policy documents from agencies.
+                    </div>
+                </div>
+            </div>
+            <!--              -----           -->
+            <div class="row pb-50">
+                <div class="col-lg-4 horizontal-padding">
+                    <span class="fa fa-picture-o fa-2x"></span>
+                    <p class="lead margin-less">
+                        Investigative Journalism
+                    </p>
+                    <div class="font-weight-300">
+                        Volunteers investigate problem officers, tracking their history across agencies.
+                    </div>
+                </div>
+                <div class="col-lg-4 horizontal-padding">
+                    <span class="fa fa-users fa-2x"></span>
+                    <p class="lead margin-less">
+                        Press
+                    </p>
+                    <div class="font-weight-300">
+                        Volunteers write news releases, do interviews, and engage with the public on behalf of Open Oversight Virginia.
+                    </div>
+                </div>
+                <div class="col-lg-4 horizontal-padding">
+                    <span class="fa fa-envelope fa-2x"></span>
+                    <p class="lead margin-less">
+                        Technology
+                    </p>
+                    <div class="font-weight-300">
+                        Volunteers code, fix bugs, manage servers, and play with data.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

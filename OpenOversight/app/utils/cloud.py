@@ -106,7 +106,7 @@ def upload_file_to_s3(file_obj, dest_filename: str):
 def upload_doc_to_s3(file_obj, dest_filename, content_type):
     s3_client = boto3.client('s3')
 
-    # Folder to store files in on S3 is first two chars of dest_filename
+    # Folder to store files in on S3 was first two chars of dest_filename - is not documents
     s3_folder = 'documents'
     s3_filename = dest_filename
     s3_content_type = content_type

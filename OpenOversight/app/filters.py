@@ -46,6 +46,7 @@ def field_in_query(form_data, field) -> str:
 def markdown(text: str) -> Markup:
     text = text.replace("\n", "  \n")  # make markdown not ignore new lines.
     html = bleach.clean(_markdown.markdown(text), markdown_tags, markdown_attrs)
+    html = html.replace("<a ", "<a target='_blank' ") # quick hack to force markdown links to open in a new tab - KF
     return Markup(html)
 
 
