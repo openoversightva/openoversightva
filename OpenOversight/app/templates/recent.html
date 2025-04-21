@@ -62,14 +62,18 @@ table.updateList td,th {
    <tr>
       <th class="col1">Link</th>
       <th class="col2">Updated At</th>
+      {% if current_user and current_user.is_authenticated %}
       <th class="col3">Updated By</th>
+      {% endif %}
       <th class="col4">Value</th>
    </tr>
    {% for obj in objs %}
     <tr>
       <td class="col1"><a href="{{ obj.url }}">{{ obj.label }}</a></td>
       <td class="col2">{{ obj.last_updated_at | display_datetime }}</td>
+      {% if current_user and current_user.is_authenticated %}
       <td class="col3">{{ obj.username }}</td>
+      {% endif %}
       <td class="col4">{{ obj.value }}</td>
     </tr>
    {% endfor %}

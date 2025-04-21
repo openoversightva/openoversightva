@@ -64,13 +64,19 @@
             Import List
         </a>
 
-    </div>
-
-    <div class="text-center frontpage-leads">
         <a href="{{ url_for('main.dup_officer_list') }}"
               class="btn btn-primary" role="button">
             <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span>
             Duplicate Officer Matching
+        </a>
+
+    </div>
+
+    <div class="text-center frontpage-leads">
+        <a href="{{ url_for('main.submit_incident_sheet') }}"
+              class="btn btn-primary" role="button">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            Bulk Upload Incidents
         </a>
     </div>
 

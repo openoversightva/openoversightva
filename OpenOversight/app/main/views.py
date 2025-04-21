@@ -27,6 +27,7 @@ from flask import (
 )
 from flask_login import current_user, login_required, login_user
 from flask_wtf import FlaskForm
+from werkzeug.utils import secure_filename
 
 from sqlalchemy import select, func, distinct, literal_column, case, union_all, desc, literal_column
 from sqlalchemy.exc import IntegrityError
@@ -173,7 +174,8 @@ from OpenOversight.app.sheet_import import (
     prep_ref_data,
     match_officers,
     load_sheet,
-    bulk_expire_officers
+    bulk_expire_officers,
+    load_incident_sheet
 )
 
 from OpenOversight.app.officer_matching import (
@@ -2210,7 +2212,7 @@ class IncidentApi(ModelView):
     def get_edit_form(self, obj: Incident):
         form = super(IncidentApi, self).get_edit_form(obj=obj)
 
-        no_license_plates = len(obj.license_plates)
+        #no_license_plates = len(obj.license_plates)
         no_links = len(obj.links)
         no_officers = len(obj.officers)
         tags = obj.tags
@@ -2219,7 +2221,7 @@ class IncidentApi(ModelView):
             form.officers[officer_idx].oo_id.data = officer.id
 
         # set the form to have fields for all the current model's items
-        form.license_plates.min_entries = no_license_plates
+        #form.license_plates.min_entries = no_license_plates
         form.links.min_entries = no_links
         form.officers.min_entries = no_officers
         form.incident_id = obj.id
@@ -2276,10 +2278,10 @@ class IncidentApi(ModelView):
                     if of and of not in obj.officers:
                         obj.officers.append(of)
 
-        license_plates = form.data.pop("license_plates")
-        del form.license_plates
-        if license_plates and license_plates[0]["number"]:
-            replace_list(license_plates, obj, "license_plates", LicensePlate, db)
+        #license_plates = form.data.pop("license_plates")
+        #del form.license_plates
+        #if license_plates and license_plates[0]["number"]:
+        #    replace_list(license_plates, obj, "license_plates", LicensePlate, db)
 
         obj.date = form.date_field.data
         if form.time_field.raw_data and form.time_field.raw_data != [""]:
@@ -2327,6 +2329,30 @@ main.add_url_rule(
 def sitemap_incidents():
     for incident in Incident.query.all():
         yield "main.incident_api", {"obj_id": incident.id}
+
+# This is the page to upload a new spreadsheet containing incidents
+@main.route("/incidents/bulk", methods=[HTTPMethod.GET, HTTPMethod.POST])
+@login_required
+@admin_required
+@limiter.limit("5/minute")
+def submit_incident_sheet():
+    form = AddSheetForm()
+    if form.validate_on_submit():
+        try:
+            file_data = form.file.data
+            filename = secure_filename(file_data.filename)
+            sheet = upload_sheet(file_data, current_user.id, filename)
+            flash("Sheet was successfully uploaded")
+        except Exception as e:
+            import traceback
+            flash(f"An error occurred while uploading {file_data} {filename}")
+            flash(traceback.format_exc())
+            return redirect("/incidents/bulk")
+        # actually read the csv and create incidents
+        load_incident_sheet(sheet)
+        return redirect(url_for("main.incident_api"))
+    else:
+        return render_template("import/import_incidents.html", form=form)
 
 
 class TextApi(ModelView):
@@ -3174,7 +3200,8 @@ def submit_sheet():
     if form.validate_on_submit():
         try:
             file_data = form.file.data
-            sheet = upload_sheet(file_data, current_user.id)
+            filename = secure_filename(form.file.filename)
+            sheet = upload_sheet(file_data, current_user.id, filename)
             flash("Sheet was successfully uploaded")
             return redirect(url_for("main.sheet_map", sheet_id=sheet.id))
         except Exception as e:
