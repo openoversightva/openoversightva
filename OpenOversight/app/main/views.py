@@ -898,6 +898,7 @@ def edit_department(department_id: int):
         department.name = form.name.data
         department.short_name = form.short_name.data
         department.state = form.state.data
+        department.narrative = form.narrative.data
         department.last_updated_by = current_user.id
         db.session.flush()
         if form.jobs.data:
@@ -959,7 +960,7 @@ def edit_department(department_id: int):
             db.session.commit()
 
         flash(f"Department {department.name} in {department.state} edited")
-        return redirect(url_for("main.list_officer", department_id=department.id))
+        return redirect(url_for("main.department_profile", department_id=department.id))
     else:
         current_app.logger.info(form.errors)
         return render_template(

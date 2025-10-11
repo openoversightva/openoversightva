@@ -226,6 +226,7 @@ class DepartmentForm(Form):
         default="",
         validators=[AnyOf(allowed_values(DEPARTMENT_STATE_CHOICES))],
     )
+    narrative = TextAreaField("Narrative Text", render_kw={"class": "form-control", "rows": 10})
     jobs = FieldList(
         StringField("Job", default="", validators=[Regexp(r"\w*")]), label="Ranks"
     )

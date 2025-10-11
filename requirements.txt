@@ -7,8 +7,8 @@ Babel~=2.12.1
 bleach==6.0.0
 bleach-allowlist==1.0.3
 blinker~=1.6.2
-boto3==1.28.1
-botocore==1.31.1
+boto3~=1.34
+botocore~1.40.50 # depend for boto3
 bottleneck>= 1.3 # opt for recordlinkage
 bootstrap-flask>=2.4.0
 cachetools==5.3.1
@@ -63,14 +63,14 @@ recommonmark==0.7.1
 recordlinkage>=0.16
 requests>=2.32.0
 rich~=13.4.2
-s3transfer~=0.6.1
+s3transfer # depend for botocore
 selenium~=4.10.0
 six~=1.16.0
 sphinx==7.1.2
 SQLAlchemy==2.0.17 # python 3.9 required after 1.4.47
-tornado~=6.4.1
+tornado~=6.5
 trio==0.22.1
-urllib3~=1.26.16 # This version is required for other packages to run
+urllib3~=2.5.0 # 1.26.16 This version is required for other packages to run
 visitor~=0.1.3
 webencodings~=0.5.1
 #Werkzeug==2.3.7 # pinned since flask-login doesn't support werkzeug 3.0 as of 2023-10-09
